@@ -18,9 +18,12 @@ class LanguageParserTest extends TestCase {
   }
   
   def testMathematical() {
-    assertEquals(Plus(Constant(1), Constant(-1)), parseAll(mathematical, "1 + -1").get)
-    assertEquals(Minus(Constant(1), Constant(-1)), parseAll(mathematical, "1 - -1").get)
-    assertEquals(Minus(Plus(Constant(-1),Constant(2)),Constant(3)), parseAll(mathematical, "(-1 + 2) - 3").get)
+    assertEquals(Add(Constant(1), Constant(-1)), parseAll(mathematical, "1 + -1").get)
+    assertEquals(Subtract(Constant(1), Constant(-1)), parseAll(mathematical, "1 - -1").get)
+    assertEquals(Subtract(Add(Constant(-1),Constant(2)),Constant(3)), parseAll(mathematical, "(-1 + 2) - 3").get)
+    assertEquals(Multiply(Constant(4), Constant(5)), parseAll(mathematical, "4 * 5").get)
+    assertEquals(Divide(Constant(10), Constant(3)), parseAll(mathematical, "10 / 3").get)
+    assertEquals(Modulus(Constant(10), Constant(3)), parseAll(mathematical, "10 % 3").get)
   }
   
   def testComparison() {
@@ -119,8 +122,8 @@ class LanguageParserTest extends TestCase {
 	  				If(
 	  					And(
 	  						GreaterThan(Constant(1), Constant(-1)), 
-	  						NotEqual(Constant(-3),Plus(Constant(2), Constant(-2)))),
-	  					List(TurnLeft(), Forward(Plus(Constant(1), Constant(2))), TurnRight()), Nil)), parse(
+	  						NotEqual(Constant(-3),Add(Constant(2), Constant(-2)))),
+	  					List(TurnLeft(), Forward(Add(Constant(1), Constant(2))), TurnRight()), Nil)), parse(
     		"""|
     		   |IF ((1 > -1) AND (-3 <> (2 + -2))) { 
     		   | LEFT
@@ -138,8 +141,8 @@ class LanguageParserTest extends TestCase {
   
   def testPush() {
 	  assertEquals(List(Push(Constant(1))), parse("""PUSH 1""").get)
-	  assertEquals(List(Push(Plus(Constant(1), Constant(2)))), parse("""PUSH (1+2)""").get)
-      assertEquals(List(Push(Minus(Constant(8), GridX()))), parse("""PUSH (8 - GRIDX)""").get)
+	  assertEquals(List(Push(Add(Constant(1), Constant(2)))), parse("""PUSH (1+2)""").get)
+      assertEquals(List(Push(Subtract(Constant(8), GridX()))), parse("""PUSH (8 - GRIDX)""").get)
   }
   
   def testPop() {

@@ -26,18 +26,22 @@ class EvaluatorTest extends TestCase {
  }
   
  def testMathematical() {
-      executeMathematicalTest("2 + 2", Plus(Constant(2), Constant(2)), 4)
-      executeMathematicalTest("2 + -2", Plus(Constant(2), Constant(-2)), 0)
-      executeMathematicalTest("-2 + 2", Plus(Constant(-2), Constant(2)), 0)
-      executeMathematicalTest("-2 + -2", Plus(Constant(-2), Constant(-2)), -4)
+      executeMathematicalTest("2 + 2", Add(Constant(2), Constant(2)), 4)
+      executeMathematicalTest("2 + -2", Add(Constant(2), Constant(-2)), 0)
+      executeMathematicalTest("-2 + 2", Add(Constant(-2), Constant(2)), 0)
+      executeMathematicalTest("-2 + -2", Add(Constant(-2), Constant(-2)), -4)
       
-      executeMathematicalTest("2 - 2", Minus(Constant(2), Constant(2)), 0)
-      executeMathematicalTest("2 - -2", Minus(Constant(2), Constant(-2)), 4)
-      executeMathematicalTest("-2 - 2", Minus(Constant(-2), Constant(2)), -4)
-      executeMathematicalTest("-2 - -2", Minus(Constant(-2), Constant(-2)), 0)
+      executeMathematicalTest("2 - 2", Subtract(Constant(2), Constant(2)), 0)
+      executeMathematicalTest("2 - -2", Subtract(Constant(2), Constant(-2)), 4)
+      executeMathematicalTest("-2 - 2", Subtract(Constant(-2), Constant(2)), -4)
+      executeMathematicalTest("-2 - -2", Subtract(Constant(-2), Constant(-2)), 0)
       
-      executeMathematicalTest("(2 - 3) + 4", Plus(Minus(Constant(2), Constant(3)), Constant(4)), 3)
-      executeMathematicalTest("2 - (3 + 4)", Minus(Constant(2), Plus(Constant(3), Constant(4))), -5)
+      executeMathematicalTest("(2 - 3) + 4", Add(Subtract(Constant(2), Constant(3)), Constant(4)), 3)
+      executeMathematicalTest("2 - (3 + 4)", Subtract(Constant(2), Add(Constant(3), Constant(4))), -5)
+      
+      executeMathematicalTest("(2 * 3) - 4", Subtract(Multiply(Constant(2), Constant(3)), Constant(4)), 2)
+      executeMathematicalTest("2 - (10 / 3)", Subtract(Constant(2), Divide(Constant(10), Constant(3))), -1)
+      executeMathematicalTest("4 + (10 % 3)", Add(Constant(4), Modulus(Constant(10), Constant(3))), 5)
  } 
  
  private def executeComparisonTest(stringInput:String, expectedComparison:Comparison, expectedBoolean:Boolean) {
@@ -73,8 +77,8 @@ class EvaluatorTest extends TestCase {
  } 
  
  def testBooleanLogic() {
-	 executeBooleanLogicTest("((1 + 3) = (0 - -4))", Equal(Plus(Constant(1), Constant(3)), Minus(Constant(0), Constant(-4))), true)
-	 executeBooleanLogicTest("((1 + 3) <> (0 - -4))", NotEqual(Plus(Constant(1), Constant(3)), Minus(Constant(0), Constant(-4))), false)
+	 executeBooleanLogicTest("((1 + 3) = (0 - -4))", Equal(Add(Constant(1), Constant(3)), Subtract(Constant(0), Constant(-4))), true)
+	 executeBooleanLogicTest("((1 + 3) <> (0 - -4))", NotEqual(Add(Constant(1), Constant(3)), Subtract(Constant(0), Constant(-4))), false)
  } 
  
  def testSimple() {
@@ -193,7 +197,7 @@ class EvaluatorTest extends TestCase {
   def testAbs() {
     executeAbsTest("ABS(-1)", Abs(Constant(-1)), 1) 
     executeAbsTest("ABS(1)", Abs(Constant(1)), 1) 
-    executeAbsTest("ABS(3-5)", Abs(Minus(Constant(3), Constant(5))), 2) 
+    executeAbsTest("ABS(3-5)", Abs(Subtract(Constant(3), Constant(5))), 2) 
   }
   
 }

@@ -14,7 +14,7 @@ object Main {
   }
   
   def main(args:Array[String]) {
-    val state = new State(8,7 ,0)
+    val state = new State(8,7,0)
     run("""
 PUSH (8 - GRIDX)
 IF (TOP > 0) {

@@ -18,8 +18,11 @@ sealed abstract class Expression()
  case class DeltaY() extends Expression
  case class Abs(expression:Expression) extends Expression
  case class Mathematical(left:Expression, right:Expression) extends Expression
-  case class Plus(override val left:Expression, override val right:Expression) extends Mathematical(left, right)
-  case class Minus(override val left:Expression, override val right:Expression) extends Mathematical(left, right)
+  case class Add(override val left:Expression, override val right:Expression) extends Mathematical(left, right)
+  case class Subtract(override val left:Expression, override val right:Expression) extends Mathematical(left, right)
+  case class Multiply(override val left:Expression, override val right:Expression) extends Mathematical(left, right)
+  case class Divide(override val left:Expression, override val right:Expression) extends Mathematical(left, right)
+  case class Modulus(override val left:Expression, override val right:Expression) extends Mathematical(left, right)
 
 sealed abstract class BooleanLogic() 
  case class Logical(left:BooleanLogic, right:BooleanLogic) extends BooleanLogic

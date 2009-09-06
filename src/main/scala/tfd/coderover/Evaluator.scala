@@ -10,8 +10,11 @@ object Evaluator {
   final def evaluate(expression:Expression, state:State):Int = {
     expression match {
       case Constant(x) => x
-      case Plus(left, right) => evaluate(left, state) + evaluate(right, state)
-      case Minus(left, right) => evaluate(left, state) - evaluate(right, state)
+      case Add(left, right) => evaluate(left, state) + evaluate(right, state)
+      case Subtract(left, right) => evaluate(left, state) - evaluate(right, state)
+      case Multiply(left, right) => evaluate(left, state) * evaluate(right, state)
+      case Divide(left, right) => evaluate(left, state) / evaluate(right, state)
+      case Modulus(left, right) => evaluate(left, state) % evaluate(right, state)
       case Pop() => state.pop()
       case Top() => state.top
       case GridX() => state.droidX

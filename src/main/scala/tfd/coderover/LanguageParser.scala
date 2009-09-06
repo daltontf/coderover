@@ -6,9 +6,12 @@ object LanguageParser extends JavaTokenParsers {
   
   def expression:Parser[Expression] = "(" ~> mathematical <~ ")" | function | arityOneFunction | constant 
   
-  def mathematical:Parser[Mathematical] = expression ~ ("+"|"-") ~ expression ^^ {
-    case left~"+"~right => Plus(left, right)
-    case left~"-"~right => Minus(left, right)
+  def mathematical:Parser[Mathematical] = expression ~ ("+"|"-"|"*"|"/"|"%") ~ expression ^^ {
+    case left~"+"~right => Add(left, right)
+    case left~"-"~right => Subtract(left, right)
+    case left~"*"~right => Multiply(left, right)
+    case left~"/"~right => Divide(left, right) 
+    case left~"%"~right => Modulus(left, right)
   }
   
   def arityOneFunction:Parser[Expression] = "ABS" ~ "(" ~ (mathematical | function | arityOneFunction | constant) <~ ")" ^^ {
