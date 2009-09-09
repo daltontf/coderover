@@ -4,7 +4,7 @@ import scala.util.parsing.combinator.JavaTokenParsers
 
 object LanguageParser extends JavaTokenParsers {
   
-  def expression:Parser[Expression] = "(" ~> mathematical <~ ")" | function | arityOneFunction | constant 
+  def expression:Parser[Expression] = "(" ~> mathematical <~ ")" | function | arityTwoFunction | arityOneFunction | constant 
   
   def mathematical:Parser[Mathematical] = expression ~ ("+"|"-"|"*"|"/"|"%") ~ expression ^^ {
     case left~"+"~right => Add(left, right)
@@ -14,8 +14,15 @@ object LanguageParser extends JavaTokenParsers {
     case left~"%"~right => Modulus(left, right)
   }
   
-  def arityOneFunction:Parser[Expression] = "ABS" ~ "(" ~ (mathematical | function | arityOneFunction | constant) <~ ")" ^^ {
+  def functionParameter = (mathematical | function | arityTwoFunction | arityOneFunction | constant)
+  
+  def arityOneFunction:Parser[Expression] = "ABS" ~ "(" ~ functionParameter <~ ")" ^^ {
     case "ABS"~_~parm => Abs(parm)
+  }
+  
+  def arityTwoFunction:Parser[Expression] = ("MAX"|"MIN") ~ "(" ~ functionParameter ~ "," ~ functionParameter <~ ")" ^^ {
+    case "MAX"~_~parm1~_~parm2 => Max(parm1, parm2)
+    case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
   }
   
   def function:Parser[Expression] = ("POP"|"TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY") ^^ {

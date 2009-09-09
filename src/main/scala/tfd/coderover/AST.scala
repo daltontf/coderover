@@ -17,6 +17,8 @@ sealed abstract class Expression()
  case class DeltaX() extends Expression
  case class DeltaY() extends Expression
  case class Abs(expression:Expression) extends Expression
+ case class Max(expression1:Expression, expression2:Expression) extends Expression
+ case class Min(expression1:Expression, expression2:Expression) extends Expression
  case class Mathematical(left:Expression, right:Expression) extends Expression
   case class Add(override val left:Expression, override val right:Expression) extends Mathematical(left, right)
   case class Subtract(override val left:Expression, override val right:Expression) extends Mathematical(left, right)

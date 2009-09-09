@@ -8,21 +8,40 @@ class EvaluatorTest extends TestCase {
 	import LanguageParser._
     
  
- private def executeConstantTest(stringInput:String, expectedConstant:Constant, expectedInt:Int) {
+  private def executeConstantTest(stringInput:String, expectedConstant:Constant, expectedInt:Int) {
 	val ast = parseAll(constant, stringInput).get
     assertEquals(expectedConstant, ast)
     assertEquals(expectedInt, evaluate(ast, State(0,0,0)))
- }
+  }
+ 
+  private def executeMathematicalTest(stringInput:String, expectedMathematical:Mathematical, expectedInt:Int) {
+    val ast = parseAll(mathematical, stringInput).get
+    assertEquals(expectedMathematical, ast)
+    assertEquals(expectedInt, evaluate(ast, State(0,0,0))) 
+  }
+  
+  private def executeComparisonTest(stringInput:String, expectedComparison:Comparison, expectedBoolean:Boolean) {
+    val ast = parseAll(comparison, stringInput).get
+    assertEquals(expectedComparison, ast)
+    assertEquals(expectedBoolean, evaluate(ast, State(0,0,0)))
+  }
+  
+   private def executeBooleanLogicTest(stringInput:String, expectedBooleanLogic:BooleanLogic, expectedBoolean:Boolean) {
+    val ast = parseAll(nestedBoolean, stringInput).get
+    assertEquals(expectedBooleanLogic, ast)
+    assertEquals(expectedBoolean, evaluate(ast, State(0,0,0)))
+  } 
+   
+  private def executeExpressionTest(stringInput:String, expectedAst:Expression, expectedIntResult:Int) {
+	val ast = parseAll(expression, stringInput).get
+	assertEquals(expectedAst, ast)
+	assertEquals(expectedIntResult, evaluate(ast, State(0,0,0)))
+  }
+  
  
  def testConstant() {
     executeConstantTest("42", Constant(42), 42)
     executeConstantTest("-273", Constant(-273), -273)
- }
- 
- private def executeMathematicalTest(stringInput:String, expectedMathematical:Mathematical, expectedInt:Int) {
-    val ast = parseAll(mathematical, stringInput).get
-    assertEquals(expectedMathematical, ast)
-    assertEquals(expectedInt, evaluate(ast, State(0,0,0))) 
  }
   
  def testMathematical() {
@@ -44,12 +63,6 @@ class EvaluatorTest extends TestCase {
       executeMathematicalTest("4 + (10 % 3)", Add(Constant(4), Modulus(Constant(10), Constant(3))), 5)
  } 
  
- private def executeComparisonTest(stringInput:String, expectedComparison:Comparison, expectedBoolean:Boolean) {
-   val ast = parseAll(comparison, stringInput).get
-   assertEquals(expectedComparison, ast)
-   assertEquals(expectedBoolean, evaluate(ast, State(0,0,0)))
- }
- 
  def testComparison() {
    executeComparisonTest("2 = 2", Equal(Constant(2), Constant(2)), true)
    executeComparisonTest("2 = -2", Equal(Constant(2), Constant(-2)), false)
@@ -69,12 +82,6 @@ class EvaluatorTest extends TestCase {
    executeComparisonTest("2 <> 2", NotEqual(Constant(2), Constant(2)), false)
    executeComparisonTest("2 <> -2", NotEqual(Constant(2), Constant(-2)), true)   
  }
- 
- private def executeBooleanLogicTest(stringInput:String, expectedBooleanLogic:BooleanLogic, expectedBoolean:Boolean) {
-   val ast = parseAll(nestedBoolean, stringInput).get
-   assertEquals(expectedBooleanLogic, ast)
-   assertEquals(expectedBoolean, evaluate(ast, State(0,0,0)))
- } 
  
  def testBooleanLogic() {
 	 executeBooleanLogicTest("((1 + 3) = (0 - -4))", Equal(Add(Constant(1), Constant(3)), Subtract(Constant(0), Constant(-4))), true)
@@ -186,18 +193,23 @@ class EvaluatorTest extends TestCase {
     evaluate(parse("PUSH DELTAY").get, state)
     assertEquals(0, state.top)
     
-  }
-  
-  private def executeAbsTest(stringInput:String, expectedAst:Abs, expectedIntResult:Int) {
-	 val ast = parseAll(expression, stringInput).get
-	 assertEquals(expectedAst, ast)
-	 assertEquals(expectedIntResult, evaluate(ast, State(0,0,0)))
-  }
-  
+  } 
+ 
   def testAbs() {
-    executeAbsTest("ABS(-1)", Abs(Constant(-1)), 1) 
-    executeAbsTest("ABS(1)", Abs(Constant(1)), 1) 
-    executeAbsTest("ABS(3-5)", Abs(Subtract(Constant(3), Constant(5))), 2) 
+    executeExpressionTest("ABS(-1)", Abs(Constant(-1)), 1) 
+    executeExpressionTest("ABS(1)", Abs(Constant(1)), 1) 
+    executeExpressionTest("ABS(3-5)", Abs(Subtract(Constant(3), Constant(5))), 2) 
   }
   
+  def testMax() {
+    executeExpressionTest("MAX(1, 2)", Max(Constant(1), Constant(2)), 2)
+    executeExpressionTest("MAX(1, -2)", Max(Constant(1), Constant(-2)), 1)
+    executeExpressionTest("MAX(-1, -2)", Max(Constant(-1), Constant(-2)), -1)
+  }
+  
+  def testMin() {
+    executeExpressionTest("MIN(1, 2)", Min(Constant(1), Constant(2)), 1)
+    executeExpressionTest("MIN(1, -2)", Min(Constant(1), Constant(-2)), -2)
+    executeExpressionTest("MIN(-1, -2)", Min(Constant(-1), Constant(-2)), -2)
+  }
 }

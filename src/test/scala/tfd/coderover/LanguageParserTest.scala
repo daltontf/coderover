@@ -185,7 +185,15 @@ class LanguageParserTest extends TestCase {
 		  			     |}""".stripMargin).get)
   }
   
-  def testABS() {
+  def testAbs() {
     assertEquals(List(Push(Abs(Constant(-1)))), parse("PUSH ABS(-1)").get)
+  }
+  
+  def testMax() {
+	assertEquals(List(Push(Max(Constant(-1), Constant(2)))), parse("PUSH MAX(-1, 2)").get)
+  }
+  
+  def testMin() {
+	assertEquals(List(Push(Min(Constant(-1), Constant(2)))), parse("PUSH MIN(-1, 2)").get)
   }
 }

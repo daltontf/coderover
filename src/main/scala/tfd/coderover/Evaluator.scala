@@ -22,6 +22,8 @@ object Evaluator {
       case DeltaX() => state.deltaX
       case DeltaY() => state.deltaY
       case Abs(expr) => Math.abs(evaluate(expr, state))
+      case Max(expr1, expr2) => Math.max(evaluate(expr1, state), evaluate(expr2, state))
+      case Min(expr1, expr2) => Math.min(evaluate(expr1, state), evaluate(expr2, state))
     }
   }
   
