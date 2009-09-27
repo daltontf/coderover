@@ -1,10 +1,15 @@
 package tfd.coderover
 
 object State {
-  val directions =  Array((0,-1), // North
-                          (1, 0), // East
-                          (0, 1), // South
-                          (-1,0)) // West
+  val NORTH = (0, -1)
+  val EAST = (1, 0)
+  val SOUTH = (0, 1)
+  val WEST = (-1, 0)
+  
+  val directions =  Array(NORTH,
+                          EAST, 
+                          SOUTH,
+                          WEST) 
 }
 
 
