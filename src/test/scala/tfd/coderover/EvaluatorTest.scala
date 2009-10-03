@@ -4,38 +4,37 @@ import junit.framework._
 import org.junit.Assert._
 
 class EvaluatorTest extends TestCase {
-	import Evaluator._
-	import LanguageParser._
+  import LanguageParser._
     
  
   private def executeConstantTest(stringInput:String, expectedConstant:Constant, expectedInt:Int) {
 	val ast = parseAll(constant, stringInput).get
     assertEquals(expectedConstant, ast)
-    assertEquals(expectedInt, evaluate(ast, State(0,0,0)))
+    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluate(ast, State(0,0,0)))
   }
  
   private def executeMathematicalTest(stringInput:String, expectedMathematical:Mathematical, expectedInt:Int) {
     val ast = parseAll(mathematical, stringInput).get
     assertEquals(expectedMathematical, ast)
-    assertEquals(expectedInt, evaluate(ast, State(0,0,0))) 
+    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluate(ast, State(0,0,0))) 
   }
   
   private def executeComparisonTest(stringInput:String, expectedComparison:Comparison, expectedBoolean:Boolean) {
     val ast = parseAll(comparison, stringInput).get
     assertEquals(expectedComparison, ast)
-    assertEquals(expectedBoolean, evaluate(ast, State(0,0,0)))
+    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, State(0,0,0)))
   }
   
    private def executeBooleanLogicTest(stringInput:String, expectedBooleanLogic:BooleanLogic, expectedBoolean:Boolean) {
     val ast = parseAll(nestedBoolean, stringInput).get
     assertEquals(expectedBooleanLogic, ast)
-    assertEquals(expectedBoolean, evaluate(ast, State(0,0,0)))
+    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, State(0,0,0)))
   } 
    
   private def executeExpressionTest(stringInput:String, expectedAst:Expression, expectedIntResult:Int) {
 	val ast = parseAll(expression, stringInput).get
 	assertEquals(expectedAst, ast)
-	assertEquals(expectedIntResult, evaluate(ast, State(0,0,0)))
+	assertEquals(expectedIntResult, new Evaluator(DefaultEnvironment).evaluate(ast, State(0,0,0)))
   }
   
  
@@ -90,69 +89,69 @@ class EvaluatorTest extends TestCase {
  
  def testSimple() {
     val state = State(2, 2, 0)
-    evaluate(parse("FORWARD").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("FORWARD").get, state)
     assertEquals(State(2, 1, 0), state)
-    evaluate(parse("RIGHT").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("RIGHT").get, state)
     assertEquals(State(2, 1, 1), state)
-    evaluate(parse("RIGHT").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("RIGHT").get, state)
     assertEquals(State(2, 1, 2), state)
-    evaluate(parse("RIGHT").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("RIGHT").get, state)
     assertEquals(State(2, 1, 3), state)
-    evaluate(parse("RIGHT").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("RIGHT").get, state)
     assertEquals(State(2, 1, 0), state)
-    evaluate(parse("LEFT").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("LEFT").get, state)
     assertEquals(State(2, 1, 3), state)
-    evaluate(parse("LEFT").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("LEFT").get, state)
     assertEquals(State(2, 1, 2), state)
-    evaluate(parse("LEFT").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("LEFT").get, state)
     assertEquals(State(2, 1, 1), state)
-    evaluate(parse("LEFT").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("LEFT").get, state)
     assertEquals(State(2, 1, 0), state)
-    evaluate(parse("RIGHT").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("RIGHT").get, state)
     assertEquals(State(2, 1, 1), state)
-    evaluate(parse("FORWARD 2").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("FORWARD 2").get, state)
     assertEquals(State(4, 1, 1), state)
-    evaluate(parse("FORWARD (1+1)").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("FORWARD (1+1)").get, state)
     assertEquals(State(6, 1, 1), state)
   }
  
   def testIfThenElse() {
     val state = State(2, 2, 0)
-    evaluate(parse("IF (GRIDY = 2) { FORWARD } ELSE { RIGHT }").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("IF (GRIDY = 2) { FORWARD } ELSE { RIGHT }").get, state)
     assertEquals(State(2, 1, 0), state)
-    evaluate(parse("IF (GRIDY = 2) { FORWARD } ELSE { RIGHT }").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("IF (GRIDY = 2) { FORWARD } ELSE { RIGHT }").get, state)
     assertEquals(State(2, 1, 1), state)
-    evaluate(parse("IF (GRIDX < 3) { FORWARD } ELSE { LEFT }").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("IF (GRIDX < 3) { FORWARD } ELSE { LEFT }").get, state)
     assertEquals(State(3, 1, 1), state)
-    evaluate(parse("IF (GRIDX < 3) { FORWARD } ELSE { LEFT }").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("IF (GRIDX < 3) { FORWARD } ELSE { LEFT }").get, state)
     assertEquals(State(3, 1, 0), state)
   }
   
   def testIfElseIf() {
     val state = State(2,2,0)
-    evaluate(parse("IF (GRIDY <> 2) { FORWARD } ELSE IF (GRIDY = 2) { RIGHT }").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("IF (GRIDY <> 2) { FORWARD } ELSE IF (GRIDY = 2) { RIGHT }").get, state)
     assertEquals(State(2, 2, 1), state)
-    evaluate(parse("IF (GRIDY = 2) { FORWARD } ELSE IF (GRIDY <> 2) { RIGHT }").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("IF (GRIDY = 2) { FORWARD } ELSE IF (GRIDY <> 2) { RIGHT }").get, state)
     assertEquals(State(3, 2, 1), state)
-    evaluate(parse("IF (GRIDY <> 2) { FORWARD } ELSE IF (GRIDY = 2) { RIGHT }").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("IF (GRIDY <> 2) { FORWARD } ELSE IF (GRIDY = 2) { RIGHT }").get, state)
     assertEquals(State(3, 2, 2), state)
-    evaluate(parse("IF (GRIDY = 2) { FORWARD } ELSE IF (GRIDY <> 2) { RIGHT }").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("IF (GRIDY = 2) { FORWARD } ELSE IF (GRIDY <> 2) { RIGHT }").get, state)
     assertEquals(State(3, 3, 2), state)
-    evaluate(parse("IF (GRIDY = 2) { FORWARD } ELSE IF (GRIDX = 2) { RIGHT }").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("IF (GRIDY = 2) { FORWARD } ELSE IF (GRIDX = 2) { RIGHT }").get, state)
     assertEquals(State(3, 3, 2), state)
   }
  
   def testStack() {
     val state = State(2,2,0)
-    evaluate(parse("PUSH (1+2)").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (1+2)").get, state)
     assertEquals(3, state.top)
-    evaluate(parse("PUSH (POP + 1)").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (POP + 1)").get, state)
     assertEquals(4, state.top)
   }
   
   def testWhileStack() {
     val state = State(2,2,0)
-    evaluate(parse("""|PUSH 10
+    new Evaluator(DefaultEnvironment).evaluate(parse("""|PUSH 10
     				  |WHILE (TOP > 3) {
     			      |  PUSH(POP - 1)
                       |}""".stripMargin).get, state)
@@ -161,7 +160,7 @@ class EvaluatorTest extends TestCase {
   
   def testGridXY() {
     val state = State(2,3,0)
-    evaluate(parse("""|PUSH GRIDX
+    new Evaluator(DefaultEnvironment).evaluate(parse("""|PUSH GRIDX
     				  |PUSH GRIDY""".stripMargin).get, state)
     assertEquals(3, state.pop)
     assertEquals(2, state.pop)
@@ -169,11 +168,11 @@ class EvaluatorTest extends TestCase {
   
   def testWhileGrid() {
 	  val state = State(2,2,1)
-	  evaluate(parse("""|WHILE (GRIDX < 10) {
+	  new Evaluator(DefaultEnvironment).evaluate(parse("""|WHILE (GRIDX < 10) {
 		  			    | FORWARD 
 			  			|}""".stripMargin).get, state)
 	  assertEquals(State(10, 2, 1), state)
-	  evaluate(parse("""|RIGHT
+	  new Evaluator(DefaultEnvironment).evaluate(parse("""|RIGHT
 			  		    |WHILE (GRIDY < 10) {
 		  			    | FORWARD 
 			  			|}""".stripMargin).get, state)
@@ -182,15 +181,15 @@ class EvaluatorTest extends TestCase {
   
   def testDeltaXY() {
     val state = State(2,3,0)
-    evaluate(parse("PUSH DELTAX").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH DELTAX").get, state)
     assertEquals(0, state.top)
-    evaluate(parse("PUSH DELTAY").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH DELTAY").get, state)
     assertEquals(-1, state.top)
-    evaluate(parse("""|
+    new Evaluator(DefaultEnvironment).evaluate(parse("""|
     			      |RIGHT
     			      |PUSH DELTAX""".stripMargin).get, state)
     assertEquals(1, state.top)
-    evaluate(parse("PUSH DELTAY").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH DELTAY").get, state)
     assertEquals(0, state.top)
     
   } 

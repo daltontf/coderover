@@ -1,59 +1,76 @@
 package tfd.coderover
 
-object Evaluator {
-  
+class Evaluator(environment:Environment) {
   
   final def evaluate(instructions:List[Instruction], state:State) {
-	  instructions.foreach(evaluate(_, state))
+	  if (!state.stopped) {
+		  instructions.foreach(evaluate(_, state))
+      }
   }
   
   final def evaluate(expression:Expression, state:State):Int = {
     expression match {
-      case Constant(x) => x
-      case Add(left, right) => evaluate(left, state) + evaluate(right, state)
+      case Constant(x)           => x
+      case Add(left, right) 	 => evaluate(left, state) + evaluate(right, state)
       case Subtract(left, right) => evaluate(left, state) - evaluate(right, state)
       case Multiply(left, right) => evaluate(left, state) * evaluate(right, state)
-      case Divide(left, right) => evaluate(left, state) / evaluate(right, state)
-      case Modulus(left, right) => evaluate(left, state) % evaluate(right, state)
-      case Pop() => state.pop()
-      case Top() => state.top
-      case GridX() => state.droidX
-      case GridY() => state.droidY
-      case DeltaX() => state.deltaX
-      case DeltaY() => state.deltaY
-      case Abs(expr) => Math.abs(evaluate(expr, state))
-      case Max(expr1, expr2) => Math.max(evaluate(expr1, state), evaluate(expr2, state))
-      case Min(expr1, expr2) => Math.min(evaluate(expr1, state), evaluate(expr2, state))
+      case Divide(left, right)   => evaluate(left, state) / evaluate(right, state)
+      case Modulus(left, right)  => evaluate(left, state) % evaluate(right, state)
+      case Pop() 				 => state.pop()
+      case Top() 				 => state.top
+      case GridX() 				 => state.gridX
+      case GridY() 				 => state.gridY
+      case DeltaX() 			 => state.deltaX
+      case DeltaY() 			 => state.deltaY
+      case Abs(expr) 			 => Math.abs(evaluate(expr,  state))
+      case Max(expr1, expr2) 	 => Math.max(evaluate(expr1, state), evaluate(expr2, state))
+      case Min(expr1, expr2) 	 => Math.min(evaluate(expr1, state), evaluate(expr2, state))
     }
   }
   
   final def evaluate(booleanExpression:BooleanLogic, state:State):Boolean = {
 	  booleanExpression match {
-	    case And(left, right) => (evaluate(left, state) && evaluate(right, state))
-        case Or(left, right) => (evaluate(left, state) || evaluate(right, state)) 
-        case Equal(left, right) =>  (evaluate(left, state) == evaluate(right, state))
-        case LessThan(left, right) =>  (evaluate(left, state) < evaluate(right, state))
-        case GreaterThan(left, right) =>  (evaluate(left, state) > evaluate(right, state))
-        case LessThanOrEqual(left, right) =>  (evaluate(left, state) <= evaluate(right, state))
+	    case And(left, right) 				 => (evaluate(left, state) && evaluate(right, state))
+        case Or(left, right) 				 => (evaluate(left, state) || evaluate(right, state)) 
+        case Equal(left, right) 			 =>  (evaluate(left, state) == evaluate(right, state))
+        case LessThan(left, right) 			 =>  (evaluate(left, state) < evaluate(right, state))
+        case GreaterThan(left, right) 	     =>  (evaluate(left, state) > evaluate(right, state))
+        case LessThanOrEqual(left, right) 	 =>  (evaluate(left, state) <= evaluate(right, state))
         case GreaterThanOrEqual(left, right) =>  (evaluate(left, state) >= evaluate(right, state))
-        case NotEqual(left, right) =>  (evaluate(left, state) != evaluate(right, state))
+        case NotEqual(left, right) 			 =>  (evaluate(left, state) != evaluate(right, state))
 	  }
   }
   
   final def evaluate(instruction:Instruction, state:State) {
-      instruction match {
-        case Forward(expression) => state.droidMoveForward(evaluate(expression, state))
-        case TurnRight() => state.droidTurnRight()
-        case TurnLeft() => state.droidTurnLeft()
-        case Push(expression) => state.push(evaluate(expression, state))
-        case If(booleanExpression, thenStatements, elseStatements) => if (evaluate(booleanExpression, state)) {
-        	evaluate(thenStatements, state)
-        } else if (!elseStatements.isEmpty) {
-        	evaluate(elseStatements, state)            
+      if (!state.stopped) {
+        instruction match {
+        	case Forward(expression) => 
+        		if (environment.canMoveForward(state)) {
+        			moveForward(evaluate(expression, state), state)
+        			environment.postMoveForward(state)
+        		}
+        	case TurnRight() 	  => turnRight(state)
+        	case TurnLeft() 	  => turnLeft(state)
+        	case Push(expression) => state.push(evaluate(expression, state))
+        	case If(booleanExpression, thenStatements, elseStatements) => 
+        		if (evaluate(booleanExpression, state)) {
+        			evaluate(thenStatements, state)
+        		} else if (!elseStatements.isEmpty) {
+        			evaluate(elseStatements, state)            
+        		}
+        	case While(booleanExpression, blockStatements) => 
+        		while (!state.stopped && evaluate(booleanExpression, state)) {
+        			evaluate(blockStatements, state)
+        		}
         }
-        case While(booleanExpression, blockStatements) => while (evaluate(booleanExpression, state)) {
-            evaluate(blockStatements, state)
-        }
-      } 
+     }
   }
+  
+  def moveForward(distance:Int, state:State) = state.moveForward(distance)
+  
+  def turnRight(state:State) = state.turnRight()
+  
+  def turnLeft(state:State) = state.turnLeft()
+  
+
 }

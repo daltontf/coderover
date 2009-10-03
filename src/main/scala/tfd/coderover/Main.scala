@@ -2,12 +2,12 @@ package tfd.coderover
 
 object Main {
 	import LanguageParser._
-	import Evaluator._
+
  
   def run(code:String, state:State) = {
     val result = parse(code)
     if (result.successful) {
-    	evaluate(result.get, state)
+    	new Evaluator(DefaultEnvironment).evaluate(result.get, state)
     } else {
         println(result)
     }

@@ -6,7 +6,7 @@ object State {
   val SOUTH = (0, 1)
   val WEST = (-1, 0)
   
-  val directions =  Array(NORTH,
+  val DIRECTIONS =  Array(NORTH,
                           EAST, 
                           SOUTH,
                           WEST) 
@@ -15,22 +15,25 @@ object State {
 
 case class State(
   
-  var droidX:Int,
-  var droidY:Int,
-  var droidDirectionIndex:Int
+  var gridX:Int,
+  var gridY:Int,
+  var directionIndex:Int
 ) {  
+  var stopped = false;
+  
   import scala.collection.mutable.Stack
+  import State._
   
-  val stack = new Stack[Int]()
+  private val stack = new Stack[Int]()
   
-  def droidMoveForward(distance:Int) = {
-    droidX = droidX + (State.directions(droidDirectionIndex)._1 * distance)
-    droidY = droidY + (State.directions(droidDirectionIndex)._2 * distance)
+  def moveForward(distance:Int) = {
+    gridX = gridX + (DIRECTIONS(directionIndex)._1 * distance)
+    gridY = gridY + (DIRECTIONS(directionIndex)._2 * distance)
   }
   
-  def droidTurnRight() = droidDirectionIndex = (droidDirectionIndex + State.directions.length + 1) % State.directions.length
+  def turnRight() = directionIndex = (directionIndex + DIRECTIONS.length + 1) % DIRECTIONS.length
   
-  def droidTurnLeft() = droidDirectionIndex = (droidDirectionIndex + State.directions.length - 1) % State.directions.length
+  def turnLeft() = directionIndex = (directionIndex + DIRECTIONS.length - 1) % DIRECTIONS.length
   
   def push(value:Int) = stack.push(value)
   
@@ -38,8 +41,8 @@ case class State(
   
   def top() = stack.top
   
-  def deltaX = State.directions(droidDirectionIndex)._1
+  def deltaX = DIRECTIONS(directionIndex)._1
   
-  def deltaY = State.directions(droidDirectionIndex)._2
+  def deltaY = DIRECTIONS(directionIndex)._2
   
 }
