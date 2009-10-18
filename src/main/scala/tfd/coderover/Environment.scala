@@ -1,15 +1,11 @@
 package tfd.coderover
 
-abstract class Environment {
-  def canMoveForward(state:State):Boolean
+trait Environment {
+  def canMoveForward(state:State) = true
   
-  def postMoveForward(state:State):Unit 
-}
+  def postMoveForward(state:State) { }
+  
+  def paint(color:Int, state:State) { }
+} 
 
-object DefaultEnvironment extends Environment {
-  
-  override def canMoveForward(state:State) = true
-  
-  override def postMoveForward(state:State) { }
-
-}
+object DefaultEnvironment extends Environment 

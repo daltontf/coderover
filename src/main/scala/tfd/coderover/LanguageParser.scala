@@ -80,7 +80,9 @@ object LanguageParser extends JavaTokenParsers {
   
   def left:Parser[TurnLeft] = "LEFT" ^^ { _ => TurnLeft() }
   
-  def instruction:Parser[Instruction] = forward | right | left | ifStatement | whileStatement | push
+  def paint:Parser[Paint] = "PAINT"~> expression ^^ { x:Expression => Paint(x)}
+  
+  def instruction:Parser[Instruction] = forward | right | left | paint | ifStatement | whileStatement | push
   
   def program = rep(instruction)
   

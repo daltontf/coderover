@@ -5,8 +5,7 @@ import org.junit.Assert._
 
 class EvaluatorTest extends TestCase {
   import LanguageParser._
-    
- 
+     
   private def executeConstantTest(stringInput:String, expectedConstant:Constant, expectedInt:Int) {
 	val ast = parseAll(constant, stringInput).get
     assertEquals(expectedConstant, ast)
@@ -210,5 +209,62 @@ class EvaluatorTest extends TestCase {
     executeExpressionTest("MIN(1, 2)", Min(Constant(1), Constant(2)), 1)
     executeExpressionTest("MIN(1, -2)", Min(Constant(1), Constant(-2)), -2)
     executeExpressionTest("MIN(-1, -2)", Min(Constant(-1), Constant(-2)), -2)
+  }
+    
+  def testBoundedEnvironment() {
+    val evaluator = new Evaluator(new BoundedEnvironment(9, 9))
+	val state = State(2,2,0)
+	evaluator.evaluate(parse("FORWARD").get, state)
+	assertEquals(State(2,1,0), state)
+	evaluator.evaluate(parse("FORWARD").get, state)
+	assertEquals(State(2,0,0), state)
+	evaluator.evaluate(parse("FORWARD").get, state)
+	assertEquals(State(2,0,0), state)
+	evaluator.evaluate(parse("LEFT FORWARD 2").get, state)
+	assertEquals(State(0,0,3), state)
+	evaluator.evaluate(parse("FORWARD 2").get, state)
+	assertEquals(State(0,0,3), state)
+	evaluator.evaluate(parse("LEFT FORWARD 9").get, state)
+	assertEquals(State(0,9,2), state)
+	evaluator.evaluate(parse("FORWARD").get, state)
+	assertEquals(State(0,9,2), state)
+	evaluator.evaluate(parse("LEFT FORWARD 9").get, state)
+	assertEquals(State(9,9,1), state)
+	evaluator.evaluate(parse("FORWARD").get, state)
+	assertEquals(State(9,9,1), state)
+	evaluator.evaluate(parse("LEFT FORWARD 99").get, state)
+	assertEquals(State(9,0,0), state)
+  }
+  
+  def testPaint() {
+    
+    val environment = new Environment {
+    	import scala.collection.mutable.ListBuffer
+      
+    	val paintedTuples = new ListBuffer[(Int,Int,Int)]
+      
+    	override def paint(color:Int, state:State) { 
+    		paintedTuples += (state.gridX, state.gridY, color) 
+    	}
+    }
+    val evaluator = new Evaluator(environment)
+    evaluator.evaluate(parse("PAINT 1").get, new State(2, 2, 0))
+    assertEquals((2,2,1), environment.paintedTuples(0))
+    evaluator.evaluate(parse("PAINT (1 + 2)").get, new State(4, 4, 0))
+    assertEquals((4,4,3), environment.paintedTuples(1))
+  }
+  
+  def testPopOnEmptyStack() {
+    val state = new State(2,2,0)
+    val evaluator = new Evaluator(DefaultEnvironment)
+    evaluator.evaluate(parse("PUSH POP").get, state)
+    assertEquals(Some(IllegalOperationOnEmptyStack), state.abend)
+  }
+  
+  def testTopOnEmptyStack() {
+    val state = new State(2,2,0)
+    val evaluator = new Evaluator(DefaultEnvironment)
+    evaluator.evaluate(parse("PUSH TOP").get, state)
+    assertEquals(Some(IllegalOperationOnEmptyStack), state.abend)
   }
 }

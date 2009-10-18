@@ -196,4 +196,9 @@ class LanguageParserTest extends TestCase {
   def testMin() {
 	assertEquals(List(Push(Min(Constant(-1), Constant(2)))), parse("PUSH MIN(-1, 2)").get)
   }
+  
+  def testPaint() {
+    assertEquals(List(Paint(Constant(1))), parse("PAINT 1").get)
+    assertEquals(List(Paint(Add(Constant(1), Constant(2)))), parse("PAINT (1 + 2)").get)
+  }
 }

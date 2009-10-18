@@ -4,9 +4,10 @@ sealed abstract class Instruction
 case class Forward(expression:Expression) extends Instruction
 case class TurnRight() extends Instruction
 case class TurnLeft() extends Instruction
-case class If(expression:BooleanLogic, thenStatements:List[Instruction], elseStatements:List[Instruction]) extends Instruction
-case class While(expression:BooleanLogic, blockStatements:List[Instruction]) extends Instruction
+case class If(booleanLogic:BooleanLogic, thenStatements:List[Instruction], elseStatements:List[Instruction]) extends Instruction
+case class While(booleanLogic:BooleanLogic, blockStatements:List[Instruction]) extends Instruction
 case class Push(expression:Expression) extends Instruction
+case class Paint(expression:Expression) extends Instruction
 
 sealed abstract class Expression() 
  case class Constant(value:Int) extends Expression

@@ -45,9 +45,11 @@ class Evaluator(environment:Environment) {
       if (!state.stopped) {
         instruction match {
         	case Forward(expression) => 
-        		if (environment.canMoveForward(state)) {
-        			moveForward(evaluate(expression, state), state)
-        			environment.postMoveForward(state)
+        	    var distance = Math.abs(evaluate(expression, state))
+        		while (!state.stopped && distance > 0 && environment.canMoveForward(state)) {
+        				moveForward(state)
+        				environment.postMoveForward(state)
+        				distance = distance - 1
         		}
         	case TurnRight() 	  => turnRight(state)
         	case TurnLeft() 	  => turnLeft(state)
@@ -62,15 +64,18 @@ class Evaluator(environment:Environment) {
         		while (!state.stopped && evaluate(booleanExpression, state)) {
         			evaluate(blockStatements, state)
         		}
+            case Paint(expression) => paint(evaluate(expression, state), state)
         }
      }
   }
   
-  def moveForward(distance:Int, state:State) = state.moveForward(distance)
+  def moveForward(state:State) = state.moveForward()
   
   def turnRight(state:State) = state.turnRight()
   
   def turnLeft(state:State) = state.turnLeft()
+  
+  def paint(color:Int, state:State) = environment.paint(color, state)
   
 
 }
