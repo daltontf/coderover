@@ -8,7 +8,7 @@ class Evaluator(environment:Environment) {
       }
   }
   
-  final def evaluate(expression:Expression, state:State):Int = {
+  private[coderover] final def evaluate(expression:Expression, state:State):Int = {
     expression match {
       case Constant(x)           => x
       case Add(left, right) 	 => evaluate(left, state) + evaluate(right, state)
@@ -28,8 +28,9 @@ class Evaluator(environment:Environment) {
     }
   }
   
-  final def evaluate(booleanExpression:BooleanLogic, state:State):Boolean = {
+   private[coderover] final def evaluate(booleanExpression:BooleanExpression, state:State):Boolean = {
 	  booleanExpression match {
+        case IsPainted(x, y)             => environment.isPainted(evaluate(x, state), evaluate(y, state))
 	    case And(left, right) 				 => (evaluate(left, state) && evaluate(right, state))
         case Or(left, right) 				 => (evaluate(left, state) || evaluate(right, state)) 
         case Equal(left, right) 			 =>  (evaluate(left, state) == evaluate(right, state))
@@ -41,7 +42,7 @@ class Evaluator(environment:Environment) {
 	  }
   }
   
-  final def evaluate(instruction:Instruction, state:State) {
+  private[coderover] final def evaluate(instruction:Instruction, state:State) {
       if (!state.stopped) {
         instruction match {
         	case Forward(expression) => 

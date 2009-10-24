@@ -31,6 +31,12 @@
 			<artifactId>scala-library</artifactId>
 			<version>${scala.version}</version>
 		</dependency>
+        <dependency>
+			<groupId>org.scala-lang</groupId>
+            <artifactId>scala-compiler</artifactId>
+			<version>${scala.version}</version>
+            <scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -89,7 +95,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<mainClass>tfd.logo.Main</mainClass>
+					<mainClass>tfd.coderover.Main</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>

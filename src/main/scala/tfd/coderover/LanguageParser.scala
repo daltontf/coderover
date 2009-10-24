@@ -24,6 +24,10 @@ object LanguageParser extends JavaTokenParsers {
     case "MAX"~_~parm1~_~parm2 => Max(parm1, parm2)
     case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
   }
+
+  def arityTwoBoolean:Parser[BooleanExpression] = ("ISPAINTED") ~ "(" ~ functionParameter ~ "," ~ functionParameter <~ ")" ^^ {
+    case "ISPAINTED"~_~parm1~_~parm2 => IsPainted(parm1, parm2)
+ }
   
   def function:Parser[Expression] = ("POP"|"TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY") ^^ {
     	case "POP" => Pop()
@@ -45,9 +49,9 @@ object LanguageParser extends JavaTokenParsers {
          case left~">"~right 	=> GreaterThan(left, right)
     }     			  
   
-  def nestedBoolean:Parser[BooleanLogic] = "(" ~> (comparison | logical) <~ ")"
+  def nestedBoolean:Parser[BooleanExpression] = "(" ~> (comparison | logical | arityTwoBoolean ) <~ ")"
   
-  def logical:Parser[BooleanLogic] = nestedBoolean ~ ("OR" | "AND") ~ nestedBoolean ^^ { 
+  def logical:Parser[BooleanExpression] = nestedBoolean ~ ("OR" | "AND") ~ nestedBoolean ^^ {
     	case left~"OR"~right => Or(left, right)
     	case left~"AND"~right => And(left, right) 
   	}  
@@ -80,7 +84,10 @@ object LanguageParser extends JavaTokenParsers {
   
   def left:Parser[TurnLeft] = "LEFT" ^^ { _ => TurnLeft() }
   
-  def paint:Parser[Paint] = "PAINT"~> expression ^^ { x:Expression => Paint(x)}
+  def paint:Parser[Paint] = "PAINT"~> opt(expression) ^^ {
+    case Some(expression) => Paint(expression)
+    case None => Paint(Constant(0))
+  }
   
   def instruction:Parser[Instruction] = forward | right | left | paint | ifStatement | whileStatement | push
   

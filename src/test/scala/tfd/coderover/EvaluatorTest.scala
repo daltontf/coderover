@@ -24,7 +24,7 @@ class EvaluatorTest extends TestCase {
     assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, State(0,0,0)))
   }
   
-   private def executeBooleanLogicTest(stringInput:String, expectedBooleanLogic:BooleanLogic, expectedBoolean:Boolean) {
+   private def executeBooleanLogicTest(stringInput:String, expectedBooleanLogic:BooleanExpression, expectedBoolean:Boolean) {
     val ast = parseAll(nestedBoolean, stringInput).get
     assertEquals(expectedBooleanLogic, ast)
     assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, State(0,0,0)))
@@ -252,6 +252,23 @@ class EvaluatorTest extends TestCase {
     assertEquals((2,2,1), environment.paintedTuples(0))
     evaluator.evaluate(parse("PAINT (1 + 2)").get, new State(4, 4, 0))
     assertEquals((4,4,3), environment.paintedTuples(1))
+    evaluator.evaluate(parse("PAINT").get, new State(5, 5, 0))
+    assertEquals((5,5,0), environment.paintedTuples(2))
+  }
+
+  def testIsPainted() {
+
+    val environment = new Environment {
+    	private val painted = (3, 4)
+
+        override def isPainted(x:Int, y:Int) = (x, y) == painted
+    }
+    val evaluator = new Evaluator(environment)
+    val state = new State(2, 2, 0)
+    evaluator.evaluate(parse("""IF (ISPAINTED(1,2)) { FORWARD }""").get, state)
+    assertEquals(State(2,2,0), state)
+    evaluator.evaluate(parse("""IF (ISPAINTED(3,4)) { FORWARD }""").get, state)
+    assertEquals(State(2,1,0), state)     
   }
   
   def testPopOnEmptyStack() {
