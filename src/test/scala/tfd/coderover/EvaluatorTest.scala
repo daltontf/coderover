@@ -212,7 +212,7 @@ class EvaluatorTest extends TestCase {
   }
     
   def testBoundedEnvironment() {
-    val evaluator = new Evaluator(new BoundedEnvironment(9, 9))
+    val evaluator = new Evaluator(new BoundedEnvironment(10, 10))
 	val state = State(2,2,0)
 	evaluator.evaluate(parse("FORWARD").get, state)
 	assertEquals(State(2,1,0), state)
@@ -269,6 +269,11 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(2,2,0), state)
     evaluator.evaluate(parse("""IF (ISPAINTED(3,4)) { FORWARD }""").get, state)
     assertEquals(State(2,1,0), state)     
+  }
+  
+  def testNot() {
+    executeBooleanLogicTest("(NOT(4 > 3))", Not(GreaterThan(Constant(4), Constant(3))), false)
+	executeBooleanLogicTest("(NOT((1 + 3) <> (0 - -4)))", Not(NotEqual(Add(Constant(1), Constant(3)), Subtract(Constant(0), Constant(-4)))), true)
   }
   
   def testPopOnEmptyStack() {

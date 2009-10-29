@@ -208,4 +208,9 @@ class LanguageParserTest extends TestCase {
                 parse("""WHILE (ISPAINTED(1,2)) { FORWARD }""").get)
 
   }
+  
+    def testNot() {
+	   assertEquals(List((While(Not(IsPainted(Constant(1), Constant(2))), List(Forward(Constant(1)))))),
+                parse("""WHILE (NOT(ISPAINTED(1,2))) { FORWARD }""").get)
+  }
 }

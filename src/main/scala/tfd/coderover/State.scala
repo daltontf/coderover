@@ -58,5 +58,10 @@ case class State(
   def fail(abend:Abend) {
     this.abend = Some(abend)
     stopped = true
-  }  
+  } 
+  
+  def reset() {
+    stopped = false
+    abend = None
+  }
 }

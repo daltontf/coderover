@@ -49,7 +49,9 @@ object LanguageParser extends JavaTokenParsers {
          case left~">"~right 	=> GreaterThan(left, right)
     }     			  
   
-  def nestedBoolean:Parser[BooleanExpression] = "(" ~> (comparison | logical | arityTwoBoolean ) <~ ")"
+  def nestedBoolean:Parser[BooleanExpression] = "(" ~> (comparison | logical | not | arityTwoBoolean ) <~ ")"
+  
+  def not:Parser[BooleanExpression] = "NOT" ~> nestedBoolean ^^ { expression => Not(expression) } 
   
   def logical:Parser[BooleanExpression] = nestedBoolean ~ ("OR" | "AND") ~ nestedBoolean ^^ {
     	case left~"OR"~right => Or(left, right)

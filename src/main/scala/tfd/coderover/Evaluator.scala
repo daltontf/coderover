@@ -30,7 +30,8 @@ class Evaluator(environment:Environment) {
   
    private[coderover] final def evaluate(booleanExpression:BooleanExpression, state:State):Boolean = {
 	  booleanExpression match {
-        case IsPainted(x, y)             => environment.isPainted(evaluate(x, state), evaluate(y, state))
+        case IsPainted(x, y)                 => environment.isPainted(evaluate(x, state), evaluate(y, state))
+        case Not(booleanExpression)		     => !(evaluate(booleanExpression, state))
 	    case And(left, right) 				 => (evaluate(left, state) && evaluate(right, state))
         case Or(left, right) 				 => (evaluate(left, state) || evaluate(right, state)) 
         case Equal(left, right) 			 =>  (evaluate(left, state) == evaluate(right, state))
