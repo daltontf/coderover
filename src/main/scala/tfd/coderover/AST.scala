@@ -31,9 +31,9 @@ sealed abstract class Expression()
 sealed abstract class BooleanExpression()
  case class IsPainted(x:Expression, y:Expression) extends BooleanExpression
  case class Not(booleanExpression:BooleanExpression) extends BooleanExpression
- sealed abstract case class Logical(left:BooleanExpression, right:BooleanExpression) extends BooleanExpression
-  case class Or(override val left:BooleanExpression, override val right:BooleanExpression) extends Logical(left, right)
-  case class And(override val left:BooleanExpression, override val right:BooleanExpression) extends Logical(left, right)
+ sealed abstract case class Logical() extends BooleanExpression
+  case class Or(val expressions:List[BooleanExpression])extends Logical
+  case class And(val expressions:List[BooleanExpression]) extends Logical
  sealed abstract case class Comparison(left:Expression, right:Expression) extends BooleanExpression
   case class LessThan(override val left:Expression, override val right:Expression) extends Comparison(left, right)
   case class GreaterThan(override val left:Expression, override val right:Expression) extends Comparison(left, right)

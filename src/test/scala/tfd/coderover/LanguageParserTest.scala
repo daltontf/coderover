@@ -36,9 +36,20 @@ class LanguageParserTest extends TestCase {
   }
   
   def testLogical() {
-    assertEquals(And(
+    assertEquals(And(List(
     				Equal(Constant(2),Constant(2)),
-    				NotEqual(Constant(4),Constant(-3))), parseAll(logical, "(2 = 2) AND (4 <> -3)").get)
+    				NotEqual(Constant(4),Constant(-3)))), parseAll(logical, "(2 = 2) AND (4 <> -3)").get)
+    assertEquals(Or(List(
+    				Equal(Constant(2),Constant(3)),
+    				NotEqual(Constant(4),Constant(-3)))), parseAll(logical, "(2 = 3) OR (4 <> -3)").get)
+    assertEquals(And(List(
+    				Equal(Constant(2),Constant(2)),
+    				NotEqual(Constant(4),Constant(-3)),
+    				LessThan(Constant(4),Constant(3)))), parseAll(logical, "(2 = 2) AND (4 <> -3) AND (4 < 3)").get)
+    assertEquals(Or(List(
+    				Equal(Constant(2),Constant(2)),
+    				NotEqual(Constant(4),Constant(-3)),
+    				LessThan(Constant(4),Constant(3)))), parseAll(logical, "(2 = 2) OR (4 <> -3) OR (4 < 3)").get)
   }
   
   def testSingleForward() {
@@ -120,9 +131,9 @@ class LanguageParserTest extends TestCase {
   def testLogicalComparisonAndMathematical() {
 	  assertEquals(List(
 	  				If(
-	  					And(
+	  					And(List(
 	  						GreaterThan(Constant(1), Constant(-1)), 
-	  						NotEqual(Constant(-3),Add(Constant(2), Constant(-2)))),
+	  						NotEqual(Constant(-3),Add(Constant(2), Constant(-2))))),
 	  					List(TurnLeft(), Forward(Add(Constant(1), Constant(2))), TurnRight()), Nil)), parse(
     		"""|
     		   |IF ((1 > -1) AND (-3 <> (2 + -2))) { 

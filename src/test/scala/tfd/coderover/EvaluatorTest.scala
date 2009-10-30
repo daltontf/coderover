@@ -84,6 +84,19 @@ class EvaluatorTest extends TestCase {
  def testBooleanLogic() {
 	 executeBooleanLogicTest("((1 + 3) = (0 - -4))", Equal(Add(Constant(1), Constant(3)), Subtract(Constant(0), Constant(-4))), true)
 	 executeBooleanLogicTest("((1 + 3) <> (0 - -4))", NotEqual(Add(Constant(1), Constant(3)), Subtract(Constant(0), Constant(-4))), false)
+	 executeBooleanLogicTest("((2 > 3) OR (4 > 3))", Or(List(GreaterThan(Constant(2), Constant(3)), GreaterThan(Constant(4), Constant(3)))), true)
+     executeBooleanLogicTest("((2 > 3) OR (4 > 5))", Or(List(GreaterThan(Constant(2), Constant(3)), GreaterThan(Constant(4), Constant(5)))), false)
+     executeBooleanLogicTest("((4 > 3) AND (5 > 3))", And(List(GreaterThan(Constant(4), Constant(3)), GreaterThan(Constant(5), Constant(3)))), true)
+     executeBooleanLogicTest("((2 > 3) AND (5 > 3))", And(List(GreaterThan(Constant(2), Constant(3)), GreaterThan(Constant(5), Constant(3)))), false)
+     executeBooleanLogicTest("((2 > 3) OR (4 > 3) OR (2 < 1))", Or(List(GreaterThan(Constant(2), Constant(3)),
+                                                                        GreaterThan(Constant(4), Constant(3)),
+     																	LessThan(Constant(2), Constant(1)))), true)
+     executeBooleanLogicTest("((2 > 3) OR (4 > 5) OR (2 < 1))", Or(List(GreaterThan(Constant(2), Constant(3)),
+                                                                        GreaterThan(Constant(4), Constant(5)),
+     																	LessThan(Constant(2), Constant(1)))), false)
+     executeBooleanLogicTest("((4 > 3) AND (5 > 3) AND (1 < 2))", And(List(GreaterThan(Constant(4), Constant(3)),
+                                                                           GreaterThan(Constant(5), Constant(3)),
+                                                                           LessThan(Constant(1), Constant(2)))), true)
  } 
  
  def testSimple() {

@@ -53,10 +53,15 @@ object LanguageParser extends JavaTokenParsers {
   
   def not:Parser[BooleanExpression] = "NOT" ~> nestedBoolean ^^ { expression => Not(expression) } 
   
-  def logical:Parser[BooleanExpression] = nestedBoolean ~ ("OR" | "AND") ~ nestedBoolean ^^ {
-    	case left~"OR"~right => Or(left, right)
-    	case left~"AND"~right => And(left, right) 
-  	}  
+  def logical:Parser[BooleanExpression] = logicalOr | logicalAnd
+  
+  def logicalOr = (nestedBoolean ~ "OR" ~ rep1sep(nestedBoolean, "OR")) ^^ {
+    case head~"OR"~tail => Or(head :: tail)
+  } 
+  
+   def logicalAnd = (nestedBoolean ~ "AND" ~ rep1sep(nestedBoolean, "AND")) ^^ {
+    case head~"AND"~tail => And(head :: tail)
+  }
   
   def elseBlock:Parser[List[Instruction]] = "ELSE" ~ "{" ~> rep(instruction) <~ "}"
   
