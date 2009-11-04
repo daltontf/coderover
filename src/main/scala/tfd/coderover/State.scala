@@ -44,12 +44,14 @@ case class State(
   				 0
   			  }
   
-  def top() = if (!stack.isEmpty) {
+  def top = if (!stack.isEmpty) {
 	  			 stack.top
   			  } else {
   				 fail(IllegalOperationOnEmptyStack)
   				 0
   			  }
+  
+  def depth = stack.size 
   
   def deltaX = DIRECTIONS(directionIndex)._1
   

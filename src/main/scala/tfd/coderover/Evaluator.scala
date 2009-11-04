@@ -11,17 +11,17 @@ class Evaluator(environment:Environment) {
   private[coderover] final def evaluate(expression:Expression, state:State):Int = {
     expression match {
       case Constant(x)           => x
-      case Add(left, right) 	 => evaluate(left, state) + evaluate(right, state)
-      case Subtract(left, right) => evaluate(left, state) - evaluate(right, state)
-      case Multiply(left, right) => evaluate(left, state) * evaluate(right, state)
-      case Divide(left, right)   => evaluate(left, state) / evaluate(right, state)
-      case Modulus(left, right)  => evaluate(left, state) % evaluate(right, state)
-      case Pop() 				 => state.pop()
+      case Add(expressionList) 	 	 => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ + evaluate(_,state) }
+      case Subtract(expressionList)  => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ - evaluate(_,state) }
+      case Multiply(expressionList)  => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ * evaluate(_,state) }
+      case Divide(expressionList)    => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ / evaluate(_,state) }
+      case Modulus(expressionList)	 => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ % evaluate(_,state) }
       case Top() 				 => state.top
       case GridX() 				 => state.gridX
       case GridY() 				 => state.gridY
       case DeltaX() 			 => state.deltaX
       case DeltaY() 			 => state.deltaY
+      case Depth()				 => state.depth
       case Abs(expr) 			 => Math.abs(evaluate(expr,  state))
       case Max(expr1, expr2) 	 => Math.max(evaluate(expr1, state), evaluate(expr2, state))
       case Min(expr1, expr2) 	 => Math.min(evaluate(expr1, state), evaluate(expr2, state))
@@ -56,6 +56,12 @@ class Evaluator(environment:Environment) {
         	case TurnRight() 	  => turnRight(state)
         	case TurnLeft() 	  => turnLeft(state)
         	case Push(expression) => state.push(evaluate(expression, state))
+            case Pop() 			  => state.pop()
+            case Replace(expression) => {
+            	val evaluated = evaluate(expression, state)
+            	state.pop()
+            	state.push(evaluated)
+            }
         	case If(booleanExpression, thenStatements, elseStatements) => 
         		if (evaluate(booleanExpression, state)) {
         			evaluate(thenStatements, state)

@@ -18,12 +18,12 @@ class LanguageParserTest extends TestCase {
   }
   
   def testMathematical() {
-    assertEquals(Add(Constant(1), Constant(-1)), parseAll(mathematical, "1 + -1").get)
-    assertEquals(Subtract(Constant(1), Constant(-1)), parseAll(mathematical, "1 - -1").get)
-    assertEquals(Subtract(Add(Constant(-1),Constant(2)),Constant(3)), parseAll(mathematical, "(-1 + 2) - 3").get)
-    assertEquals(Multiply(Constant(4), Constant(5)), parseAll(mathematical, "4 * 5").get)
-    assertEquals(Divide(Constant(10), Constant(3)), parseAll(mathematical, "10 / 3").get)
-    assertEquals(Modulus(Constant(10), Constant(3)), parseAll(mathematical, "10 % 3").get)
+    assertEquals(Add(List(Constant(1), Constant(-1))), parseAll(mathematical, "1 + -1").get)
+    assertEquals(Subtract(List(Constant(1), Constant(-1))), parseAll(mathematical, "1 - -1").get)
+    assertEquals(Subtract(List(Add(List(Constant(-1),Constant(2))),Constant(3))), parseAll(mathematical, "(-1 + 2) - 3").get)
+    assertEquals(Multiply(List(Constant(4), Constant(5))), parseAll(mathematical, "4 * 5").get)
+    assertEquals(Divide(List(Constant(10), Constant(3))), parseAll(mathematical, "10 / 3").get)
+    assertEquals(Modulus(List(Constant(10), Constant(3))), parseAll(mathematical, "10 % 3").get)
   }
   
   def testComparison() {
@@ -133,8 +133,8 @@ class LanguageParserTest extends TestCase {
 	  				If(
 	  					And(List(
 	  						GreaterThan(Constant(1), Constant(-1)), 
-	  						NotEqual(Constant(-3),Add(Constant(2), Constant(-2))))),
-	  					List(TurnLeft(), Forward(Add(Constant(1), Constant(2))), TurnRight()), Nil)), parse(
+	  						NotEqual(Constant(-3),Add(List(Constant(2), Constant(-2)))))),
+	  					List(TurnLeft(), Forward(Add(List(Constant(1), Constant(2)))), TurnRight()), Nil)), parse(
     		"""|
     		   |IF ((1 > -1) AND (-3 <> (2 + -2))) { 
     		   | LEFT
@@ -152,20 +152,29 @@ class LanguageParserTest extends TestCase {
   
   def testPush() {
 	  assertEquals(List(Push(Constant(1))), parse("""PUSH 1""").get)
-	  assertEquals(List(Push(Add(Constant(1), Constant(2)))), parse("""PUSH (1+2)""").get)
-      assertEquals(List(Push(Subtract(Constant(8), GridX()))), parse("""PUSH (8 - GRIDX)""").get)
+	  assertEquals(List(Push(Add(List(Constant(1), Constant(2))))), parse("""PUSH (1+2)""").get)
+      assertEquals(List(Push(Subtract(List(Constant(8), GridX())))), parse("""PUSH (8 - GRIDX)""").get)
   }
   
   def testPop() {
-	  assertEquals(List(If(GreaterThan(Pop(), Constant(1)), List(), Nil)), 
-                parse("""|IF (POP > 1) {
-		  			     |}""".stripMargin).get)
+	  assertEquals(List(Push(Constant(1)), Pop()), parse("""|PUSH 1
+    										                |POP""".stripMargin).get)
+  }
+  
+  def testReplace() {
+	  assertEquals(List(Push(Constant(1)), Replace(Multiply(List(Top(), Constant(2))))),
+                parse("""|PUSH 1
+    			         |REPLACE (TOP * 2)""".stripMargin).get)
   }
   
   def testTop() {
 	  assertEquals(List(If(LessThanOrEqual(Top(), Constant(-1)), List(), Nil)), 
                 parse("""|IF (TOP <= -1) {
 		  			     |}""".stripMargin).get)
+  }
+  
+  def testDepth() {
+	  assertEquals(List(Push(Add(List(Depth(), Constant(1))))), parse("""PUSH (DEPTH + 1)""").get)
   }
   
   def testGridX() {
@@ -210,7 +219,7 @@ class LanguageParserTest extends TestCase {
   
   def testPaint() {
     assertEquals(List(Paint(Constant(1))), parse("PAINT 1").get)
-    assertEquals(List(Paint(Add(Constant(1), Constant(2)))), parse("PAINT (1 + 2)").get)
+    assertEquals(List(Paint(Add(List(Constant(1), Constant(2))))), parse("PAINT (1 + 2)").get)
     assertEquals(List(Paint(Constant(0))), parse("PAINT").get)
   }
 

@@ -4,17 +4,20 @@ import scala.util.parsing.combinator.JavaTokenParsers
 
 object LanguageParser extends JavaTokenParsers {
   
-  def expression:Parser[Expression] = "(" ~> mathematical <~ ")" | function | arityTwoFunction | arityOneFunction | constant 
+  def expression:Parser[Expression] = "(" ~> mathematical <~ ")" | arityNoneFunction | arityOneFunction | arityTwoFunction | constant 
   
-  def mathematical:Parser[Mathematical] = expression ~ ("+"|"-"|"*"|"/"|"%") ~ expression ^^ {
-    case left~"+"~right => Add(left, right)
-    case left~"-"~right => Subtract(left, right)
-    case left~"*"~right => Multiply(left, right)
-    case left~"/"~right => Divide(left, right) 
-    case left~"%"~right => Modulus(left, right)
-  }
+  def mathematical:Parser[Mathematical] = mathematical("+", (head:Expression, tail:List[Expression]) => Add(head :: tail)) |
+    								 	  mathematical("-", (head:Expression, tail:List[Expression]) => Subtract(head :: tail)) |
+    								 	  mathematical("*", (head:Expression, tail:List[Expression]) => Multiply(head :: tail)) |
+    								 	  mathematical("/", (head:Expression, tail:List[Expression]) => Divide(head :: tail)) |
+    								 	  mathematical("%", (head:Expression, tail:List[Expression]) => Modulus(head :: tail))
   
-  def functionParameter = (mathematical | function | arityTwoFunction | arityOneFunction | constant)
+  def mathematical(sign:String, f:(Expression, List[Expression]) => Mathematical) =
+    (expression ~ sign ~ rep1sep(expression, sign)) ^^ {
+      case head~sign~tail => f(head, tail)
+    }
+  
+  def functionParameter = (mathematical | arityNoneFunction | arityOneFunction |arityTwoFunction | constant)
   
   def arityOneFunction:Parser[Expression] = "ABS" ~ "(" ~ functionParameter <~ ")" ^^ {
     case "ABS"~_~parm => Abs(parm)
@@ -29,13 +32,13 @@ object LanguageParser extends JavaTokenParsers {
     case "ISPAINTED"~_~parm1~_~parm2 => IsPainted(parm1, parm2)
  }
   
-  def function:Parser[Expression] = ("POP"|"TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY") ^^ {
-    	case "POP" => Pop()
+  def arityNoneFunction:Parser[Expression] = ("TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY"|"DEPTH") ^^ {
     	case "TOP" => Top()
     	case "GRIDX" => GridX()
         case "GRIDY" => GridY()
         case "DELTAX" => DeltaX()
         case "DELTAY" => DeltaY()
+        case "DEPTH" => Depth()
   }
    
   def constant:Parser[Constant] = wholeNumber ^^ { x => Constant(x.toInt) } 
@@ -87,6 +90,8 @@ object LanguageParser extends JavaTokenParsers {
   
   def push:Parser[Push] = "PUSH"~> expression ^^ { x:Expression => Push(x)}
   
+  def pop:Parser[Pop] = "POP" ^^ { _ => Pop() }
+  
   def right:Parser[TurnRight] = "RIGHT" ^^ { _ => TurnRight() }
   
   def left:Parser[TurnLeft] = "LEFT" ^^ { _ => TurnLeft() }
@@ -96,7 +101,13 @@ object LanguageParser extends JavaTokenParsers {
     case None => Paint(Constant(0))
   }
   
-  def instruction:Parser[Instruction] = forward | right | left | paint | ifStatement | whileStatement | push
+  def replace:Parser[Replace] = "REPLACE"~>expression ^^ { x:Expression => Replace(x) }
+    
+  def command:Parser[Instruction] = forward | right | left | paint | push | pop | replace
+  
+  def controlFlow:Parser[Instruction] = ifStatement | whileStatement
+  
+  def instruction:Parser[Instruction] = command  | controlFlow
   
   def program = rep(instruction)
   

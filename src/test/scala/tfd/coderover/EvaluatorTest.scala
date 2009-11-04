@@ -43,22 +43,30 @@ class EvaluatorTest extends TestCase {
  }
   
  def testMathematical() {
-      executeMathematicalTest("2 + 2", Add(Constant(2), Constant(2)), 4)
-      executeMathematicalTest("2 + -2", Add(Constant(2), Constant(-2)), 0)
-      executeMathematicalTest("-2 + 2", Add(Constant(-2), Constant(2)), 0)
-      executeMathematicalTest("-2 + -2", Add(Constant(-2), Constant(-2)), -4)
+      executeMathematicalTest("2 + 2", Add(List(Constant(2), Constant(2))), 4)
+      executeMathematicalTest("2 + -2", Add(List(Constant(2), Constant(-2))), 0)
+      executeMathematicalTest("-2 + 2", Add(List(Constant(-2), Constant(2))), 0)
+      executeMathematicalTest("-2 + -2", Add(List(Constant(-2), Constant(-2))), -4)
+      executeMathematicalTest("1 + -2 + -3", Add(List(Constant(1), Constant(-2), Constant(-3))), -4)
       
-      executeMathematicalTest("2 - 2", Subtract(Constant(2), Constant(2)), 0)
-      executeMathematicalTest("2 - -2", Subtract(Constant(2), Constant(-2)), 4)
-      executeMathematicalTest("-2 - 2", Subtract(Constant(-2), Constant(2)), -4)
-      executeMathematicalTest("-2 - -2", Subtract(Constant(-2), Constant(-2)), 0)
+      executeMathematicalTest("2 - 2", Subtract(List(Constant(2), Constant(2))), 0)
+      executeMathematicalTest("2 - -2", Subtract(List(Constant(2), Constant(-2))), 4)
+      executeMathematicalTest("-2 - 2", Subtract(List(Constant(-2), Constant(2))), -4)
+      executeMathematicalTest("-2 - -2", Subtract(List(Constant(-2), Constant(-2))), 0)
+      executeMathematicalTest("-2 - -2 - 3", Subtract(List(Constant(-2), Constant(-2), Constant(3))), -3)
       
-      executeMathematicalTest("(2 - 3) + 4", Add(Subtract(Constant(2), Constant(3)), Constant(4)), 3)
-      executeMathematicalTest("2 - (3 + 4)", Subtract(Constant(2), Add(Constant(3), Constant(4))), -5)
+      executeMathematicalTest("-2 * -2 * 3", Multiply(List(Constant(-2), Constant(-2), Constant(3))), 12)
       
-      executeMathematicalTest("(2 * 3) - 4", Subtract(Multiply(Constant(2), Constant(3)), Constant(4)), 2)
-      executeMathematicalTest("2 - (10 / 3)", Subtract(Constant(2), Divide(Constant(10), Constant(3))), -1)
-      executeMathematicalTest("4 + (10 % 3)", Add(Constant(4), Modulus(Constant(10), Constant(3))), 5)
+      executeMathematicalTest("24 / 2 / 3", Divide(List(Constant(24), Constant(2), Constant(3))), 4)
+      
+      executeMathematicalTest("24 % 5 % 3", Modulus(List(Constant(24), Constant(5), Constant(3))), 1)
+      
+      executeMathematicalTest("(2 - 3) + 4", Add(List(Subtract(List(Constant(2), Constant(3))), Constant(4))), 3)
+      executeMathematicalTest("2 - (3 + 4)", Subtract(List(Constant(2), Add(List(Constant(3), Constant(4))))), -5)
+      
+      executeMathematicalTest("(2 * 3) - 4", Subtract(List(Multiply(List(Constant(2), Constant(3))), Constant(4))), 2)
+      executeMathematicalTest("2 - (10 / 3)", Subtract(List(Constant(2), Divide(List(Constant(10), Constant(3))))), -1)
+      executeMathematicalTest("4 + (10 % 3)", Add(List(Constant(4), Modulus(List(Constant(10), Constant(3))))), 5)
  } 
  
  def testComparison() {
@@ -82,8 +90,8 @@ class EvaluatorTest extends TestCase {
  }
  
  def testBooleanLogic() {
-	 executeBooleanLogicTest("((1 + 3) = (0 - -4))", Equal(Add(Constant(1), Constant(3)), Subtract(Constant(0), Constant(-4))), true)
-	 executeBooleanLogicTest("((1 + 3) <> (0 - -4))", NotEqual(Add(Constant(1), Constant(3)), Subtract(Constant(0), Constant(-4))), false)
+	 executeBooleanLogicTest("((1 + 3) = (0 - -4))", Equal(Add(List(Constant(1), Constant(3))), Subtract(List(Constant(0), Constant(-4)))), true)
+	 executeBooleanLogicTest("((1 + 3) <> (0 - -4))", NotEqual(Add(List(Constant(1), Constant(3))), Subtract(List(Constant(0), Constant(-4)))), false)
 	 executeBooleanLogicTest("((2 > 3) OR (4 > 3))", Or(List(GreaterThan(Constant(2), Constant(3)), GreaterThan(Constant(4), Constant(3)))), true)
      executeBooleanLogicTest("((2 > 3) OR (4 > 5))", Or(List(GreaterThan(Constant(2), Constant(3)), GreaterThan(Constant(4), Constant(5)))), false)
      executeBooleanLogicTest("((4 > 3) AND (5 > 3))", And(List(GreaterThan(Constant(4), Constant(3)), GreaterThan(Constant(5), Constant(3)))), true)
@@ -157,15 +165,19 @@ class EvaluatorTest extends TestCase {
     val state = State(2,2,0)
     new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (1+2)").get, state)
     assertEquals(3, state.top)
-    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (POP + 1)").get, state)
+    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (TOP + 1)").get, state)
     assertEquals(4, state.top)
+    new Evaluator(DefaultEnvironment).evaluate(parse("POP").get, state)
+    assertEquals(3, state.top)
+    new Evaluator(DefaultEnvironment).evaluate(parse("REPLACE (TOP * 2)").get, state)
+    assertEquals(6, state.top)
   }
   
   def testWhileStack() {
     val state = State(2,2,0)
     new Evaluator(DefaultEnvironment).evaluate(parse("""|PUSH 10
     				  |WHILE (TOP > 3) {
-    			      |  PUSH(POP - 1)
+    			      |  REPLACE (TOP - 1)
                       |}""".stripMargin).get, state)
     assertEquals(3, state.top)
   }
@@ -209,7 +221,7 @@ class EvaluatorTest extends TestCase {
   def testAbs() {
     executeExpressionTest("ABS(-1)", Abs(Constant(-1)), 1) 
     executeExpressionTest("ABS(1)", Abs(Constant(1)), 1) 
-    executeExpressionTest("ABS(3-5)", Abs(Subtract(Constant(3), Constant(5))), 2) 
+    executeExpressionTest("ABS(3-5)", Abs(Subtract(List(Constant(3), Constant(5)))), 2) 
   }
   
   def testMax() {
@@ -286,13 +298,13 @@ class EvaluatorTest extends TestCase {
   
   def testNot() {
     executeBooleanLogicTest("(NOT(4 > 3))", Not(GreaterThan(Constant(4), Constant(3))), false)
-	executeBooleanLogicTest("(NOT((1 + 3) <> (0 - -4)))", Not(NotEqual(Add(Constant(1), Constant(3)), Subtract(Constant(0), Constant(-4)))), true)
+	executeBooleanLogicTest("(NOT((1 + 3) <> (0 - -4)))", Not(NotEqual(Add(List(Constant(1), Constant(3))), Subtract(List(Constant(0), Constant(-4))))), true)
   }
   
   def testPopOnEmptyStack() {
     val state = new State(2,2,0)
     val evaluator = new Evaluator(DefaultEnvironment)
-    evaluator.evaluate(parse("PUSH POP").get, state)
+    evaluator.evaluate(parse("POP").get, state)
     assertEquals(Some(IllegalOperationOnEmptyStack), state.abend)
   }
   
