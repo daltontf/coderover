@@ -22,6 +22,7 @@ sealed abstract class Expression()
  case class Abs(expression:Expression) extends Expression
  case class Max(expression1:Expression, expression2:Expression) extends Expression
  case class Min(expression1:Expression, expression2:Expression) extends Expression
+ case class Negate(expression:Expression) extends Expression
  
  sealed abstract case class Mathematical(expressions:List[Expression]) extends Expression
   case class Add(override val expressions:List[Expression]) extends Mathematical(expressions)

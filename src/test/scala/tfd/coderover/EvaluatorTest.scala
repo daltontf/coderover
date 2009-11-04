@@ -67,7 +67,11 @@ class EvaluatorTest extends TestCase {
       executeMathematicalTest("(2 * 3) - 4", Subtract(List(Multiply(List(Constant(2), Constant(3))), Constant(4))), 2)
       executeMathematicalTest("2 - (10 / 3)", Subtract(List(Constant(2), Divide(List(Constant(10), Constant(3))))), -1)
       executeMathematicalTest("4 + (10 % 3)", Add(List(Constant(4), Modulus(List(Constant(10), Constant(3))))), 5)
- } 
+  } 
+ 
+ def testExpression() {
+   executeExpressionTest("-(2 + 2)", Negate(Add(List(Constant(2), Constant(2)))), -4)
+ }
  
  def testComparison() {
    executeComparisonTest("2 = 2", Equal(Constant(2), Constant(2)), true)
@@ -222,18 +226,21 @@ class EvaluatorTest extends TestCase {
     executeExpressionTest("ABS(-1)", Abs(Constant(-1)), 1) 
     executeExpressionTest("ABS(1)", Abs(Constant(1)), 1) 
     executeExpressionTest("ABS(3-5)", Abs(Subtract(List(Constant(3), Constant(5)))), 2) 
+    executeExpressionTest("-ABS(3-5)", Negate(Abs(Subtract(List(Constant(3), Constant(5))))), -2) 
   }
   
   def testMax() {
     executeExpressionTest("MAX(1, 2)", Max(Constant(1), Constant(2)), 2)
     executeExpressionTest("MAX(1, -2)", Max(Constant(1), Constant(-2)), 1)
     executeExpressionTest("MAX(-1, -2)", Max(Constant(-1), Constant(-2)), -1)
+    executeExpressionTest("-MAX(-1, -2)", Negate(Max(Constant(-1), Constant(-2))), 1)
   }
   
   def testMin() {
     executeExpressionTest("MIN(1, 2)", Min(Constant(1), Constant(2)), 1)
     executeExpressionTest("MIN(1, -2)", Min(Constant(1), Constant(-2)), -2)
     executeExpressionTest("MIN(-1, -2)", Min(Constant(-1), Constant(-2)), -2)
+    executeExpressionTest("-MIN(-1, -2)", Negate(Min(Constant(-1), Constant(-2))), 2)
   }
     
   def testBoundedEnvironment() {

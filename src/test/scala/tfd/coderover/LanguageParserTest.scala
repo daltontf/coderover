@@ -15,6 +15,8 @@ class LanguageParserTest extends TestCase {
   
   def testExpression() {
     assertEquals(Constant(1), parseAll(expression, "1").get)
+    assertEquals(Constant(-1), parseAll(expression, "-1").get)
+    assertEquals(Negate(Add(List(Constant(1), Constant(2)))), parseAll(expression, "-(1+2)").get)
   }
   
   def testMathematical() {

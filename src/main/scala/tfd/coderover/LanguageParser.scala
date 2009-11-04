@@ -4,7 +4,11 @@ import scala.util.parsing.combinator.JavaTokenParsers
 
 object LanguageParser extends JavaTokenParsers {
   
-  def expression:Parser[Expression] = "(" ~> mathematical <~ ")" | arityNoneFunction | arityOneFunction | arityTwoFunction | constant 
+  def expression:Parser[Expression] = negatableExpression | negatedExpression | constant
+  
+  def negatableExpression:Parser[Expression] = "(" ~> mathematical <~ ")" | arityNoneFunction | arityOneFunction | arityTwoFunction
+  
+  def negatedExpression:Parser[Expression] = "-"~>negatableExpression ^^ { expression => Negate(expression) } 
   
   def mathematical:Parser[Mathematical] = mathematical("+", (head:Expression, tail:List[Expression]) => Add(head :: tail)) |
     								 	  mathematical("-", (head:Expression, tail:List[Expression]) => Subtract(head :: tail)) |

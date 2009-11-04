@@ -25,6 +25,7 @@ class Evaluator(environment:Environment) {
       case Abs(expr) 			 => Math.abs(evaluate(expr,  state))
       case Max(expr1, expr2) 	 => Math.max(evaluate(expr1, state), evaluate(expr2, state))
       case Min(expr1, expr2) 	 => Math.min(evaluate(expr1, state), evaluate(expr2, state))
+      case Negate(expr)			 => -evaluate(expr, state)
     }
   }
   
