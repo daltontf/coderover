@@ -28,8 +28,8 @@ object LanguageParser extends JavaTokenParsers {
     case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
   }
 
-  def arityTwoBoolean:Parser[BooleanExpression] = ("ISPAINTED") ~ "(" ~ functionParameter ~ "," ~ functionParameter <~ ")" ^^ {
-    case "ISPAINTED"~_~parm1~_~parm2 => IsPainted(parm1, parm2)
+  def arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED") ~ "(" ~ functionParameter ~ "," ~ functionParameter <~ ")" ^^ {
+    case "PAINTED"~_~parm1~_~parm2 => Painted(parm1, parm2)
  }
   
   def arityNoneFunction:Parser[Expression] = ("TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY"|"DEPTH") ^^ {

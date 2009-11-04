@@ -31,7 +31,7 @@ sealed abstract class Expression()
   case class Modulus(override val expressions:List[Expression]) extends Mathematical(expressions)
 
 sealed abstract class BooleanExpression()
- case class IsPainted(x:Expression, y:Expression) extends BooleanExpression
+ case class Painted(x:Expression, y:Expression) extends BooleanExpression
  case class Not(booleanExpression:BooleanExpression) extends BooleanExpression
  sealed abstract case class Logical() extends BooleanExpression
   case class Or(val expressions:List[BooleanExpression])extends Logical

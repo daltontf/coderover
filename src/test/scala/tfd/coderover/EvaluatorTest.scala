@@ -281,7 +281,7 @@ class EvaluatorTest extends TestCase {
     assertEquals((5,5,0), environment.paintedTuples(2))
   }
 
-  def testIsPainted() {
+  def testPainted() {
 
     val environment = new Environment {
     	private val painted = (3, 4)
@@ -290,9 +290,9 @@ class EvaluatorTest extends TestCase {
     }
     val evaluator = new Evaluator(environment)
     val state = new State(2, 2, 0)
-    evaluator.evaluate(parse("""IF (ISPAINTED(1,2)) { FORWARD }""").get, state)
+    evaluator.evaluate(parse("""IF (PAINTED(1,2)) { FORWARD }""").get, state)
     assertEquals(State(2,2,0), state)
-    evaluator.evaluate(parse("""IF (ISPAINTED(3,4)) { FORWARD }""").get, state)
+    evaluator.evaluate(parse("""IF (PAINTED(3,4)) { FORWARD }""").get, state)
     assertEquals(State(2,1,0), state)     
   }
   

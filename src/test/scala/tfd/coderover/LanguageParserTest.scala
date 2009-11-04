@@ -223,14 +223,14 @@ class LanguageParserTest extends TestCase {
     assertEquals(List(Paint(Constant(0))), parse("PAINT").get)
   }
 
-  def testIsPainted() {
-    assertEquals(List((While(IsPainted(Constant(1), Constant(2)), List(Forward(Constant(1)))))),
-                parse("""WHILE (ISPAINTED(1,2)) { FORWARD }""").get)
+  def testPainted() {
+    assertEquals(List((While(Painted(Constant(1), Constant(2)), List(Forward(Constant(1)))))),
+                parse("""WHILE (PAINTED(1,2)) { FORWARD }""").get)
 
   }
   
     def testNot() {
-	   assertEquals(List((While(Not(IsPainted(Constant(1), Constant(2))), List(Forward(Constant(1)))))),
-                parse("""WHILE (NOT(ISPAINTED(1,2))) { FORWARD }""").get)
+	   assertEquals(List((While(Not(Painted(Constant(1), Constant(2))), List(Forward(Constant(1)))))),
+                parse("""WHILE (NOT(PAINTED(1,2))) { FORWARD }""").get)
   }
 }
