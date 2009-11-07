@@ -321,4 +321,79 @@ class EvaluatorTest extends TestCase {
     evaluator.evaluate(parse("PUSH TOP").get, state)
     assertEquals(Some(IllegalOperationOnEmptyStack), state.abend)
   }
+  
+  def testAdajacent() {
+    val state = new State(2,2,1)
+    val evaluator = new Evaluator(new Environment {
+      override def adjacent(entity:String, state:State) = 
+    	  "ROCK" == entity && ((Math.abs(3 - state.gridX) + Math.abs(3 - state.gridY)) == 1)      
+    })
+    evaluator.evaluate(parse("""IF (ADJACENT(ROCK)) { FORWARD }""").get, state)
+    assertEquals(State(2,2,1), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(FLAG)) { FORWARD }""").get, state)
+    assertEquals(State(2,2,1), state)
+    evaluator.evaluate(parse("""IF (NOT(ADJACENT(ROCK))) { FORWARD }""").get, state)
+    assertEquals(State(3,2,1), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(FLAG)) { FORWARD }""").get, state)
+    assertEquals(State(3,2,1), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(ROCK)) { FORWARD RIGHT }""").get, state)
+    assertEquals(State(4,2,2), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(FLAG)) { FORWARD }""").get, state)
+    assertEquals(State(4,2,2), state)
+    evaluator.evaluate(parse("""IF (NOT(ADJACENT(ROCK))) { FORWARD  }""").get, state)
+    assertEquals(State(4,3,2), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(FLAG)) { FORWARD }""").get, state)
+    assertEquals(State(4,3,2), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(ROCK)) { FORWARD RIGHT }""").get, state)
+    assertEquals(State(4,4,3), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(FLAG)) { FORWARD }""").get, state)
+    assertEquals(State(4,4,3), state)
+    evaluator.evaluate(parse("""IF (NOT(ADJACENT(ROCK))) { FORWARD  }""").get, state)
+    assertEquals(State(3,4,3), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(FLAG)) { FORWARD }""").get, state)
+    assertEquals(State(3,4,3), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(ROCK)) { FORWARD RIGHT }""").get, state)
+    assertEquals(State(2,4,0), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(FLAG)) { FORWARD }""").get, state)
+    assertEquals(State(2,4,0), state)
+    evaluator.evaluate(parse("""IF (NOT(ADJACENT(ROCK))) { FORWARD }""").get, state)
+    assertEquals(State(2,3,0), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(FLAG)) { FORWARD }""").get, state)
+    assertEquals(State(2,3,0), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(ROCK)) { FORWARD }""").get, state)
+    assertEquals(State(2,2,0), state)
+    evaluator.evaluate(parse("""IF (ADJACENT(FLAG)) { FORWARD }""").get, state)
+    assertEquals(State(2,2,0), state)
+  }
+  
+  def testDistances() {
+    val state = new State(2,3,1)
+    val evaluator = new Evaluator(new Environment {
+    	private val entityMap = Map("ROCK" -> (5,5), 
+                                  	"FLAG" -> (1,1))
+      
+        override def distanceX(entity:String, state:State) = if (entityMap.contains(entity)) { Some(entityMap(entity)._1 - state.gridX) } else { None }
+  
+        override def distanceY(entity:String, state:State) = if (entityMap.contains(entity)) { Some(entityMap(entity)._2 - state.gridY) } else { None }
+    })
+    evaluator.evaluate(parse("PUSH DISTANCEX(ROCK)").get, state)
+    assertEquals(3, state.top)
+    assertEquals(false, state.stopped)
+    assertEquals(None, state.abend)
+    evaluator.evaluate(parse("PUSH DISTANCEY(ROCK)").get, state)
+    assertEquals(2, state.top)
+    assertEquals(false, state.stopped)
+    assertEquals(None, state.abend)
+    evaluator.evaluate(parse("PUSH DISTANCEX(FLAG)").get, state)
+    assertEquals(-1, state.top)
+    assertEquals(false, state.stopped)
+    assertEquals(None, state.abend)
+    evaluator.evaluate(parse("PUSH DISTANCEY(FLAG)").get, state)
+    assertEquals(-2, state.top)
+    assertEquals(false, state.stopped)
+    assertEquals(None, state.abend)
+    evaluator.evaluate(parse("PUSH DISTANCEX(FOO)").get, state)
+    assertEquals(true, state.stopped)
+    assertEquals(Some(UnknownEntity("FOO")), state.abend)
+  }
 }

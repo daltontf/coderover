@@ -6,7 +6,7 @@ object LanguageParser extends JavaTokenParsers {
   
   def expression:Parser[Expression] = negatableExpression | negatedExpression | constant
   
-  def negatableExpression:Parser[Expression] = "(" ~> mathematical <~ ")" | arityNoneFunction | arityOneFunction | arityTwoFunction
+  def negatableExpression:Parser[Expression] = "(" ~> mathematical <~ ")" | arityNoneFunction | arityOneFunction | arityTwoFunction | arityOneIdentFunction
   
   def negatedExpression:Parser[Expression] = "-"~>negatableExpression ^^ { expression => Negate(expression) } 
   
@@ -21,20 +21,29 @@ object LanguageParser extends JavaTokenParsers {
       case head~sign~tail => f(head, tail)
     }
   
-  def functionParameter = (mathematical | arityNoneFunction | arityOneFunction |arityTwoFunction | constant)
+  def expressionParameter:Parser[Expression] = mathematical | expression 
   
-  def arityOneFunction:Parser[Expression] = "ABS" ~ "(" ~ functionParameter <~ ")" ^^ {
+  def arityOneFunction:Parser[Expression] = "ABS" ~ "(" ~ expressionParameter <~ ")" ^^ {
     case "ABS"~_~parm => Abs(parm)
   }
   
-  def arityTwoFunction:Parser[Expression] = ("MAX"|"MIN") ~ "(" ~ functionParameter ~ "," ~ functionParameter <~ ")" ^^ {
+  def arityOneIdentFunction:Parser[Expression] = ("DISTANCEX" | "DISTANCEY") ~ "(" ~ ident <~ ")" ^^ {
+    case "DISTANCEX"~_~parm => DistanceX(parm)
+    case "DISTANCEY"~_~parm => DistanceY(parm)
+  }
+  
+  def arityTwoFunction:Parser[Expression] = ("MAX"|"MIN") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
     case "MAX"~_~parm1~_~parm2 => Max(parm1, parm2)
     case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
   }
+  
+  def adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ {
+    	x => Adjacent(x)
+  }
 
-  def arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED") ~ "(" ~ functionParameter ~ "," ~ functionParameter <~ ")" ^^ {
+  def arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
     case "PAINTED"~_~parm1~_~parm2 => Painted(parm1, parm2)
- }
+  }
   
   def arityNoneFunction:Parser[Expression] = ("TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY"|"DEPTH") ^^ {
     	case "TOP" => Top()
@@ -56,7 +65,7 @@ object LanguageParser extends JavaTokenParsers {
          case left~">"~right 	=> GreaterThan(left, right)
     }     			  
   
-  def nestedBoolean:Parser[BooleanExpression] = "(" ~> (comparison | logical | not | arityTwoBoolean ) <~ ")"
+  def nestedBoolean:Parser[BooleanExpression] = "(" ~> (comparison | logical | not | adjacent | arityTwoBoolean ) <~ ")"
   
   def not:Parser[BooleanExpression] = "NOT" ~> nestedBoolean ^^ { expression => Not(expression) } 
   

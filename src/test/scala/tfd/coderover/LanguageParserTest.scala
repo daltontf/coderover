@@ -156,6 +156,7 @@ class LanguageParserTest extends TestCase {
 	  assertEquals(List(Push(Constant(1))), parse("""PUSH 1""").get)
 	  assertEquals(List(Push(Add(List(Constant(1), Constant(2))))), parse("""PUSH (1+2)""").get)
       assertEquals(List(Push(Subtract(List(Constant(8), GridX())))), parse("""PUSH (8 - GRIDX)""").get)
+      assertEquals(List(Push(Negate(Add(List(Constant(1), Constant(2)))))), parse("""PUSH -(1+2)""").get)
   }
   
   def testPop() {
@@ -209,6 +210,8 @@ class LanguageParserTest extends TestCase {
   
   def testAbs() {
     assertEquals(List(Push(Abs(Constant(-1)))), parse("PUSH ABS(-1)").get)
+    assertEquals(List(Push(Negate(Abs(Constant(-1))))), parse("PUSH -ABS(-1)").get)
+    assertEquals(List(Push(Abs(Negate(Add(List(Constant(1), Constant(2), Constant(3))))))), parse("PUSH ABS(-(1 + 2 + 3))").get)
   }
   
   def testMax() {
@@ -234,5 +237,15 @@ class LanguageParserTest extends TestCase {
     def testNot() {
 	   assertEquals(List((While(Not(Painted(Constant(1), Constant(2))), List(Forward(Constant(1)))))),
                 parse("""WHILE (NOT(PAINTED(1,2))) { FORWARD }""").get)
+  }
+    
+  def testAdjacent() {
+	  assertEquals(List(If(Adjacent("MINE"), List(TurnRight()), Nil)), parse("IF (ADJACENT(MINE)) { RIGHT }").get)
+  }
+  
+  def testDistances() {
+	  assertEquals(List(Push(DistanceX("FLAG"))), parse("PUSH DISTANCEX(FLAG)").get)
+	  assertEquals(List(Push(DistanceY("ROCK"))), parse("PUSH DISTANCEY(ROCK)").get)
+	  assertEquals(List(Push(Min(DistanceX("FLAG"), DistanceY("FLAG")))), parse("PUSH MIN(DISTANCEX(FLAG), DISTANCEY(FLAG))").get)
   }
 }

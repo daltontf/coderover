@@ -8,6 +8,14 @@ class Evaluator(environment:Environment) {
       }
   }
   
+  private[this] final def processDistance(distance:Option[Int], entity:String, state:State) = 
+    if (distance == None) { 
+    	state.fail(new UnknownEntity(entity))
+        0
+    } else {
+        distance.get
+    }    
+  
   private[coderover] final def evaluate(expression:Expression, state:State):Int = {
     expression match {
       case Constant(x)           => x
@@ -26,6 +34,8 @@ class Evaluator(environment:Environment) {
       case Max(expr1, expr2) 	 => Math.max(evaluate(expr1, state), evaluate(expr2, state))
       case Min(expr1, expr2) 	 => Math.min(evaluate(expr1, state), evaluate(expr2, state))
       case Negate(expr)			 => -evaluate(expr, state)
+      case DistanceX(entity)  	 => processDistance(environment.distanceX(entity, state), entity, state)
+      case DistanceY(entity)  	 => processDistance(environment.distanceY(entity, state), entity, state)
     }
   }
   
@@ -41,6 +51,7 @@ class Evaluator(environment:Environment) {
         case LessThanOrEqual(left, right) 	 =>  (evaluate(left, state) <= evaluate(right, state))
         case GreaterThanOrEqual(left, right) =>  (evaluate(left, state) >= evaluate(right, state))
         case NotEqual(left, right) 			 =>  (evaluate(left, state) != evaluate(right, state))
+        case Adjacent(entity)				 =>  environment.adjacent(entity, state)
 	  }
   }
   

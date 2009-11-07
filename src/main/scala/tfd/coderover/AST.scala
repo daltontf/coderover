@@ -19,6 +19,8 @@ sealed abstract class Expression()
  case class DeltaX() extends Expression
  case class DeltaY() extends Expression
  case class Depth() extends Expression
+ case class DistanceX(entity:String) extends Expression
+ case class DistanceY(entity:String) extends Expression
  case class Abs(expression:Expression) extends Expression
  case class Max(expression1:Expression, expression2:Expression) extends Expression
  case class Min(expression1:Expression, expression2:Expression) extends Expression
@@ -33,6 +35,7 @@ sealed abstract class Expression()
 
 sealed abstract class BooleanExpression()
  case class Painted(x:Expression, y:Expression) extends BooleanExpression
+ case class Adjacent(entity:String) extends BooleanExpression
  case class Not(booleanExpression:BooleanExpression) extends BooleanExpression
  sealed abstract case class Logical() extends BooleanExpression
   case class Or(val expressions:List[BooleanExpression])extends Logical
