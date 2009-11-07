@@ -10,6 +10,8 @@ case class Push(expression:Expression) extends Instruction
 case class Paint(expression:Expression) extends Instruction
 case class Pop() extends Instruction
 case class Replace(expression:Expression) extends Instruction
+case class Def(name:String, statements:List[Instruction]) extends Instruction
+case class Call(name:String) extends Instruction
 
 sealed abstract class Expression() 
  case class Constant(value:Int) extends Expression

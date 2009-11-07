@@ -116,13 +116,21 @@ object LanguageParser extends JavaTokenParsers {
   
   def replace:Parser[Replace] = "REPLACE"~>expression ^^ { x:Expression => Replace(x) }
     
-  def command:Parser[Instruction] = forward | right | left | paint | push | pop | replace
+  def command:Parser[Instruction] = forward | right | left | paint | push | pop | replace | call
   
-  def controlFlow:Parser[Instruction] = ifStatement | whileStatement
+  def controlFlow:Parser[Instruction] = ifStatement | whileStatement 
   
-  def instruction:Parser[Instruction] = command  | controlFlow
+  def definition:Parser[Def] = "DEF" ~> ident ~ "{" ~ rep(instruction) <~ "}" ^^ {
+    case name~_~instructions => Def(name, instructions)
+  }
   
-  def program = rep(instruction)
+  def call:Parser[Call] = "CALL" ~> ident ^^ { x:String => Call(x) }
+  
+  def instruction:Parser[Instruction] = command  | controlFlow 
+  
+  def topLevelInstruction:Parser[Instruction] = instruction | definition
+  
+  def program = rep(topLevelInstruction)
   
   def parse(text:String) = parseAll(program, text)
 

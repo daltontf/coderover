@@ -1,6 +1,7 @@
 package tfd.coderover
 
 class Evaluator(environment:Environment) {
+  private val blockMap = new scala.collection.mutable.HashMap[String, List[Instruction]]()
   
   final def evaluate(instructions:List[Instruction], state:State) {
 	  if (!state.stopped) {
@@ -58,6 +59,12 @@ class Evaluator(environment:Environment) {
   private[coderover] final def evaluate(instruction:Instruction, state:State) {
       if (!state.stopped) {
         instruction match {
+            case Def(name, instructions) => blockMap += name -> instructions
+            case Call(name) => if (blockMap.contains(name)) {
+            						evaluate(blockMap(name),state)
+            				   } else {
+            					   	state.fail(new UndefinedBlock(name))
+            				   }
         	case Forward(expression) => 
         	    var distance = Math.abs(evaluate(expression, state))
         		while (!state.stopped && distance > 0 && environment.canMoveForward(state)) {

@@ -6,4 +6,6 @@ object IllegalOperationOnEmptyStack extends Abend("Illegal operation performed o
 
 case class UnknownEntity(val entity:String) extends Abend("Unknown entity :" + entity)
 
+case class UndefinedBlock(val name:String) extends Abend("Undefined block :" + name)
+
 

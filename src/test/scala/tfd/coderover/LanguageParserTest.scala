@@ -248,4 +248,12 @@ class LanguageParserTest extends TestCase {
 	  assertEquals(List(Push(DistanceY("ROCK"))), parse("PUSH DISTANCEY(ROCK)").get)
 	  assertEquals(List(Push(Min(DistanceX("FLAG"), DistanceY("FLAG")))), parse("PUSH MIN(DISTANCEX(FLAG), DISTANCEY(FLAG))").get)
   }
+  
+  def testDef() {
+	  assertEquals(List(Def("FUNC", List(TurnLeft(), TurnLeft()))), parse("DEF FUNC { LEFT LEFT }").get)
+  }
+  
+  def testCall() {
+	  assertEquals(List(Call("FUNC")), parse("CALL FUNC").get)
+  }
 }

@@ -396,4 +396,22 @@ class EvaluatorTest extends TestCase {
     assertEquals(true, state.stopped)
     assertEquals(Some(UnknownEntity("FOO")), state.abend)
   }
+  
+  def testDefCall {
+     val state = State(2,2,0)
+     val evaluator = new Evaluator(DefaultEnvironment)
+     evaluator.evaluate(parse("""|DEF RIGHT_FORWARD { RIGHT FORWARD }
+     							 |DEF LEFT_FORWARD { LEFT FORWARD }
+     							 |DEF EMPTY { } 
+     						     |CALL RIGHT_FORWARD""".stripMargin).get, state)
+     assertEquals(State(3,2,1), state)
+     evaluator.evaluate(parse("CALL LEFT_FORWARD").get, state)
+     assertEquals(State(3,1,0), state)  
+     evaluator.evaluate(parse("CALL EMPTY").get, state)
+     assertEquals(State(3,1,0), state) 
+     evaluator.evaluate(parse("CALL FOO").get, state)
+     assertEquals(State(3,1,0), state) 
+     assertEquals(true, state.stopped)
+     assertEquals(Some(UndefinedBlock("FOO")), state.abend)
+  }
 }
