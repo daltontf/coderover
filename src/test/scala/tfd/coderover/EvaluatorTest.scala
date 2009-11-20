@@ -30,8 +30,8 @@ class EvaluatorTest extends TestCase {
     assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, State(0,0,0)))
   } 
    
-  private def executeExpressionTest(stringInput:String, expectedAst:Expression, expectedIntResult:Int) {
-	val ast = parseAll(expression, stringInput).get
+  private def executeIntExpressionTest(stringInput:String, expectedAst:Expression, expectedIntResult:Int) {
+	val ast = parseAll(intExpression, stringInput).get
 	assertEquals(expectedAst, ast)
 	assertEquals(expectedIntResult, new Evaluator(DefaultEnvironment).evaluate(ast, State(0,0,0)))
   }
@@ -70,7 +70,7 @@ class EvaluatorTest extends TestCase {
   } 
  
  def testExpression() {
-   executeExpressionTest("-(2 + 2)", Negate(Add(List(Constant(2), Constant(2)))), -4)
+   executeIntExpressionTest("-(2 + 2)", Negate(Add(List(Constant(2), Constant(2)))), -4)
  }
  
  def testComparison() {
@@ -223,24 +223,24 @@ class EvaluatorTest extends TestCase {
   } 
  
   def testAbs() {
-    executeExpressionTest("ABS(-1)", Abs(Constant(-1)), 1) 
-    executeExpressionTest("ABS(1)", Abs(Constant(1)), 1) 
-    executeExpressionTest("ABS(3-5)", Abs(Subtract(List(Constant(3), Constant(5)))), 2) 
-    executeExpressionTest("-ABS(3-5)", Negate(Abs(Subtract(List(Constant(3), Constant(5))))), -2) 
+    executeIntExpressionTest("ABS(-1)", Abs(Constant(-1)), 1) 
+    executeIntExpressionTest("ABS(1)", Abs(Constant(1)), 1) 
+    executeIntExpressionTest("ABS(3-5)", Abs(Subtract(List(Constant(3), Constant(5)))), 2) 
+    executeIntExpressionTest("-ABS(3-5)", Negate(Abs(Subtract(List(Constant(3), Constant(5))))), -2) 
   }
   
   def testMax() {
-    executeExpressionTest("MAX(1, 2)", Max(Constant(1), Constant(2)), 2)
-    executeExpressionTest("MAX(1, -2)", Max(Constant(1), Constant(-2)), 1)
-    executeExpressionTest("MAX(-1, -2)", Max(Constant(-1), Constant(-2)), -1)
-    executeExpressionTest("-MAX(-1, -2)", Negate(Max(Constant(-1), Constant(-2))), 1)
+    executeIntExpressionTest("MAX(1, 2)", Max(Constant(1), Constant(2)), 2)
+    executeIntExpressionTest("MAX(1, -2)", Max(Constant(1), Constant(-2)), 1)
+    executeIntExpressionTest("MAX(-1, -2)", Max(Constant(-1), Constant(-2)), -1)
+    executeIntExpressionTest("-MAX(-1, -2)", Negate(Max(Constant(-1), Constant(-2))), 1)
   }
   
   def testMin() {
-    executeExpressionTest("MIN(1, 2)", Min(Constant(1), Constant(2)), 1)
-    executeExpressionTest("MIN(1, -2)", Min(Constant(1), Constant(-2)), -2)
-    executeExpressionTest("MIN(-1, -2)", Min(Constant(-1), Constant(-2)), -2)
-    executeExpressionTest("-MIN(-1, -2)", Negate(Min(Constant(-1), Constant(-2))), 2)
+    executeIntExpressionTest("MIN(1, 2)", Min(Constant(1), Constant(2)), 1)
+    executeIntExpressionTest("MIN(1, -2)", Min(Constant(1), Constant(-2)), -2)
+    executeIntExpressionTest("MIN(-1, -2)", Min(Constant(-1), Constant(-2)), -2)
+    executeIntExpressionTest("-MIN(-1, -2)", Negate(Min(Constant(-1), Constant(-2))), 2)
   }
     
   def testBoundedEnvironment() {
@@ -413,5 +413,18 @@ class EvaluatorTest extends TestCase {
      assertEquals(State(3,1,0), state) 
      assertEquals(true, state.stopped)
      assertEquals(Some(UndefinedBlock("FOO")), state.abend)
+  }
+  
+  def testPrint() {
+
+    val environment = new Environment {
+    	var lastPrint:String = null
+      
+    	override def print(value:String) { lastPrint = value } 
+    }
+    val evaluator = new Evaluator(environment)
+    val state = new State(2, 3, 0)
+    evaluator.evaluate(parse("""PRINT "GRIDX = " + GRIDX + " GRIDY = " + GRIDY + " foo" """).get, state)
+    assertEquals("GRIDX = 2 GRIDY = 3 foo", environment.lastPrint)  
   }
 }

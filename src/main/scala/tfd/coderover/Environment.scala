@@ -14,6 +14,8 @@ trait Environment {
   def adjacent(entity:String, state:State) = false
 
   def isPainted(x:Int, y:Int) = false
+  
+  def print(value:String) = println(value)
 } 
 
 object DefaultEnvironment extends Environment 

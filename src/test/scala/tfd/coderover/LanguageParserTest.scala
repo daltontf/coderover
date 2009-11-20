@@ -13,10 +13,14 @@ class LanguageParserTest extends TestCase {
     assertEquals(List(), parse("\n").get)    
   }
   
-  def testExpression() {
-    assertEquals(Constant(1), parseAll(expression, "1").get)
-    assertEquals(Constant(-1), parseAll(expression, "-1").get)
-    assertEquals(Negate(Add(List(Constant(1), Constant(2)))), parseAll(expression, "-(1+2)").get)
+  def testIntExpression() {
+    assertEquals(Constant(1), parseAll(intExpression, "1").get)
+    assertEquals(Constant(-1), parseAll(intExpression, "-1").get)
+    assertEquals(Negate(Add(List(Constant(1), Constant(2)))), parseAll(intExpression, "-(1+2)").get)
+  }
+  
+  def testStringConstant() {
+    assertEquals(StringConstant("foo"), parseAll(stringConstant, "\"foo\"").get)
   }
   
   def testMathematical() {
@@ -256,4 +260,9 @@ class LanguageParserTest extends TestCase {
   def testCall() {
 	  assertEquals(List(Call("FUNC")), parse("CALL FUNC").get)
   }
+  
+  def testPrint() {
+	  assertEquals(List(Print(List(StringConstant("GRIDX = "), GridX()))), parse("""PRINT "GRIDX = " + GRIDX""").get)
+  }
+  
 }

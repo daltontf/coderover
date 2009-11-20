@@ -4,48 +4,41 @@ import scala.util.parsing.combinator.JavaTokenParsers
 
 object LanguageParser extends JavaTokenParsers {
   
-  def expression:Parser[Expression] = negatableExpression | negatedExpression | constant
+  def intExpression:Parser[IntExpression] = negatableExpression | negatedExpression | constant
   
-  def negatableExpression:Parser[Expression] = "(" ~> mathematical <~ ")" | arityNoneFunction | arityOneFunction | arityTwoFunction | arityOneIdentFunction
+  def negatableExpression:Parser[IntExpression] = "(" ~> mathematical <~ ")" | arityNoneFunction | arityOneFunction | arityTwoFunction | arityOneIdentFunction
   
-  def negatedExpression:Parser[Expression] = "-"~>negatableExpression ^^ { expression => Negate(expression) } 
+  def negatedExpression:Parser[IntExpression] = "-"~>negatableExpression ^^ { expression => Negate(expression) } 
   
-  def mathematical:Parser[Mathematical] = mathematical("+", (head:Expression, tail:List[Expression]) => Add(head :: tail)) |
-    								 	  mathematical("-", (head:Expression, tail:List[Expression]) => Subtract(head :: tail)) |
-    								 	  mathematical("*", (head:Expression, tail:List[Expression]) => Multiply(head :: tail)) |
-    								 	  mathematical("/", (head:Expression, tail:List[Expression]) => Divide(head :: tail)) |
-    								 	  mathematical("%", (head:Expression, tail:List[Expression]) => Modulus(head :: tail))
+  def mathematical:Parser[Mathematical] = mathematical("+", (head:IntExpression, tail:List[IntExpression]) => Add(head :: tail)) |
+    								 	  mathematical("-", (head:IntExpression, tail:List[IntExpression]) => Subtract(head :: tail)) |
+    								 	  mathematical("*", (head:IntExpression, tail:List[IntExpression]) => Multiply(head :: tail)) |
+    								 	  mathematical("/", (head:IntExpression, tail:List[IntExpression]) => Divide(head :: tail)) |
+    								 	  mathematical("%", (head:IntExpression, tail:List[IntExpression]) => Modulus(head :: tail))
   
-  def mathematical(sign:String, f:(Expression, List[Expression]) => Mathematical) =
-    (expression ~ sign ~ rep1sep(expression, sign)) ^^ {
+  def mathematical(sign:String, f:(IntExpression, List[IntExpression]) => Mathematical) =
+    (intExpression ~ sign ~ rep1sep(intExpression, sign)) ^^ {
       case head~sign~tail => f(head, tail)
     }
   
-  def expressionParameter:Parser[Expression] = mathematical | expression 
+  def expressionParameter:Parser[IntExpression] = mathematical | intExpression 
   
-  def arityOneFunction:Parser[Expression] = "ABS" ~ "(" ~ expressionParameter <~ ")" ^^ {
+  def arityOneFunction:Parser[IntExpression] = "ABS" ~ "(" ~ expressionParameter <~ ")" ^^ {
     case "ABS"~_~parm => Abs(parm)
   }
   
-  def arityOneIdentFunction:Parser[Expression] = ("DISTANCEX" | "DISTANCEY") ~ "(" ~ ident <~ ")" ^^ {
+  def arityOneIdentFunction:Parser[IntExpression] = ("DISTANCEX" | "DISTANCEY") ~ "(" ~ ident <~ ")" ^^ {
     case "DISTANCEX"~_~parm => DistanceX(parm)
     case "DISTANCEY"~_~parm => DistanceY(parm)
   }
   
-  def arityTwoFunction:Parser[Expression] = ("MAX"|"MIN") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
+  def arityTwoFunction:Parser[IntExpression] = ("MAX"|"MIN") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
     case "MAX"~_~parm1~_~parm2 => Max(parm1, parm2)
     case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
   }
   
-  def adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ {
-    	x => Adjacent(x)
-  }
-
-  def arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
-    case "PAINTED"~_~parm1~_~parm2 => Painted(parm1, parm2)
-  }
   
-  def arityNoneFunction:Parser[Expression] = ("TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY"|"DEPTH") ^^ {
+  def arityNoneFunction:Parser[IntExpression] = ("TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY"|"DEPTH") ^^ {
     	case "TOP" => Top()
     	case "GRIDX" => GridX()
         case "GRIDY" => GridY()
@@ -53,10 +46,18 @@ object LanguageParser extends JavaTokenParsers {
         case "DELTAY" => DeltaY()
         case "DEPTH" => Depth()
   }
+
+  def adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ {
+        	x => Adjacent(x)
+  }
+        
+  def arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
+        case "PAINTED"~_~parm1~_~parm2 => Painted(parm1, parm2)
+  }
    
   def constant:Parser[Constant] = wholeNumber ^^ { x => Constant(x.toInt) } 
     
-  def comparison:Parser[Comparison] = expression ~ ("=" | "<=" | ">=" | "<>" | "<" | ">" ) ~ expression ^^ {
+  def comparison:Parser[Comparison] = intExpression ~ ("=" | "<=" | ">=" | "<>" | "<" | ">" ) ~ intExpression ^^ {
          case left~"="~right 	=> Equal(left, right)
          case left~"<="~right 	=> LessThanOrEqual(left, right)
          case left~">="~right 	=> GreaterThanOrEqual(left, right)
@@ -78,6 +79,10 @@ object LanguageParser extends JavaTokenParsers {
    def logicalAnd = (nestedBoolean ~ "AND" ~ rep1sep(nestedBoolean, "AND")) ^^ {
     case head~"AND"~tail => And(head :: tail)
   }
+   
+  def printString = "PRINT" ~> rep1sep((intExpression | stringConstant), "+") ^^ { Print(_) }
+  
+  def stringConstant = stringLiteral ^^ { x=> StringConstant(x.substring(1, x.length-1)) }
   
   def elseBlock:Parser[List[Instruction]] = "ELSE" ~ "{" ~> rep(instruction) <~ "}"
   
@@ -96,12 +101,12 @@ object LanguageParser extends JavaTokenParsers {
     	case whileExpression~_~blockInstructions => While(whileExpression, blockInstructions) 
   	} 
   
-  def forward:Parser[Forward] = "FORWARD"~>opt(expression) ^^ { 
+  def forward:Parser[Forward] = "FORWARD"~>opt(intExpression) ^^ { 
     	case Some(expression)=> Forward(expression) 
     	case None => Forward(Constant(1))  			
   	} 
   
-  def push:Parser[Push] = "PUSH"~> expression ^^ { x:Expression => Push(x)}
+  def push:Parser[Push] = "PUSH"~> intExpression ^^ { x:IntExpression => Push(x)}
   
   def pop:Parser[Pop] = "POP" ^^ { _ => Pop() }
   
@@ -109,14 +114,14 @@ object LanguageParser extends JavaTokenParsers {
   
   def left:Parser[TurnLeft] = "LEFT" ^^ { _ => TurnLeft() }
   
-  def paint:Parser[Paint] = "PAINT"~> opt(expression) ^^ {
+  def paint:Parser[Paint] = "PAINT"~> opt(intExpression) ^^ {
     case Some(expression) => Paint(expression)
     case None => Paint(Constant(0))
   }
   
-  def replace:Parser[Replace] = "REPLACE"~>expression ^^ { x:Expression => Replace(x) }
+  def replace:Parser[Replace] = "REPLACE"~>intExpression ^^ { x:IntExpression => Replace(x) }
     
-  def command:Parser[Instruction] = forward | right | left | paint | push | pop | replace | call
+  def command:Parser[Instruction] = forward | right | left | paint | push | pop | replace | call | printString
   
   def controlFlow:Parser[Instruction] = ifStatement | whileStatement 
   

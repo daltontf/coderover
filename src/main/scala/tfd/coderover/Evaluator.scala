@@ -17,7 +17,7 @@ class Evaluator(environment:Environment) {
         distance.get
     }    
   
-  private[coderover] final def evaluate(expression:Expression, state:State):Int = {
+  private[coderover] final def evaluate(expression:IntExpression, state:State):Int = {
     expression match {
       case Constant(x)           => x
       case Add(expressionList) 	 	 => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ + evaluate(_,state) }
@@ -54,6 +54,14 @@ class Evaluator(environment:Environment) {
         case NotEqual(left, right) 			 =>  (evaluate(left, state) != evaluate(right, state))
         case Adjacent(entity)				 =>  environment.adjacent(entity, state)
 	  }
+  }
+   
+  private[coderover] final def evaluateString(expression:Expression, state:State):String = {
+	   expression match {
+        case StringConstant(value)					=> value
+        case x:IntExpression						=> evaluate(x, state).toString
+        case x:BooleanExpression					=> evaluate(x, state).toString
+	   }  
   }
   
   private[coderover] final def evaluate(instruction:Instruction, state:State) {
@@ -92,6 +100,7 @@ class Evaluator(environment:Environment) {
         			evaluate(blockStatements, state)
         		}
             case Paint(expression) => paint(evaluate(expression, state), state)
+            case Print(expressionList) => environment.print(expressionList.tail.foldLeft(evaluateString(expressionList.head, state)){ _ + evaluateString(_,state) })
         }
      }
   }
