@@ -424,7 +424,7 @@ class EvaluatorTest extends TestCase {
     }
     val evaluator = new Evaluator(environment)
     val state = new State(2, 3, 0)
-    evaluator.evaluate(parse("""PRINT "GRIDX = " + GRIDX + " GRIDY = " + GRIDY + " foo" """).get, state)
-    assertEquals("GRIDX = 2 GRIDY = 3 foo", environment.lastPrint)  
+    evaluator.evaluate(parse("""PRINT "GRIDX = " + GRIDX + " GRIDY = " + GRIDY + " " + ((2+2) = 4) + " foo" """).get, state)
+    assertEquals("GRIDX = 2 GRIDY = 3 true foo", environment.lastPrint)  
   }
 }

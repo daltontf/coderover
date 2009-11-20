@@ -80,7 +80,7 @@ object LanguageParser extends JavaTokenParsers {
     case head~"AND"~tail => And(head :: tail)
   }
    
-  def printString = "PRINT" ~> rep1sep((intExpression | stringConstant), "+") ^^ { Print(_) }
+  def printString = "PRINT" ~> rep1sep((intExpression | nestedBoolean | stringConstant), "+") ^^ { Print(_) }
   
   def stringConstant = stringLiteral ^^ { x=> StringConstant(x.substring(1, x.length-1)) }
   
