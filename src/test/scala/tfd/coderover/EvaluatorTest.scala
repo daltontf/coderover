@@ -417,14 +417,14 @@ class EvaluatorTest extends TestCase {
   
   def testPrint() {
 
-    val environment = new Environment {
+    val controller = new Controller(DefaultEnvironment) {
     	var lastPrint:String = null
       
     	override def print(value:String) { lastPrint = value } 
     }
-    val evaluator = new Evaluator(environment)
+    val evaluator = new Evaluator(DefaultEnvironment, controller)
     val state = new State(2, 3, 0)
     evaluator.evaluate(parse("""PRINT "GRIDX = " + GRIDX + " GRIDY = " + GRIDY + " " + ((2+2) = 4) + " foo" """).get, state)
-    assertEquals("GRIDX = 2 GRIDY = 3 true foo", environment.lastPrint)  
+    assertEquals("GRIDX = 2 GRIDY = 3 true foo", controller.lastPrint)  
   }
 }

@@ -1,6 +1,8 @@
 package tfd.coderover
 
-class Evaluator(environment:Environment) {
+class Evaluator(environment:Environment, controller:Controller) {
+  def this(environment:Environment) = this(environment, new Controller(environment))
+  
   private val blockMap = new scala.collection.mutable.HashMap[String, List[Instruction]]()
   
   final def evaluate(instructions:List[Instruction], state:State) {
@@ -76,12 +78,12 @@ class Evaluator(environment:Environment) {
         	case Forward(expression) => 
         	    var distance = Math.abs(evaluate(expression, state))
         		while (!state.stopped && distance > 0 && environment.canMoveForward(state)) {
-        				moveForward(state)
+        				controller.moveForward(state)
         				environment.postMoveForward(state)
         				distance = distance - 1
         		}
-        	case TurnRight() 	  => turnRight(state)
-        	case TurnLeft() 	  => turnLeft(state)
+        	case TurnRight() 	  => controller.turnRight(state)
+        	case TurnLeft() 	  => controller.turnLeft(state)
         	case Push(expression) => state.push(evaluate(expression, state))
             case Pop() 			  => state.pop()
             case Replace(expression) => {
@@ -99,19 +101,9 @@ class Evaluator(environment:Environment) {
         		while (!state.stopped && evaluate(booleanExpression, state)) {
         			evaluate(blockStatements, state)
         		}
-            case Paint(expression) => paint(evaluate(expression, state), state)
-            case Print(expressionList) => environment.print(expressionList.tail.foldLeft(evaluateString(expressionList.head, state)){ _ + evaluateString(_,state) })
+            case Paint(expression) => controller.paint(evaluate(expression, state), state)
+            case Print(expressionList) => controller.print(expressionList.tail.foldLeft(evaluateString(expressionList.head, state)){ _ + evaluateString(_,state) })
         }
      }
   }
-  
-  def moveForward(state:State) = state.moveForward()
-  
-  def turnRight(state:State) = state.turnRight()
-  
-  def turnLeft(state:State) = state.turnLeft()
-  
-  def paint(color:Int, state:State) = environment.paint(color, state)
-  
-
 }
