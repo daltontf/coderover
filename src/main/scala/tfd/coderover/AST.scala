@@ -31,6 +31,7 @@ sealed abstract class Expression()
     case class Max(expression1:IntExpression, expression2:IntExpression) extends IntExpression
     case class Min(expression1:IntExpression, expression2:IntExpression) extends IntExpression
     case class Negate(expression:IntExpression) extends IntExpression
+    case class PaintColor(x:IntExpression, y:IntExpression) extends IntExpression
  
  sealed abstract case class Mathematical(expressions:List[IntExpression]) extends IntExpression
   case class Add(override val expressions:List[IntExpression]) extends Mathematical(expressions)

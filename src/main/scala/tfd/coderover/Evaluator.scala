@@ -39,6 +39,10 @@ class Evaluator(environment:Environment, controller:Controller) {
       case Negate(expr)			 => -evaluate(expr, state)
       case DistanceX(entity)  	 => processDistance(environment.distanceX(entity, state), entity, state)
       case DistanceY(entity)  	 => processDistance(environment.distanceY(entity, state), entity, state)
+      case PaintColor(x, y) => environment.paintColor(evaluate(x, state), evaluate(y, state), state) match {
+          case Some(color) => color
+          case None => state.fail(NotPainted); -1
+      }
     }
   }
   

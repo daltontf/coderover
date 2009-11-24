@@ -32,19 +32,20 @@ object LanguageParser extends JavaTokenParsers {
     case "DISTANCEY"~_~parm => DistanceY(parm)
   }
   
-  def arityTwoFunction:Parser[IntExpression] = ("MAX"|"MIN") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
+  def arityTwoFunction:Parser[IntExpression] = ("MAX"|"MIN"|"PAINTCOLOR") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
     case "MAX"~_~parm1~_~parm2 => Max(parm1, parm2)
     case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
+    case "PAINTCOLOR"~_~gridx~_~gridy=> PaintColor(gridx, gridy)
   }
   
   
   def arityNoneFunction:Parser[IntExpression] = ("TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY"|"DEPTH") ^^ {
     	case "TOP" => Top()
     	case "GRIDX" => GridX()
-        case "GRIDY" => GridY()
-        case "DELTAX" => DeltaX()
-        case "DELTAY" => DeltaY()
-        case "DEPTH" => Depth()
+      case "GRIDY" => GridY()
+      case "DELTAX" => DeltaX()
+      case "DELTAY" => DeltaY()
+      case "DEPTH" => Depth()
   }
 
   def adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ {
