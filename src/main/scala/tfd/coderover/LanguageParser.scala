@@ -35,7 +35,6 @@ object LanguageParser extends JavaTokenParsers {
   def arityTwoFunction:Parser[IntExpression] = ("MAX"|"MIN"|"PAINTCOLOR") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
     case "MAX"~_~parm1~_~parm2 => Max(parm1, parm2)
     case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
-    case "PAINTCOLOR"~_~gridx~_~gridy=> PaintColor(gridx, gridy)
   }
   
   
@@ -115,10 +114,7 @@ object LanguageParser extends JavaTokenParsers {
   
   def left:Parser[TurnLeft] = "LEFT" ^^ { _ => TurnLeft() }
   
-  def paint:Parser[Paint] = "PAINT"~> opt(intExpression) ^^ {
-    case Some(expression) => Paint(expression)
-    case None => Paint(Constant(0))
-  }
+  def paint:Parser[Paint] = "PAINT" ^^ { _ => Paint() }
   
   def replace:Parser[Replace] = "REPLACE"~>intExpression ^^ { x:IntExpression => Replace(x) }
     

@@ -225,9 +225,7 @@ class LanguageParserTest extends TestCase {
   }
 
   def testPaint() {
-    assertEquals(List(Paint(Constant(1))), parse("PAINT 1").get)
-    assertEquals(List(Paint(Add(List(Constant(1), Constant(2))))), parse("PAINT (1 + 2)").get)
-    assertEquals(List(Paint(Constant(0))), parse("PAINT").get)
+    assertEquals(List(Paint()), parse("PAINT").get)
   }
 
   def testPainted() {
@@ -262,9 +260,4 @@ class LanguageParserTest extends TestCase {
   def testPrint() {
     assertEquals(List(Print(List(StringConstant("GRIDX = "), GridX()))), parse("""PRINT "GRIDX = " + GRIDX""").get)
   }
-
-  def testPaintColor() {
-    assertEquals(List(Push(PaintColor(Constant(1), Constant(2)))), parse("""PUSH PAINTCOLOR(1,2)""").get)
-  }
-
 }

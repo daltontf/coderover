@@ -273,19 +273,20 @@ class EvaluatorTest extends TestCase {
     val environment = new Environment {
       import scala.collection.mutable.ListBuffer
 
-      val paintedTuples = new ListBuffer[(Int, Int, Int)]
+      val paintedTuples = new ListBuffer[(Int, Int)]
 
-      override def paint(color: Int, x: Int, y: Int) {
-        paintedTuples += (x, y, color)
+      override def paint(x: Int, y: Int) {
+        paintedTuples += (x, y)
       }
     }
     val evaluator = new Evaluator(environment)
-    evaluator.evaluate(parse("PAINT 1").get, new State(2, 2, 0))
-    assertEquals((2, 2, 1), environment.paintedTuples(0))
-    evaluator.evaluate(parse("PAINT (1 + 2)").get, new State(4, 4, 0))
-    assertEquals((4, 4, 3), environment.paintedTuples(1))
-    evaluator.evaluate(parse("PAINT").get, new State(5, 5, 0))
-    assertEquals((5, 5, 0), environment.paintedTuples(2))
+    val state = new State(2,2,0)
+    evaluator.evaluate(parse("PAINT").get, state)
+    assertEquals((2, 2), environment.paintedTuples(0))
+    evaluator.evaluate(parse("FORWARD PAINT").get, state)
+    assertEquals((2, 1), environment.paintedTuples(1))
+    evaluator.evaluate(parse("RIGHT FORWARD PAINT").get, state)
+    assertEquals((3, 1), environment.paintedTuples(2))
   }
 
   def testPainted() {
@@ -426,23 +427,5 @@ class EvaluatorTest extends TestCase {
     val state = new State(2, 3, 0)
     evaluator.evaluate(parse("""PRINT "GRIDX = " + GRIDX + " GRIDY = " + GRIDY + " " + ((2+2) = 4) + " foo" """).get, state)
     assertEquals("GRIDX = 2 GRIDY = 3 true foo", controller.lastPrint)
-  }
-
-  def testPaintColor() {
-    val environment = new BoundedEnvironment(10,10) {
-        override def paintColor(x:Int, y:Int, state:State) =
-          if ((x,y) == (2,2)) {
-            Some(3)
-          } else {
-            super.paintColor(x, y, state)
-        }
-    }
-    val evaluator = new Evaluator(environment)
-    val state = new State(2, 2, 0)
-    evaluator.evaluate(parse("""PUSH PAINTCOLOR(GRIDX, GRIDY)""").get, state)
-    assertEquals(None, state.abend)
-    assertEquals(3, state.top)
-    evaluator.evaluate(parse("""FORWARD PUSH PAINTCOLOR(GRIDX, GRIDY)""").get, state)
-    assertEquals(Some(NotPainted), state.abend)
-  }
+  }  
 }
