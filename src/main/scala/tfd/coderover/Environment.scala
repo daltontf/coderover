@@ -5,7 +5,7 @@ trait Environment {
   
   def postMoveForward(state:State) { }
   
-  def paint(x:Int, y:Int) { }
+  def paint(state:State) { }
   
   def distanceX(entity:String, state:State):Option[Int] = None
   
@@ -13,7 +13,11 @@ trait Environment {
   
   def adjacent(entity:String, state:State) = false
 
-  def isPainted(x:Int, y:Int) = false
+  def isPainted(x:Int, y:Int, state:State) = false
+
+  def store(address:Int, value:Int, state:State) { }
+
+  def mem(address:Int, state:State) = 0
 } 
 
 object DefaultEnvironment extends Environment 

@@ -260,4 +260,12 @@ class LanguageParserTest extends TestCase {
   def testPrint() {
     assertEquals(List(Print(List(StringConstant("GRIDX = "), GridX()))), parse("""PRINT "GRIDX = " + GRIDX""").get)
   }
+
+  def testStore() {
+    assertEquals(List(Store(Constant(1), GridX())), parse("""STORE (1, GRIDX)""").get)
+  }
+
+  def testMem() {
+    assertEquals(List(Push(Mem(Constant(1)))), parse("""PUSH MEM(1)""").get)
+  }
 }

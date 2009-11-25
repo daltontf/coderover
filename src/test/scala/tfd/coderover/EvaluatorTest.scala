@@ -275,8 +275,8 @@ class EvaluatorTest extends TestCase {
 
       val paintedTuples = new ListBuffer[(Int, Int)]
 
-      override def paint(x: Int, y: Int) {
-        paintedTuples += (x, y)
+      override def paint(state:State) {
+        paintedTuples += (state.gridX, state.gridY)
       }
     }
     val evaluator = new Evaluator(environment)
@@ -294,7 +294,7 @@ class EvaluatorTest extends TestCase {
     val environment = new Environment {
       private val painted = (3, 4)
 
-      override def isPainted(x: Int, y: Int) = (x, y) == painted
+      override def isPainted(x: Int, y: Int, state:State) = (x, y) == painted
     }
     val evaluator = new Evaluator(environment)
     val state = new State(2, 2, 0)
@@ -427,5 +427,37 @@ class EvaluatorTest extends TestCase {
     val state = new State(2, 3, 0)
     evaluator.evaluate(parse("""PRINT "GRIDX = " + GRIDX + " GRIDY = " + GRIDY + " " + ((2+2) = 4) + " foo" """).get, state)
     assertEquals("GRIDX = 2 GRIDY = 3 true foo", controller.lastPrint)
-  }  
+  }
+
+  def testStoreMem() {
+    val environment = new Environment {
+        val memory = new Array[Int](10)
+
+        override def mem(address:Int, state:State) =
+          if (address > 0 && address < memory.size) {
+              memory(address)
+          } else {
+              state.fail(InvalidMEMAddress(address));
+              0
+          }
+
+        override def store(address:Int, value:Int, state:State) {
+          if (address > 0 && address < memory.size) {
+              memory(address) = value
+          } else {
+              state.fail(InvalidMEMAddress(address));
+          }
+        }
+    }
+    val evaluator = new Evaluator(environment)
+    val state = new State(2, 2, 0)
+    evaluator.evaluate(parse("""STORE (3,42) PUSH MEM(3)""").get, state)
+    assertEquals(42, state.top)
+    assertEquals(42, environment.memory(3))
+    evaluator.evaluate(parse("""STORE (10,42)""").get, state)
+    assertEquals(Some(InvalidMEMAddress(10)), state.abend)
+    state.reset()
+    evaluator.evaluate(parse("""PUSH MEM(10)""").get, state)
+    assertEquals(Some(InvalidMEMAddress(10)), state.abend)
+  }
 }

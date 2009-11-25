@@ -23,8 +23,9 @@ object LanguageParser extends JavaTokenParsers {
   
   def expressionParameter:Parser[IntExpression] = mathematical | intExpression 
   
-  def arityOneFunction:Parser[IntExpression] = "ABS" ~ "(" ~ expressionParameter <~ ")" ^^ {
+  def arityOneFunction:Parser[IntExpression] = ("ABS"|"MEM") ~ "(" ~ expressionParameter <~ ")" ^^ {
     case "ABS"~_~parm => Abs(parm)
+    case "MEM"~_~parm => Mem(parm)
   }
   
   def arityOneIdentFunction:Parser[IntExpression] = ("DISTANCEX" | "DISTANCEY") ~ "(" ~ ident <~ ")" ^^ {
@@ -117,8 +118,12 @@ object LanguageParser extends JavaTokenParsers {
   def paint:Parser[Paint] = "PAINT" ^^ { _ => Paint() }
   
   def replace:Parser[Replace] = "REPLACE"~>intExpression ^^ { x:IntExpression => Replace(x) }
-    
-  def command:Parser[Instruction] = forward | right | left | paint | push | pop | replace | call | printString
+
+  def store:Parser[Store] = "STORE" ~ "(" ~> intExpression ~ "," ~ intExpression <~ ")" ^^ {
+    case address~_~value => Store(address, value)
+  }
+  
+  def command:Parser[Instruction] = forward | right | left | paint | push | pop | replace | call | store | printString
   
   def controlFlow:Parser[Instruction] = ifStatement | whileStatement 
   

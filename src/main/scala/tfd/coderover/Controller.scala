@@ -7,7 +7,7 @@ class Controller(environment:Environment) {
   
   def turnLeft(state:State) = state.turnLeft()
   
-  def paint(state:State) = environment.paint(state.gridX, state.gridY)
+  def paint(state:State) = environment.paint(state)
   
   def print(value:String) = println(value)
 }

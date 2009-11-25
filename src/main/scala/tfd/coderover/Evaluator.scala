@@ -39,12 +39,13 @@ class Evaluator(environment:Environment, controller:Controller) {
       case Negate(expr)			 => -evaluate(expr, state)
       case DistanceX(entity)  	 => processDistance(environment.distanceX(entity, state), entity, state)
       case DistanceY(entity)  	 => processDistance(environment.distanceY(entity, state), entity, state)
+      case Mem(address)     => environment.mem(evaluate(address, state), state)
     }
   }
   
    private[coderover] final def evaluate(booleanExpression:BooleanExpression, state:State):Boolean = {
 	  booleanExpression match {
-        case Painted(x, y)                   =>  environment.isPainted(evaluate(x, state), evaluate(y, state))
+        case Painted(x, y)                   =>  environment.isPainted(evaluate(x, state), evaluate(y, state), state)
         case Not(booleanExpression)		     =>  !(evaluate(booleanExpression, state))
 	      case And(booleanExpressionList)		 =>  booleanExpressionList.forall{ evaluate(_, state) }
         case Or(booleanExpressionList) 		 =>  booleanExpressionList.exists{ evaluate(_, state) }
@@ -101,8 +102,9 @@ class Evaluator(environment:Environment, controller:Controller) {
         		while (!state.stopped && evaluate(booleanExpression, state)) {
         			evaluate(blockStatements, state)
         		}
-            case Paint() => controller.paint(state)
-            case Print(expressionList) => controller.print(expressionList.tail.foldLeft(evaluateString(expressionList.head, state)){ _ + evaluateString(_,state) })
+          case Paint() => controller.paint(state)
+          case Print(expressionList) => controller.print(expressionList.tail.foldLeft(evaluateString(expressionList.head, state)){ _ + evaluateString(_,state) })
+          case Store(address, value) => environment.store(evaluate(address, state), evaluate(value, state), state)
         }
      }
   }
