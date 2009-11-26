@@ -69,6 +69,18 @@ class EvaluatorTest extends TestCase {
     executeMathematicalTest("4 + (10 % 3)", Add(List(Constant(4), Modulus(List(Constant(10), Constant(3))))), 5)
   }
 
+  def testDivByZero() {
+    val state = State(2, 2, 0)
+    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (2/0)").get, state)
+    assertEquals(Some(DivideByZero), state.abend)
+  }
+
+  def testModByZero() {
+    val state = State(2, 2, 0)
+    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (2%0)").get, state)
+    assertEquals(Some(DivideByZero), state.abend)
+  }
+
   def testExpression() {
     executeIntExpressionTest("-(2 + 2)", Negate(Add(List(Constant(2), Constant(2)))), -4)
   }

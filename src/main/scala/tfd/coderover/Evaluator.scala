@@ -17,7 +17,17 @@ class Evaluator(environment:Environment, controller:Controller) {
         0
     } else {
         distance.get
-    }    
+    }
+
+  private[this] def evaluateDivideByZero(expression:IntExpression, state:State) = {
+    val value = evaluate(expression, state)
+    if (state.abend == None && value == 0) {
+      state.fail(DivideByZero)
+      1
+    } else {
+      value
+    }
+  }
   
   private[coderover] final def evaluate(expression:IntExpression, state:State):Int = {
     expression match {
@@ -25,8 +35,8 @@ class Evaluator(environment:Environment, controller:Controller) {
       case Add(expressionList) 	 	 => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ + evaluate(_,state) }
       case Subtract(expressionList)  => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ - evaluate(_,state) }
       case Multiply(expressionList)  => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ * evaluate(_,state) }
-      case Divide(expressionList)    => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ / evaluate(_,state) }
-      case Modulus(expressionList)	 => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ % evaluate(_,state) }
+      case Divide(expressionList)    => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ / evaluateDivideByZero(_,state) }
+      case Modulus(expressionList)	 => expressionList.tail.foldLeft(evaluate(expressionList.head, state)){ _ % evaluateDivideByZero(_,state) }
       case Top() 				 => state.top
       case GridX() 				 => state.gridX
       case GridY() 				 => state.gridY
