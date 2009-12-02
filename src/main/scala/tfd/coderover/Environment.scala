@@ -1,7 +1,11 @@
 package tfd.coderover
 
-trait Environment {
-  def canMoveForward(state:State) = true
+class Environment(val sizeX:Int, val sizeY:Int)  {
+  def canMoveForward(state:State) = {
+      val nextX = state.gridX + state.deltaX
+      val nextY = state.gridY + state.deltaY
+      (nextX >= 0 && nextX < sizeX && nextY >=0 && nextY < sizeY)
+    }
   
   def postMoveForward(state:State) { }
   
@@ -14,10 +18,6 @@ trait Environment {
   def adjacent(entity:String, state:State) = false
 
   def isPainted(x:Int, y:Int, state:State) = false
-
-  def store(address:Int, value:Int, state:State) { }
-
-  def mem(address:Int, state:State) = 0
 } 
 
-object DefaultEnvironment extends Environment 
+object DefaultEnvironment extends Environment(10,10) 

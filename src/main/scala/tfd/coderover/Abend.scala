@@ -6,6 +6,10 @@ object IllegalOperationOnEmptyStack extends Abend("Illegal operation performed o
 
 object DivideByZero extends Abend("Divide by zero")
 
+object StackOverflow extends Abend("Stack overflow")
+
+object CallStackOverflow extends Abend("Call Stack overflow")
+
 case class InvalidMEMAddress(val value:Int) extends Abend("Invalid MEM address :" + value)
 
 case class UnknownEntity(val entity:String) extends Abend("Unknown entity :" + entity)

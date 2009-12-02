@@ -208,11 +208,11 @@ class EvaluatorTest extends TestCase {
 
   def testWhileGrid() {
     val state = State(2, 2, 1)
-    new Evaluator(DefaultEnvironment).evaluate(parse("""|WHILE (GRIDX < 10) {
+    new Evaluator(new Environment(11,11)).evaluate(parse("""|WHILE (GRIDX < 10) {
 		  			    | FORWARD 
 			  			|}""".stripMargin).get, state)
     assertEquals(State(10, 2, 1), state)
-    new Evaluator(DefaultEnvironment).evaluate(parse("""|RIGHT
+    new Evaluator(new Environment(11,11)).evaluate(parse("""|RIGHT
 			  		    |WHILE (GRIDY < 10) {
 		  			    | FORWARD 
 			  			|}""".stripMargin).get, state)
@@ -256,7 +256,7 @@ class EvaluatorTest extends TestCase {
   }
 
   def testBoundedEnvironment() {
-    val evaluator = new Evaluator(new BoundedEnvironment(10, 10))
+    val evaluator = new Evaluator(new Environment(10, 10))
     val state = State(2, 2, 0)
     evaluator.evaluate(parse("FORWARD").get, state)
     assertEquals(State(2, 1, 0), state)
@@ -282,7 +282,7 @@ class EvaluatorTest extends TestCase {
 
   def testPaint() {
 
-    val environment = new Environment {
+    val environment = new Environment(10,10) {
       import scala.collection.mutable.ListBuffer
 
       val paintedTuples = new ListBuffer[(Int, Int)]
@@ -303,7 +303,7 @@ class EvaluatorTest extends TestCase {
 
   def testPainted() {
 
-    val environment = new Environment {
+    val environment = new Environment(10,10) {
       private val painted = (3, 4)
 
       override def isPainted(x: Int, y: Int, state:State) = (x, y) == painted
@@ -337,7 +337,7 @@ class EvaluatorTest extends TestCase {
 
   def testAdajacent() {
     val state = new State(2, 2, 1)
-    val evaluator = new Evaluator(new Environment {
+    val evaluator = new Evaluator(new Environment(10,10) {
       override def adjacent(entity: String, state: State) =
         "ROCK" == entity && ((Math.abs(3 - state.gridX) + Math.abs(3 - state.gridY)) == 1)
     })
@@ -381,7 +381,7 @@ class EvaluatorTest extends TestCase {
 
   def testDistances() {
     val state = new State(2, 3, 1)
-    val evaluator = new Evaluator(new Environment {
+    val evaluator = new Evaluator(new Environment(10,10) {
       private val entityMap = Map("ROCK" -> (5, 5),
         "FLAG" -> (1, 1))
 
@@ -430,7 +430,7 @@ class EvaluatorTest extends TestCase {
 
   def testPrint() {
 
-    val controller = new Controller(DefaultEnvironment) {
+    val controller = new Controller(DefaultEnvironment, DefaultConstraints) {
       var lastPrint: String = null
 
       override def print(value: String) {lastPrint = value}
@@ -442,34 +442,38 @@ class EvaluatorTest extends TestCase {
   }
 
   def testStoreMem() {
-    val environment = new Environment {
-        val memory = new Array[Int](10)
-
-        override def mem(address:Int, state:State) =
-          if (address > 0 && address < memory.size) {
-              memory(address)
-          } else {
-              state.fail(InvalidMEMAddress(address));
-              0
-          }
-
-        override def store(address:Int, value:Int, state:State) {
-          if (address > 0 && address < memory.size) {
-              memory(address) = value
-          } else {
-              state.fail(InvalidMEMAddress(address));
-          }
-        }
-    }
-    val evaluator = new Evaluator(environment)
+    val controller = new Controller(DefaultEnvironment, new Constraints(10, 10, 10))
+    val evaluator = new Evaluator(DefaultEnvironment, controller)
     val state = new State(2, 2, 0)
     evaluator.evaluate(parse("""STORE (3,42) PUSH MEM(3)""").get, state)
     assertEquals(42, state.top)
-    assertEquals(42, environment.memory(3))
+    assertEquals(42, controller.memory(3))
     evaluator.evaluate(parse("""STORE (10,42)""").get, state)
     assertEquals(Some(InvalidMEMAddress(10)), state.abend)
     state.reset()
     evaluator.evaluate(parse("""PUSH MEM(10)""").get, state)
     assertEquals(Some(InvalidMEMAddress(10)), state.abend)
+  }
+
+  def testMaxStack() {
+    val controller = new Controller(DefaultEnvironment, new Constraints(10, 1, 10))
+    val evaluator = new Evaluator(DefaultEnvironment, controller)
+    val state = new State(2, 2, 0)
+    evaluator.evaluate(parse("""PUSH 1""").get, state)
+    assertEquals(None, state.abend)
+    evaluator.evaluate(parse("""PUSH 1""").get, state)
+    assertEquals(Some(StackOverflow), state.abend)
+  }
+
+  def testMaxCallStack() {
+    val controller = new Controller(DefaultEnvironment, new Constraints(10, 10, 1))
+    val evaluator = new Evaluator(DefaultEnvironment, controller)
+    val state = new State(2, 2, 0)
+    evaluator.evaluate(parse("""
+    |DEF FOO { PUSH 2 POP }
+    |DEF BAR { PUSH 1 CALL FOO POP }
+    |CALL BAR""".stripMargin).get, state)
+    assertEquals(1, state.depth)
+    assertEquals(Some(CallStackOverflow), state.abend)
   }
 }

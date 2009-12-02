@@ -1,7 +1,7 @@
 package tfd.coderover
 
 class Evaluator(environment:Environment, controller:Controller) {
-  def this(environment:Environment) = this(environment, new Controller(environment))
+  def this(environment:Environment) = this(environment, new Controller(environment, DefaultConstraints))
   
   private val blockMap = new scala.collection.mutable.HashMap[String, List[Instruction]]()
   
@@ -49,7 +49,7 @@ class Evaluator(environment:Environment, controller:Controller) {
       case Negate(expr)			 => -evaluate(expr, state)
       case DistanceX(entity)  	 => processDistance(environment.distanceX(entity, state), entity, state)
       case DistanceY(entity)  	 => processDistance(environment.distanceY(entity, state), entity, state)
-      case Mem(address)     => environment.mem(evaluate(address, state), state)
+      case Mem(address)     => controller.mem(evaluate(address, state), state)
     }
   }
   
@@ -82,7 +82,11 @@ class Evaluator(environment:Environment, controller:Controller) {
         instruction match {
             case Def(name, instructions) => blockMap += name -> instructions
             case Call(name) => if (blockMap.contains(name)) {
-            						evaluate(blockMap(name),state)
+                          controller.incrementCallStack(state)
+                          if (!state.stopped) {
+            						    evaluate(blockMap(name),state)
+                            controller.decrementCallStack()
+                          }
             				   } else {
             					   	state.fail(new UndefinedBlock(name))
             				   }
@@ -95,7 +99,7 @@ class Evaluator(environment:Environment, controller:Controller) {
         		}
         	case TurnRight() 	  => controller.turnRight(state)
         	case TurnLeft() 	  => controller.turnLeft(state)
-        	case Push(expression) => state.push(evaluate(expression, state))
+        	case Push(expression) => controller.push(state, evaluate(expression, state))
             case Pop() 			  => state.pop()
             case Replace(expression) => {
             	val evaluated = evaluate(expression, state)
@@ -114,7 +118,7 @@ class Evaluator(environment:Environment, controller:Controller) {
         		}
           case Paint() => controller.paint(state)
           case Print(expressionList) => controller.print(expressionList.tail.foldLeft(evaluateString(expressionList.head, state)){ _ + evaluateString(_,state) })
-          case Store(address, value) => environment.store(evaluate(address, state), evaluate(value, state), state)
+          case Store(address, value) => controller.store(evaluate(address, state), evaluate(value, state), state)
         }
      }
   }
