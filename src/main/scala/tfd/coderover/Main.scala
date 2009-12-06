@@ -14,10 +14,6 @@ object Main {
   }
   
   def main(args:Array[String]) {
-    val state = new State(8,7,0)
-    run("""
-WHILE (ISPAINTED(1,2)) { FORWARD }
-    """,state)
-    println(state)
+    println(parseAll(booleanExpression,"NOT(1 = 2)"))
   }
 }

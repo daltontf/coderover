@@ -38,7 +38,6 @@ object LanguageParser extends JavaTokenParsers {
     case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
   }
   
-  
   lazy val arityNoneFunction:Parser[IntExpression] = ("TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY"|"DEPTH") ^^ {
     	case "TOP" => Top()
     	case "GRIDX" => GridX()
@@ -48,6 +47,8 @@ object LanguageParser extends JavaTokenParsers {
       case "DEPTH" => Depth()
   }
 
+  lazy val constant:Parser[Constant] = wholeNumber ^^ { x => Constant(x.toInt) }
+
   lazy val adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ {
         	x => Adjacent(x)
   }
@@ -55,9 +56,7 @@ object LanguageParser extends JavaTokenParsers {
   lazy val arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
         case "PAINTED"~_~parm1~_~parm2 => Painted(parm1, parm2)
   }
-   
-  lazy val constant:Parser[Constant] = wholeNumber ^^ { x => Constant(x.toInt) }
-    
+
   lazy val comparison:Parser[Comparison] = intExpression ~ ("=" | "<=" | ">=" | "<>" | "<" | ">" ) ~ intExpression ^^ {
          case left~"="~right 	=> Equal(left, right)
          case left~"<="~right 	=> LessThanOrEqual(left, right)
@@ -66,22 +65,26 @@ object LanguageParser extends JavaTokenParsers {
          case left~"<"~right 	=> LessThan(left, right)
          case left~">"~right 	=> GreaterThan(left, right)
     }     			  
-  
-  lazy val nestedBoolean:Parser[BooleanExpression] = "(" ~> (comparison | logical | not | adjacent | arityTwoBoolean ) <~ ")"
-  
-  lazy val not:Parser[BooleanExpression] = "NOT" ~> nestedBoolean ^^ { expression => Not(expression) }
+
+  lazy val parenBoolean:Parser[BooleanExpression] = "(" ~> (nestedBoolean | booleanExpression) <~ ")"
+
+  lazy val nestedBoolean:Parser[BooleanExpression] = comparison | logical | booleanExpression
+
+  lazy val booleanExpression:Parser[BooleanExpression] =  ("(" ~> nestedBoolean  <~ ")") | not | adjacent | arityTwoBoolean 
+
+  lazy val not:Parser[BooleanExpression] = "NOT" ~> parenBoolean ^^ { expression => Not(expression) }
   
   lazy val logical:Parser[BooleanExpression] = logicalOr | logicalAnd
   
-  lazy val logicalOr = (nestedBoolean ~ "OR" ~ rep1sep(nestedBoolean, "OR")) ^^ {
+  lazy val logicalOr = (booleanExpression ~ "OR" ~ rep1sep(booleanExpression, "OR")) ^^ {
     case head~"OR"~tail => Or(head :: tail)
   } 
   
-   lazy val logicalAnd = (nestedBoolean ~ "AND" ~ rep1sep(nestedBoolean, "AND")) ^^ {
+   lazy val logicalAnd = (booleanExpression ~ "AND" ~ rep1sep(booleanExpression, "AND")) ^^ {
     case head~"AND"~tail => And(head :: tail)
   }
    
-  lazy val printString = "PRINT" ~> rep1sep((intExpression | nestedBoolean | stringConstant), "+") ^^ { Print(_) }
+  lazy val printString = "PRINT" ~> rep1sep((intExpression | booleanExpression | stringConstant), "+") ^^ { Print(_) }
   
   lazy val stringConstant = stringLiteral ^^ { x=> StringConstant(x.substring(1, x.length-1)) }
   
@@ -91,14 +94,14 @@ object LanguageParser extends JavaTokenParsers {
 	  x => List(x)
   }
   
-  lazy val ifStatement:Parser[If] = "IF" ~> nestedBoolean ~ "{" ~
+  lazy val ifStatement:Parser[If] = "IF" ~> booleanExpression ~ "{" ~
 	  		rep(instruction) ~ "}" ~  opt(elseBlock | elseIfBlock) ^^
     {
     	case ifExpression~_~thenInstructions~_~Some(elseInstructions) => If(ifExpression, thenInstructions, elseInstructions)
     	case ifExpression~_~thenInstructions~_~None => If(ifExpression, thenInstructions, Nil)
   	}
   
-  lazy val whileStatement:Parser[While] = "WHILE" ~> nestedBoolean ~ "{" ~ rep(instruction) <~ "}" ^^ {
+  lazy val whileStatement:Parser[While] = "WHILE" ~> booleanExpression ~ "{" ~ rep(instruction) <~ "}" ^^ {
     	case whileExpression~_~blockInstructions => While(whileExpression, blockInstructions) 
   	} 
   

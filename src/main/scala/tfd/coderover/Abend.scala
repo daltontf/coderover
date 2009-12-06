@@ -10,6 +10,8 @@ object StackOverflow extends Abend("Stack overflow")
 
 object CallStackOverflow extends Abend("Call Stack overflow")
 
+object GridLocationOutOfBounds extends Abend("Grid location out of bounds")
+
 case class InvalidMEMAddress(val value:Int) extends Abend("Invalid MEM address :" + value)
 
 case class UnknownEntity(val entity:String) extends Abend("Unknown entity :" + entity)

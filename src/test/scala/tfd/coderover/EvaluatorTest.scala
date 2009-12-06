@@ -25,7 +25,7 @@ class EvaluatorTest extends TestCase {
   }
 
   private def executeBooleanLogicTest(stringInput: String, expectedBooleanLogic: BooleanExpression, expectedBoolean: Boolean) {
-    val ast = parseAll(nestedBoolean, stringInput).get
+    val ast = parseAll(booleanExpression, stringInput).get
     assertEquals(expectedBooleanLogic, ast)
     assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, State(0, 0, 0)))
   }
@@ -317,8 +317,8 @@ class EvaluatorTest extends TestCase {
   }
 
   def testNot() {
-    executeBooleanLogicTest("(NOT(4 > 3))", Not(GreaterThan(Constant(4), Constant(3))), false)
-    executeBooleanLogicTest("(NOT((1 + 3) <> (0 - -4)))", Not(NotEqual(Add(List(Constant(1), Constant(3))), Subtract(List(Constant(0), Constant(-4))))), true)
+    executeBooleanLogicTest("NOT(4 > 3)", Not(GreaterThan(Constant(4), Constant(3))), false)
+    executeBooleanLogicTest("NOT((1 + 3) <> (0 - -4))", Not(NotEqual(Add(List(Constant(1), Constant(3))), Subtract(List(Constant(0), Constant(-4))))), true)
   }
 
   def testPopOnEmptyStack() {
@@ -335,7 +335,7 @@ class EvaluatorTest extends TestCase {
     assertEquals(Some(IllegalOperationOnEmptyStack), state.abend)
   }
 
-  def testAdajacent() {
+  def testAdjacent() {
     val state = new State(2, 2, 1)
     val evaluator = new Evaluator(new Environment(10,10) {
       override def adjacent(entity: String, state: State) =

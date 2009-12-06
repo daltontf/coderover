@@ -104,6 +104,13 @@ class LanguageParserTest extends TestCase {
          | LEFT
          | FORWARD
          | }""".stripMargin).get)
+    // unnecessary params
+    assertEquals(List(If(NotEqual(Constant(1), Constant(2)), List(TurnLeft(), Forward(Constant(1))), Nil)), parse(
+      """|
+         |IF ((1 <> 2)) {
+         | LEFT
+         | FORWARD
+         | }""".stripMargin).get)
   }
 
   def testIfElse() {
@@ -152,6 +159,10 @@ class LanguageParserTest extends TestCase {
     assertEquals(List(While(Equal(Constant(1), Constant(2)), List())), parse(
       """|
          |WHILE (1 = 2) {
+         |}""".stripMargin).get)
+    assertEquals(List(While(Equal(Constant(1), Constant(2)), List())), parse(
+      """|
+         |WHILE ((1 = 2)) {
          |}""".stripMargin).get)
   }
 
@@ -231,6 +242,10 @@ class LanguageParserTest extends TestCase {
   def testPainted() {
     assertEquals(List((While(Painted(Constant(1), Constant(2)), List(Forward(Constant(1)))))),
       parse("""WHILE (PAINTED(1,2)) { FORWARD }""").get)
+    assertEquals(List((While(Painted(Constant(1), Constant(2)), List(Forward(Constant(1)))))),
+      parse("""WHILE PAINTED(1,2) { FORWARD }""").get)
+    assertEquals(List((While(Painted(Constant(1), Constant(2)), List(Forward(Constant(1)))))),
+      parse("""WHILE ((PAINTED(1,2))) { FORWARD }""").get) 
 
   }
 
