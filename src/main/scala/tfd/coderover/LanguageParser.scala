@@ -38,12 +38,12 @@ object LanguageParser extends JavaTokenParsers {
     case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
   }
   
-  lazy val arityNoneFunction:Parser[IntExpression] = ("TOP"|"GRIDX"|"GRIDY"|"DELTAX"|"DELTAY"|"DEPTH") ^^ {
+  lazy val arityNoneFunction:Parser[IntExpression] = ("TOP"|"X"|"Y"|"DX"|"DY"|"DEPTH") ^^ {
     	case "TOP" => Top()
-    	case "GRIDX" => GridX()
-      case "GRIDY" => GridY()
-      case "DELTAX" => DeltaX()
-      case "DELTAY" => DeltaY()
+    	case "X" => GridX()
+      case "Y" => GridY()
+      case "DX" => DeltaX()
+      case "DY" => DeltaY()
       case "DEPTH" => Depth()
   }
 

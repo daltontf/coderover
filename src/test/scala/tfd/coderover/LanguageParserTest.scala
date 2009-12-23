@@ -169,7 +169,7 @@ class LanguageParserTest extends TestCase {
   def testPush() {
     assertEquals(List(Push(Constant(1))), parse("""PUSH 1""").get)
     assertEquals(List(Push(Add(List(Constant(1), Constant(2))))), parse("""PUSH (1+2)""").get)
-    assertEquals(List(Push(Subtract(List(Constant(8), GridX())))), parse("""PUSH (8 - GRIDX)""").get)
+    assertEquals(List(Push(Subtract(List(Constant(8), GridX())))), parse("""PUSH (8 - X)""").get)
     assertEquals(List(Push(Negate(Add(List(Constant(1), Constant(2)))))), parse("""PUSH -(1+2)""").get)
   }
 
@@ -195,28 +195,28 @@ class LanguageParserTest extends TestCase {
 
   def testGridX() {
     assertEquals(List(While(LessThan(GridX(), Constant(5)), List(Forward(Constant(1))))),
-      parse("""|WHILE (GRIDX < 5) {
+      parse("""|WHILE (X < 5) {
             	 | FORWARD 1
 		  			   |}""".stripMargin).get)
   }
 
   def testGridY() {
     assertEquals(List(While(GreaterThanOrEqual(GridY(), Constant(1)), List(Forward(Constant(1))))),
-      parse("""|WHILE (GRIDY >= 1) {
+      parse("""|WHILE (Y >= 1) {
                | FORWARD 1
 		  			   |}""".stripMargin).get)
   }
 
   def testDeltaX() {
     assertEquals(List(While(Equal(DeltaX(), Constant(1)), List(TurnRight()))),
-      parse("""|WHILE (DELTAX = 1) {
+      parse("""|WHILE (DX = 1) {
                | RIGHT
 		  			   |}""".stripMargin).get)
   }
 
   def testDeltaY() {
     assertEquals(List(While(Equal(DeltaY(), Constant(0)), List(TurnLeft()))),
-      parse("""|WHILE (DELTAY = 0) {
+      parse("""|WHILE (DY = 0) {
                | LEFT
 		  			   |}""".stripMargin).get)
   }
@@ -273,11 +273,11 @@ class LanguageParserTest extends TestCase {
   }
 
   def testPrint() {
-    assertEquals(List(Print(List(StringConstant("GRIDX = "), GridX()))), parse("""PRINT "GRIDX = " + GRIDX""").get)
+    assertEquals(List(Print(List(StringConstant("X = "), GridX()))), parse("""PRINT "X = " + X""").get)
   }
 
   def testStore() {
-    assertEquals(List(Store(Constant(1), GridX())), parse("""STORE (1, GRIDX)""").get)
+    assertEquals(List(Store(Constant(1), GridX())), parse("""STORE (1, X)""").get)
   }
 
   def testMem() {
