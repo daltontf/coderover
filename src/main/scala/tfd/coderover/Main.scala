@@ -1,8 +1,8 @@
 package tfd.coderover
 
 object Main {
-	import LanguageParser._
-
+	private[this] val languageParser = new LanguageParser()
+  import languageParser._
  
   def run(code:String, state:State) = {
     val result = parse(code)

@@ -2,7 +2,7 @@ package tfd.coderover
 
 import scala.util.parsing.combinator.JavaTokenParsers
 
-object LanguageParser extends JavaTokenParsers {
+class LanguageParser extends JavaTokenParsers {
   
   lazy val intExpression:Parser[IntExpression] = negatableExpression | negatedExpression | constant
   

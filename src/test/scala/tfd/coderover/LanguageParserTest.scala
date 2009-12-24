@@ -4,7 +4,8 @@ import junit.framework._
 import org.junit.Assert._
 
 class LanguageParserTest extends TestCase {
-  import LanguageParser._
+  private[this] val languageParser = new LanguageParser()
+  import languageParser._
 
   def testEmptyProgram() {
     assertEquals(List(), parse("").get)

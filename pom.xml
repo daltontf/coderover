@@ -98,6 +98,58 @@
 					<mainClass>tfd.coderover.Main</mainClass>
 				</configuration>
 			</plugin>
+            <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.1</version>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+            <plugin>
+				<groupId>com.pyx4me</groupId>
+				<artifactId>proguard-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>proguard</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<libs>
+						<lib>${java.home}\lib\rt.jar</lib>
+						<lib>${java.home}\lib\jsse.jar</lib>
+					</libs>
+					<includeDependency>false</includeDependency>
+					<options>
+						<option>-dontnote</option>
+						<option>-dontwarn</option>
+						<option>-dontoptimize</option>
+						<option>-dontobfuscate</option>
+						<option>-dontskipnonpubliclibraryclassmembers</option>
+						<option>-allowaccessmodification</option>
+                        <option>-keep class tfd.coderover.*</option>
+					</options>
+					<maxMemory>768m</maxMemory>
+					<injar>${project.build.finalName}-jar-with-dependencies.jar</injar>
+					<outjar>${project.build.finalName}-jar-with-dependencies.jar</outjar>
+					<outputDirectory>${project.build.directory}</outputDirectory>
+					<addMavenDescriptor>false</addMavenDescriptor>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	

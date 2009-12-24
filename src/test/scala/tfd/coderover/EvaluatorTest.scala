@@ -4,7 +4,8 @@ import junit.framework._
 import org.junit.Assert._
 
 class EvaluatorTest extends TestCase {
-  import LanguageParser._
+  private[this] val languageParser = new LanguageParser()
+  import languageParser._
 
   private def executeConstantTest(stringInput: String, expectedConstant: Constant, expectedInt: Int) {
     val ast = parseAll(constant, stringInput).get
