@@ -3,6 +3,8 @@ package tfd.coderover
 import scala.util.parsing.combinator.JavaTokenParsers
 
 class LanguageParser extends JavaTokenParsers {
+
+  override protected val whiteSpace = """(\s+|//[^\n]*\n|//[^\n]*$|/\*.*\*/)+""".r
   
   lazy val intExpression:Parser[IntExpression] = negatableExpression | negatedExpression | constant
   

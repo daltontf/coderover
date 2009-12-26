@@ -284,4 +284,19 @@ class LanguageParserTest extends TestCase {
   def testMem() {
     assertEquals(List(Push(Mem(Constant(1)))), parse("""PUSH MEM(1)""").get)
   }
+
+  def testComments() {
+    assertEquals(List(While(Equal(DeltaY(), Constant(0)), List(TurnLeft()))),
+      parse("""|WHILE (DY = 0) { // comment
+               | LEFT
+               |}//comment""".stripMargin).get)
+    assertEquals(List(While(Equal(DeltaY(), Constant(0)), List(TurnLeft()))),
+      parse("""|WHILE /* /* comment */ (DY = 0) {
+               | LEFT  /* Comment */
+		  			   |}""".stripMargin).get)
+    assertEquals(List(While(Equal(DeltaY(), Constant(0)), List(TurnLeft()))),
+      parse("""|WHILE (DY = 0) { // Comment
+               | /* Comment */ LEFT
+		  			   |}""".stripMargin).get)
+  }
 }
