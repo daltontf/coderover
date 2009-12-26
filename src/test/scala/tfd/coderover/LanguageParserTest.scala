@@ -291,7 +291,8 @@ class LanguageParserTest extends TestCase {
                | LEFT
                |}//comment""".stripMargin).get)
     assertEquals(List(While(Equal(DeltaY(), Constant(0)), List(TurnLeft()))),
-      parse("""|WHILE /* /* comment */ (DY = 0) {
+      parse("""|WHILE /* multi-line
+               | comment */ (DY = 0) {
                | LEFT  /* Comment */
 		  			   |}""".stripMargin).get)
     assertEquals(List(While(Equal(DeltaY(), Constant(0)), List(TurnLeft()))),
