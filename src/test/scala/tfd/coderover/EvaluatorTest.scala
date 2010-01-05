@@ -477,4 +477,13 @@ class EvaluatorTest extends TestCase {
     assertEquals(1, state.depth)
     assertEquals(Some(CallStackOverflow), state.abend)
   }
+
+  def testObstructed() {
+    val environment = new Environment(10, 10, Set((2, 3)))
+    val controller = new Controller(environment, DefaultConstraints)
+    val evaluator = new Evaluator(environment, controller)
+    val state = new State(2, 2, 2)
+    evaluator.evaluate(parse("FORWARD").get, state)
+    assertEquals(State(2,2,2), state)
+  }
 }
