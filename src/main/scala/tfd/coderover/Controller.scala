@@ -5,37 +5,37 @@ class Controller(environment:Environment, constraints:Constraints) {
 
   private[coderover] val memory = new Array[Int](constraints.memorySize)
 
-  def moveForward(state:State) = state.moveForward()
+  private[coderover] def moveForward(state:State) = state.moveForward()
   
-  def turnRight(state:State) = state.turnRight()
+  private[coderover] def turnRight(state:State) = state.turnRight()
   
-  def turnLeft(state:State) = state.turnLeft()
+  private[coderover] def turnLeft(state:State) = state.turnLeft()
   
-  def paint(state:State) = environment.paint(state)
+  private[coderover] def paint(state:State) = environment.paint(state)
 
-  def push(state:State, value:Int) {
+  private[coderover] def push(state:State, value:Int) {
     state.push(value)
     if (state.depth > constraints.maxStackSize) {
       state.fail(StackOverflow)
     }
   }
 
-  def resetCallStack() {
+  private[coderover] def resetCallStack() {
     callStackSize = 0
   }
 
-  def incrementCallStack(state:State) {
+  private[coderover] def incrementCallStack(state:State) {
     callStackSize = callStackSize + 1
     if (callStackSize > constraints.maxCallStackSize) {
       state.fail(CallStackOverflow)
     }
   }
 
-  def decrementCallStack() {
+  private[coderover] def decrementCallStack() {
     callStackSize = callStackSize - 1
   }
 
-  def mem(address:Int, state:State) =
+  private[coderover] def mem(address:Int, state:State) =
      if (address > 0 && address < memory.size) {
          memory(address)
      } else {
@@ -43,7 +43,7 @@ class Controller(environment:Environment, constraints:Constraints) {
          0
      }
 
-  def store(address:Int, value:Int, state:State) {
+  private[coderover] def store(address:Int, value:Int, state:State) {
      if (address > 0 && address < memory.size) {
           memory(address) = value
      } else {
@@ -51,5 +51,5 @@ class Controller(environment:Environment, constraints:Constraints) {
      }
   }
 
-  def print(value:String) = println(value)
+  private[coderover] def print(value:String) = println(value)
 }
