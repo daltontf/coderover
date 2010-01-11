@@ -45,6 +45,7 @@ sealed abstract class BooleanExpression() extends Expression
  case class Painted(x:IntExpression, y:IntExpression) extends BooleanExpression
  case class Adjacent(entity:String) extends BooleanExpression
  case class Not(booleanExpression:BooleanExpression) extends BooleanExpression
+ case class Obstructed() extends BooleanExpression
  sealed abstract case class Logical() extends BooleanExpression
   case class Or(val expressions:List[BooleanExpression])extends Logical
   case class And(val expressions:List[BooleanExpression]) extends Logical

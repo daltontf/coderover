@@ -55,6 +55,7 @@ class Evaluator(environment:Environment, controller:Controller) {
   
    private[coderover] final def evaluate(booleanExpression:BooleanExpression, state:State):Boolean = {
 	  booleanExpression match {
+        case Obstructed()                    => !environment.canMoveForward(state)
         case Painted(x, y)                   =>  environment.isPainted(evaluate(x, state), evaluate(y, state), state)
         case Not(booleanExpression)		     =>  !(evaluate(booleanExpression, state))
 	      case And(booleanExpressionList)		 =>  booleanExpressionList.forall{ evaluate(_, state) }

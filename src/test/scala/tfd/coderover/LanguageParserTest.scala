@@ -300,4 +300,8 @@ class LanguageParserTest extends TestCase {
                | /* Comment */ LEFT
 		  			   |}""".stripMargin).get)
   }
+
+  def testObstructed() {
+    assertEquals(List(If(Obstructed(), List(TurnLeft()), Nil)), parse("IF (OBSTRUCTED) { LEFT }").get)
+  }
 }

@@ -478,7 +478,7 @@ class EvaluatorTest extends TestCase {
     assertEquals(Some(CallStackOverflow), state.abend)
   }
 
-  def testObstructed() {
+  def testObstructions() {
     val environment = new Environment(10, 10, Set((2, 3)))
     val controller = new Controller(environment, DefaultConstraints)
     val evaluator = new Evaluator(environment, controller)
@@ -486,4 +486,38 @@ class EvaluatorTest extends TestCase {
     evaluator.evaluate(parse("FORWARD").get, state)
     assertEquals(State(2,2,2), state)
   }
+
+  def testObstructed() {
+    val environment = new Environment(3, 3, Set((1, 1)))
+    val controller = new Controller(environment, DefaultConstraints)
+    val evaluator = new Evaluator(environment, controller)
+    val state = new State(0, 0, 0)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(0,0,1), state)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(1,0,1), state)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(2,0,1), state)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(2,0,2), state)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(2,1,2), state)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(2,2,2), state)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(2,2,3), state)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(1,2,3), state)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(0,2,3), state)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(0,2,0), state)
+    evaluator.evaluate(parse("IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(0,1,0), state)
+    // Face obstructed square first
+    evaluator.evaluate(parse("RIGHT IF NOT(OBSTRUCTED) { FORWARD } ELSE { RIGHT }").get, state)
+    assertEquals(State(0,1,2), state)
+  }
+
+
 }
