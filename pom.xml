@@ -6,24 +6,29 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<scala.version>2.7.7</scala.version>
+		<scala.version>2.8.0-SNAPSHOT</scala.version>
 	</properties>
 
 	<repositories>
 		<repository>
 			<id>scala-tools.org</id>
-			<name>Scala-Tools Maven2 Repository</name>
+			<name>Scala-Tools Maven2 Snapshot Repository</name>
+			<url>http://scala-tools.org/repo-snapshots</url>
+		</repository>
+        <repository>
+			<id>scala-tools.org</id>
+			<name>Scala-Tools Maven2 Release Repository</name>
 			<url>http://scala-tools.org/repo-releases</url>
 		</repository>
 	</repositories>
 
-	<pluginRepositories>
+	<!--pluginRepositories>
 		<pluginRepository>
 			<id>scala-tools.org</id>
 			<name>Scala-Tools Maven2 Repository</name>
 			<url>http://scala-tools.org/repo-releases</url>
 		</pluginRepository>
-	</pluginRepositories>
+	</pluginRepositories-->
 
 	<dependencies>
 		<dependency>
@@ -40,7 +45,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.4</version>
+			<version>4.5</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

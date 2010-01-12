@@ -289,7 +289,7 @@ class EvaluatorTest extends TestCase {
       val paintedTuples = new ListBuffer[(Int, Int)]
 
       override def paint(state:State) {
-        paintedTuples += (state.gridX, state.gridY)
+        paintedTuples += ((state.gridX, state.gridY))
       }
     }
     val evaluator = new Evaluator(environment)
