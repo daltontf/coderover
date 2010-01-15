@@ -6,7 +6,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<scala.version>2.8.0-SNAPSHOT</scala.version>
+		<scala.version>2.8.0.Beta1-RC2</scala.version>
 	</properties>
 
 	<repositories>
@@ -48,6 +48,11 @@
 			<version>4.5</version>
 			<scope>test</scope>
 		</dependency>
+         <dependency>
+            <groupId>org.scala-tools.testing</groupId>
+            <artifactId>specs</artifactId>
+            <version>1.4.4</version> <!-- specify the version here -->
+        </dependency>
 	</dependencies>
 
 	<build>
@@ -138,21 +143,21 @@
 						<lib>${java.home}\lib\rt.jar</lib>
 						<lib>${java.home}\lib\jsse.jar</lib>
 					</libs>
-					<includeDependency>false</includeDependency>
-					<options>
-						<option>-dontnote</option>
+					<attach>true</attach>
+                    <includeDependency>false</includeDependency>
+                    <options>
+						<!--option>-dontnote</option-->
 						<option>-dontwarn</option>
 						<option>-dontoptimize</option>
 						<option>-dontobfuscate</option>
 						<option>-dontskipnonpubliclibraryclassmembers</option>
 						<option>-allowaccessmodification</option>
-                        <option>-keep class tfd.coderover.*</option>
+                        <option>-keep public class tfd.coderover.** { *; }</option>
 					</options>
 					<maxMemory>768m</maxMemory>
 					<injar>${project.build.finalName}-jar-with-dependencies.jar</injar>
-					<outjar>${project.build.finalName}-jar-with-dependencies.jar</outjar>
 					<outputDirectory>${project.build.directory}</outputDirectory>
-					<addMavenDescriptor>false</addMavenDescriptor>
+					<addMavenDescriptor>true</addMavenDescriptor>
 				</configuration>
 			</plugin>
 		</plugins>
