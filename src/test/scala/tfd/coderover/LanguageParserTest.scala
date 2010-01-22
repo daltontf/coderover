@@ -302,6 +302,10 @@ class LanguageParserTest extends TestCase {
   }
 
   def testObstructed() {
-    assertEquals(List(If(Obstructed(), List(TurnLeft()), Nil)), parse("IF (OBSTRUCTED) { LEFT }").get)
+    assertEquals(List(If(Obstructed(Add(List(GridX(), DeltaX())), Add(List(GridY(), DeltaY()))), List(TurnLeft()), Nil)), parse("IF (OBSTRUCTED(X+DX,Y+DY)) { LEFT }").get)
+  }
+
+  def testNegativeExpression() {
+    assertEquals(List(Print(List(StringConstant("-DX = "), Negate(DeltaX())))), parse("""PRINT "-DX = " + -DX""").get)
   }
 }

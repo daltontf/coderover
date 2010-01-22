@@ -1,6 +1,10 @@
 package tfd.coderover
 
-class Environment(val sizeX:Int, val sizeY:Int, val obstructed:Set[(Int,Int)]) {
+class Environment(
+        val sizeX:Int,
+        val sizeY:Int,
+        val obstructed:Set[(Int,Int)]          
+  ) {
 
   def this(sizeX:Int, sizeY:Int) = this(sizeX, sizeY, Set.empty[(Int,Int)])
 

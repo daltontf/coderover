@@ -51,16 +51,13 @@ class LanguageParser extends JavaTokenParsers {
 
   lazy val constant:Parser[Constant] = wholeNumber ^^ { x => Constant(x.toInt) }
 
-  lazy val obstructed:Parser[Obstructed] = "OBSTRUCTED" ^^ {  _ =>
-      Obstructed()
-  }
-
   lazy val adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ {
         	x => Adjacent(x)
   }
 
-  lazy val arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
-        case "PAINTED"~_~parm1~_~parm2 => Painted(parm1, parm2)
+  lazy val arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED"|"OBSTRUCTED") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
+        case "PAINTED"~_~x~_~y => Painted(x, y)
+        case "OBSTRUCTED"~_~x~_~y => Obstructed(x, y)
   }
 
   lazy val comparison:Parser[Comparison] = intExpression ~ ("=" | "<=" | ">=" | "<>" | "<" | ">" ) ~ intExpression ^^ {
@@ -76,7 +73,7 @@ class LanguageParser extends JavaTokenParsers {
 
   lazy val nestedBoolean:Parser[BooleanExpression] = comparison | logical | booleanExpression
 
-  lazy val booleanExpression:Parser[BooleanExpression] =  ("(" ~> nestedBoolean  <~ ")") | not | adjacent | obstructed | arityTwoBoolean 
+  lazy val booleanExpression:Parser[BooleanExpression] =  ("(" ~> nestedBoolean  <~ ")") | not | adjacent | arityTwoBoolean 
 
   lazy val not:Parser[BooleanExpression] = "NOT" ~> parenBoolean ^^ { expression => Not(expression) }
   

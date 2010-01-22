@@ -55,8 +55,15 @@ class Evaluator(environment:Environment, controller:Controller) {
   
    private[coderover] final def evaluate(booleanExpression:BooleanExpression, state:State):Boolean = {
 	  booleanExpression match {
-        case Obstructed()                    => !environment.canMoveForward(state)
-        case Painted(x, y)                   =>  environment.isPainted(evaluate(x, state), evaluate(y, state), state)
+        case Obstructed(xExpression, yExpression) => {
+                                                    val x = evaluate(xExpression, state)
+                                                    val y = evaluate(yExpression, state)
+                                                    (x < 0) ||
+                                                    (y < 0) ||
+                                                    (x >= environment.sizeX) ||
+                                                    (y >= environment.sizeY) ||
+                                                    environment.obstructed.contains((x,y))}
+        case Painted(xExpression, yExpression) =>  environment.isPainted(evaluate(xExpression, state), evaluate(yExpression, state), state)
         case Not(booleanExpression)		     =>  !(evaluate(booleanExpression, state))
 	      case And(booleanExpressionList)		 =>  booleanExpressionList.forall{ evaluate(_, state) }
         case Or(booleanExpressionList) 		 =>  booleanExpressionList.exists{ evaluate(_, state) }
