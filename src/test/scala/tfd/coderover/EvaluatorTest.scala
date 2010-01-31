@@ -10,31 +10,31 @@ class EvaluatorTest extends TestCase {
   private def executeConstantTest(stringInput: String, expectedConstant: Constant, expectedInt: Int) {
     val ast = parseAll(constant, stringInput).get
     assertEquals(expectedConstant, ast)
-    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluate(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeMathematicalTest(stringInput: String, expectedMathematical: Mathematical, expectedInt: Int) {
     val ast = parseAll(mathematical, stringInput).get
     assertEquals(expectedMathematical, ast)
-    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluate(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeComparisonTest(stringInput: String, expectedComparison: Comparison, expectedBoolean: Boolean) {
     val ast = parseAll(comparison, stringInput).get
     assertEquals(expectedComparison, ast)
-    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluateBoolean(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeBooleanLogicTest(stringInput: String, expectedBooleanLogic: BooleanExpression, expectedBoolean: Boolean) {
     val ast = parseAll(booleanExpression, stringInput).get
     assertEquals(expectedBooleanLogic, ast)
-    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluateBoolean(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeIntExpressionTest(stringInput: String, expectedAst: Expression, expectedIntResult: Int) {
     val ast = parseAll(intExpression, stringInput).get
     assertEquals(expectedAst, ast)
-    assertEquals(expectedIntResult, new Evaluator(DefaultEnvironment).evaluate(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(expectedIntResult, new Evaluator(DefaultEnvironment).evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
 
