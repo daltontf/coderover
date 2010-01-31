@@ -11,7 +11,7 @@ case class Paint() extends Instruction
 case class Pop() extends Instruction
 case class Replace(expression:IntExpression) extends Instruction
 case class Def(name:String, statements:List[Instruction]) extends Instruction
-case class Call(name:String) extends Instruction
+case class Call(name:String, callArgs:List[IntExpression]) extends Instruction
 case class Print(expression:List[Expression]) extends Instruction
 case class Store(address:IntExpression, value:IntExpression) extends Instruction
 
@@ -33,6 +33,7 @@ sealed abstract class Expression()
     case class Min(expression1:IntExpression, expression2:IntExpression) extends IntExpression
     case class Negate(expression:IntExpression) extends IntExpression
     case class Mem(expression:IntExpression) extends IntExpression
+    case class Param(position:Int) extends IntExpression
 
  sealed abstract class Mathematical(expressions:List[IntExpression]) extends IntExpression
   case class Add(val expressions:List[IntExpression]) extends Mathematical(expressions)

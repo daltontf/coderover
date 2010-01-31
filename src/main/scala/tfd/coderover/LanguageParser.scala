@@ -6,7 +6,7 @@ class LanguageParser extends JavaTokenParsers {
 
   override protected val whiteSpace = """(\s+|//[^\n]*\n|/\*(.|[\r\n])*?\*/|//[^\n]*$)+""".r
   
-  lazy val intExpression:Parser[IntExpression] = negatableExpression | negatedExpression | constant
+  lazy val intExpression:Parser[IntExpression] = negatableExpression | negatedExpression | param | constant
   
   lazy val negatableExpression:Parser[IntExpression] = "(" ~> mathematical <~ ")" | arityNoneFunction | arityOneFunction | arityTwoFunction | arityOneIdentFunction
   
@@ -48,6 +48,8 @@ class LanguageParser extends JavaTokenParsers {
       case "DY" => DeltaY()
       case "DEPTH" => Depth()
   }
+
+  lazy val param:Parser[Param] = """:\d+""".r ^^ { x => Param(x.substring(1).toInt) }
 
   lazy val constant:Parser[Constant] = wholeNumber ^^ { x => Constant(x.toInt) }
 
@@ -137,7 +139,12 @@ class LanguageParser extends JavaTokenParsers {
     case name~_~instructions => Def(name, instructions)
   }
   
-  lazy val call:Parser[Call] = "CALL" ~> ident ^^ { x:String => Call(x) }
+  lazy val call:Parser[Call] = "CALL" ~> ident ~ opt(callParams)  ^^ {
+    case defName~Some(params) => Call(defName, params)
+    case defName~None => Call(defName, Nil) 
+  }
+
+  lazy val callParams:Parser[List[IntExpression]] = "(" ~> repsep(intExpression, ",") <~ ")"
   
   lazy val instruction:Parser[Instruction] = command  | controlFlow
   

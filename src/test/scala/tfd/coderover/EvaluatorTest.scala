@@ -10,31 +10,31 @@ class EvaluatorTest extends TestCase {
   private def executeConstantTest(stringInput: String, expectedConstant: Constant, expectedInt: Int) {
     val ast = parseAll(constant, stringInput).get
     assertEquals(expectedConstant, ast)
-    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluate(ast, State(0, 0, 0)))
+    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluate(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeMathematicalTest(stringInput: String, expectedMathematical: Mathematical, expectedInt: Int) {
     val ast = parseAll(mathematical, stringInput).get
     assertEquals(expectedMathematical, ast)
-    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluate(ast, State(0, 0, 0)))
+    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluate(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeComparisonTest(stringInput: String, expectedComparison: Comparison, expectedBoolean: Boolean) {
     val ast = parseAll(comparison, stringInput).get
     assertEquals(expectedComparison, ast)
-    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, State(0, 0, 0)))
+    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeBooleanLogicTest(stringInput: String, expectedBooleanLogic: BooleanExpression, expectedBoolean: Boolean) {
     val ast = parseAll(booleanExpression, stringInput).get
     assertEquals(expectedBooleanLogic, ast)
-    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, State(0, 0, 0)))
+    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluate(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeIntExpressionTest(stringInput: String, expectedAst: Expression, expectedIntResult: Int) {
     val ast = parseAll(intExpression, stringInput).get
     assertEquals(expectedAst, ast)
-    assertEquals(expectedIntResult, new Evaluator(DefaultEnvironment).evaluate(ast, State(0, 0, 0)))
+    assertEquals(expectedIntResult, new Evaluator(DefaultEnvironment).evaluate(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
 
@@ -427,6 +427,38 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(3, 1, 0), state)
     assertEquals(true, state.stopped)
     assertEquals(Some(UndefinedBlock("FOO")), state.abend)
+  }
+
+  def testDefCallWithParams {
+    val state = State(2, 2, 0)
+    val evaluator = new Evaluator(DefaultEnvironment)
+    evaluator.evaluate(parse("""|DEF RIGHT_FORWARD { RIGHT FORWARD :1 }
+     							 |DEF LEFT_FORWARD { LEFT FORWARD :1 }
+     							 |DEF EMPTY { }
+     							 |DEF LEFT_LEFT_FORWARD { LEFT FORWARD :1 LEFT FORWARD :2 }
+     						     |CALL RIGHT_FORWARD(1)""".stripMargin).get, state)
+    assertEquals(State(3, 2, 1), state)
+    evaluator.evaluate(parse("CALL LEFT_FORWARD(2)").get, state)
+    assertEquals(State(3, 0, 0), state)
+    evaluator.evaluate(parse("CALL LEFT_FORWARD(3)").get, state)
+    assertEquals(State(0, 0, 3), state)
+    evaluator.evaluate(parse("CALL LEFT_LEFT_FORWARD(4, 5)").get, state)
+    assertEquals(State(5, 4, 1), state)
+    evaluator.evaluate(parse("CALL EMPTY").get, state)
+    assertEquals(State(5, 4, 1), state)
+    evaluator.evaluate(parse("CALL FOO").get, state)
+    assertEquals(State(5, 4, 1), state)
+    assertEquals(true, state.stopped)
+    assertEquals(Some(UndefinedBlock("FOO")), state.abend)
+  }
+
+  def testUnboundParams {
+    val state = State(2, 2, 0)
+    val evaluator = new Evaluator(DefaultEnvironment)
+    evaluator.evaluate(parse("PUSH :1").get, state)
+    assertEquals(true, state.stopped)
+    assertEquals(Some(UnboundParameter(1)), state.abend)  
+
   }
 
   def testPrint() {

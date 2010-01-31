@@ -270,7 +270,10 @@ class LanguageParserTest extends TestCase {
   }
 
   def testCall() {
-    assertEquals(List(Call("FUNC")), parse("CALL FUNC").get)
+    assertEquals(List(Call("FUNC", Nil)), parse("CALL FUNC").get)
+    assertEquals(List(Call("FUNC", Nil)), parse("CALL FUNC()").get)
+    assertEquals(List(Call("FUNC", List(Constant(42)))), parse("CALL FUNC(42)").get)
+    assertEquals(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), parse("CALL FUNC(42,(TOP + 28))").get)
   }
 
   def testPrint() {
@@ -307,5 +310,9 @@ class LanguageParserTest extends TestCase {
 
   def testNegativeExpression() {
     assertEquals(List(Print(List(StringConstant("-DX = "), Negate(DeltaX())))), parse("""PRINT "-DX = " + -DX""").get)
+  }
+
+  def testParameters() {
+    assertEquals(List(Forward(Param(1))), parse("""FORWARD :1""").get)
   }
 }

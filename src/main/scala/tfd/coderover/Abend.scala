@@ -18,4 +18,6 @@ case class UnknownEntity(val entity:String) extends Abend("Unknown entity :" + e
 
 case class UndefinedBlock(val name:String) extends Abend("Undefined block :" + name)
 
+case class UnboundParameter(val position:Int) extends Abend("Unbound parameter :" + position)
+
 
