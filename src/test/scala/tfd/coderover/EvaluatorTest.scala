@@ -10,33 +10,36 @@ class EvaluatorTest extends TestCase {
   private def executeConstantTest(stringInput: String, expectedConstant: Constant, expectedInt: Int) {
     val ast = parseAll(constant, stringInput).get
     assertEquals(expectedConstant, ast)
-    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(EvaluationSuccess(expectedInt), new Evaluator(DefaultEnvironment).evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeMathematicalTest(stringInput: String, expectedMathematical: Mathematical, expectedInt: Int) {
     val ast = parseAll(mathematical, stringInput).get
     assertEquals(expectedMathematical, ast)
-    assertEquals(expectedInt, new Evaluator(DefaultEnvironment).evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(EvaluationSuccess(expectedInt), new Evaluator(DefaultEnvironment).evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeComparisonTest(stringInput: String, expectedComparison: Comparison, expectedBoolean: Boolean) {
     val ast = parseAll(comparison, stringInput).get
     assertEquals(expectedComparison, ast)
-    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluateBoolean(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(EvaluationSuccess(expectedBoolean), new Evaluator(DefaultEnvironment).evaluateBoolean(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeBooleanLogicTest(stringInput: String, expectedBooleanLogic: BooleanExpression, expectedBoolean: Boolean) {
     val ast = parseAll(booleanExpression, stringInput).get
     assertEquals(expectedBooleanLogic, ast)
-    assertEquals(expectedBoolean, new Evaluator(DefaultEnvironment).evaluateBoolean(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(EvaluationSuccess(expectedBoolean), new Evaluator(DefaultEnvironment).evaluateBoolean(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeIntExpressionTest(stringInput: String, expectedAst: Expression, expectedIntResult: Int) {
     val ast = parseAll(intExpression, stringInput).get
     assertEquals(expectedAst, ast)
-    assertEquals(expectedIntResult, new Evaluator(DefaultEnvironment).evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(EvaluationSuccess(expectedIntResult), new Evaluator(DefaultEnvironment).evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
+  def testEmpty() {
+    assertEquals(EvaluationSuccess(()), new Evaluator(DefaultEnvironment).evaluate(parse("").get, State(0,0,0)))
+  }
 
   def testConstant() {
     executeConstantTest("42", Constant(42), 42)
@@ -71,15 +74,11 @@ class EvaluatorTest extends TestCase {
   }
 
   def testDivByZero() {
-    val state = State(2, 2, 0)
-    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (2/0)").get, state)
-    assertEquals(Some(DivideByZero), state.abend)
+    assertEquals(EvaluationAbend[Int](DivideByZero), new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (2/0)").get, State(2, 2, 0)))
   }
 
   def testModByZero() {
-    val state = State(2, 2, 0)
-    new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (2%0)").get, state)
-    assertEquals(Some(DivideByZero), state.abend)
+    assertEquals(EvaluationAbend[Int](DivideByZero), new Evaluator(DefaultEnvironment).evaluate(parse("PUSH (2%0)").get, State(2, 2, 0)))
   }
 
   def testExpression() {
@@ -406,9 +405,7 @@ class EvaluatorTest extends TestCase {
     assertEquals(-2, state.top)
     assertEquals(false, state.stopped)
     assertEquals(None, state.abend)
-    evaluator.evaluate(parse("PUSH DISTANCEX(FOO)").get, state)
-    assertEquals(true, state.stopped)
-    assertEquals(Some(UnknownEntity("FOO")), state.abend)
+    assertEquals(EvaluationAbend(UnknownEntity("FOO")), evaluator.evaluate(parse("PUSH DISTANCEX(FOO)").get, state))
   }
 
   def testDefCall {
@@ -423,10 +420,8 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(3, 1, 0), state)
     evaluator.evaluate(parse("CALL EMPTY").get, state)
     assertEquals(State(3, 1, 0), state)
-    evaluator.evaluate(parse("CALL FOO").get, state)
+    assertEquals(EvaluationAbend(UndefinedBlock("FOO")), evaluator.evaluate(parse("CALL FOO").get, state))
     assertEquals(State(3, 1, 0), state)
-    assertEquals(true, state.stopped)
-    assertEquals(Some(UndefinedBlock("FOO")), state.abend)
   }
 
   def testDefCallWithParams {
@@ -446,19 +441,12 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(5, 4, 1), state)
     evaluator.evaluate(parse("CALL EMPTY").get, state)
     assertEquals(State(5, 4, 1), state)
-    evaluator.evaluate(parse("CALL FOO").get, state)
+    assertEquals(EvaluationAbend(UndefinedBlock("FOO")), evaluator.evaluate(parse("CALL FOO").get, state))
     assertEquals(State(5, 4, 1), state)
-    assertEquals(true, state.stopped)
-    assertEquals(Some(UndefinedBlock("FOO")), state.abend)
   }
 
   def testUnboundParams {
-    val state = State(2, 2, 0)
-    val evaluator = new Evaluator(DefaultEnvironment)
-    evaluator.evaluate(parse("PUSH :1").get, state)
-    assertEquals(true, state.stopped)
-    assertEquals(Some(UnboundParameter(1)), state.abend)  
-
+    assertEquals(EvaluationAbend(UnboundParameter(1)), new Evaluator(DefaultEnvironment).evaluate(parse("PUSH :1").get, State(2, 2, 0)))
   }
 
   def testPrint() {
@@ -478,13 +466,13 @@ class EvaluatorTest extends TestCase {
     val controller = new Controller(DefaultEnvironment, new Constraints(10, 10, 10))
     val evaluator = new Evaluator(DefaultEnvironment, controller)
     val state = new State(2, 2, 0)
-    evaluator.evaluate(parse("""STORE (3,42) PUSH MEM(3)""").get, state)
+    assertEquals(EvaluationSuccess(()),evaluator.evaluate(parse("""STORE (3,42) PUSH MEM(3)""").get, state))
     assertEquals(42, state.top)
     assertEquals(42, controller.memory(3))
-    evaluator.evaluate(parse("""STORE (10,42)""").get, state)
+    assertEquals(EvaluationSuccess(()), evaluator.evaluate(parse("""STORE (10,42)""").get, state))
     assertEquals(Some(InvalidMEMAddress(10)), state.abend)
     state.reset()
-    evaluator.evaluate(parse("""PUSH MEM(10)""").get, state)
+    assertEquals(EvaluationSuccess(()), evaluator.evaluate(parse("""PUSH MEM(10)""").get, state))
     assertEquals(Some(InvalidMEMAddress(10)), state.abend)
   }
 
@@ -506,7 +494,6 @@ class EvaluatorTest extends TestCase {
     |DEF FOO { PUSH 2 POP }
     |DEF BAR { PUSH 1 CALL FOO POP }
     |CALL BAR""".stripMargin).get, state)
-    assertEquals(1, state.depth)
     assertEquals(Some(CallStackOverflow), state.abend)
   }
 
