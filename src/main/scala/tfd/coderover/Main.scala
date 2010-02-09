@@ -7,7 +7,7 @@ object Main {
   def run(code:String, state:State) = {
     val result = parse(code)
     if (result.successful) {
-    	new Evaluator(DefaultEnvironment).evaluate(result.get, Array.empty[Int], state)
+    	new Evaluator().evaluate(result.get, new Controller(state))
     } else {
         println(result)
     }
