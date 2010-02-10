@@ -9,59 +9,59 @@ class EvaluatorTest extends TestCase {
 
   import languageParser._
 
-  private def evaluateInt(intExpression:IntExpression, args:Array[Int] = Array.empty[Int], controller:Controller):EvaluationResult[Int] =
+  private def evaluateInt(intExpression:IntExpression, args:Array[Int] = Array.empty[Int], controller:Controller):ResultOrAbend[Int] =
       evaluator.evaluateInt(intExpression, args, controller)
 
-  private def evaluateInt(intExpression:IntExpression, args:Array[Int], state:State):EvaluationResult[Int] =
+  private def evaluateInt(intExpression:IntExpression, args:Array[Int], state:State):ResultOrAbend[Int] =
       evaluateInt(intExpression, args, new Controller(state, DefaultEnvironment))
 
-  private def evaluateBoolean(booleanExpression:BooleanExpression, args:Array[Int] = Array.empty[Int], controller:Controller):EvaluationResult[Boolean] =
+  private def evaluateBoolean(booleanExpression:BooleanExpression, args:Array[Int] = Array.empty[Int], controller:Controller):ResultOrAbend[Boolean] =
       evaluator.evaluateBoolean(booleanExpression, args, controller)
 
-  private def evaluateBoolean(booleanExpression:BooleanExpression, args:Array[Int], state:State):EvaluationResult[Boolean] =
+  private def evaluateBoolean(booleanExpression:BooleanExpression, args:Array[Int], state:State):ResultOrAbend[Boolean] =
       evaluateBoolean(booleanExpression, args, new Controller(state, DefaultEnvironment))
 
-  private def evaluate(instructions:String, controller:Controller):EvaluationResult[Unit] =
+  private def evaluate(instructions:String, controller:Controller):ResultOrAbend[Unit] =
       evaluator.evaluate(parse(instructions).get, controller)
 
-  private def evaluate(instructions:String, state:State):EvaluationResult[Unit] =
+  private def evaluate(instructions:String, state:State):ResultOrAbend[Unit] =
       evaluator.evaluate(parse(instructions).get, new Controller(state, DefaultEnvironment))
 
-  private def evaluate(instructions:List[Instruction], state:State):EvaluationResult[Unit] = 
+  private def evaluate(instructions:List[Instruction], state:State):ResultOrAbend[Unit] =
       evaluator.evaluate(instructions, new Controller(state, DefaultEnvironment))
 
   private def executeConstantTest(stringInput: String, expectedConstant: Constant, expectedInt: Int) {
     val ast = parseAll(constant, stringInput).get
     assertEquals(expectedConstant, ast)
-    assertEquals(EvaluationResult(Some(expectedInt), None), evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(ResultOrAbend(Some(expectedInt), None), evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeMathematicalTest(stringInput: String, expectedMathematical: Mathematical, expectedInt: Int) {
     val ast = parseAll(mathematical, stringInput).get
     assertEquals(expectedMathematical, ast)
-    assertEquals(EvaluationResult(Some(expectedInt), None), evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(ResultOrAbend(Some(expectedInt), None), evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeComparisonTest(stringInput: String, expectedComparison: Comparison, expectedBoolean: Boolean) {
     val ast = parseAll(comparison, stringInput).get
     assertEquals(expectedComparison, ast)
-    assertEquals(EvaluationResult(Some(expectedBoolean), None), evaluateBoolean(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(ResultOrAbend(Some(expectedBoolean), None), evaluateBoolean(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeBooleanLogicTest(stringInput: String, expectedBooleanLogic: BooleanExpression, expectedBoolean: Boolean) {
     val ast = parseAll(booleanExpression, stringInput).get
     assertEquals(expectedBooleanLogic, ast)
-    assertEquals(EvaluationResult(Some(expectedBoolean), None), evaluateBoolean(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(ResultOrAbend(Some(expectedBoolean), None), evaluateBoolean(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   private def executeIntExpressionTest(stringInput: String, expectedAst: Expression, expectedIntResult: Int) {
     val ast = parseAll(intExpression, stringInput).get
     assertEquals(expectedAst, ast)
-    assertEquals(EvaluationResult(Some(expectedIntResult), None), evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
+    assertEquals(ResultOrAbend(Some(expectedIntResult), None), evaluateInt(ast, Array.empty[Int], State(0, 0, 0)))
   }
 
   def testEmpty() {
-    assertEquals(EvaluationSuccessUnit, evaluate("", State(0,0,0)))
+    assertEquals(SuccessResultUnit, evaluate("", State(0,0,0)))
   }
 
   def testConstant() {
@@ -97,11 +97,15 @@ class EvaluatorTest extends TestCase {
   }
 
   def testDivByZero() {
-    assertEquals(EvaluationResult(None, Some(DivideByZero)), evaluate("PUSH (2/0)", State(2, 2, 0)))
+    List("PUSH (2/0)",
+         "PRINT (2/0)"
+      ).map { code:String =>
+        assertEquals(ResultOrAbend(None, Some(DivideByZero)), evaluate(code, State(2, 2, 0)))
+      }
   }
 
   def testModByZero() {
-    assertEquals(EvaluationResult(None, Some(DivideByZero)), evaluate("PUSH (2%0)", State(2, 2, 0)))
+    assertEquals(ResultOrAbend(None, Some(DivideByZero)), evaluate("PUSH (2%0)", State(2, 2, 0)))
   }
 
   def testExpression() {
@@ -201,32 +205,32 @@ class EvaluatorTest extends TestCase {
   }
 
   def testStack() {
-    val state = State(2, 2, 0)
-    evaluate("PUSH (1+2)", state)
-    //assertEquals(3, state.top)
-    evaluate("PUSH (TOP + 1)", state)
-    //assertEquals(4, state.top)
-    evaluate("POP", state)
-    //assertEquals(3, state.top)
-    evaluate("REPLACE (TOP * 2)", state)
-    //assertEquals(6, state.top)
+    val controller = new Controller(State(2, 2, 0))
+    evaluate("PUSH (1+2)", controller)
+    assertEquals(ResultOrAbend(3), controller.top)
+    evaluate("PUSH (TOP + 1)", controller)
+    assertEquals(ResultOrAbend(4), controller.top)
+    evaluate("POP", controller)
+    assertEquals(ResultOrAbend(3), controller.top)
+    evaluate("REPLACE (TOP * 2)", controller)
+    assertEquals(ResultOrAbend(6), controller.top)
   }
 
   def testWhileStack() {
-    val state = State(2, 2, 0)
+    val controller = new Controller(State(2, 2, 0))
     evaluate("""|PUSH 10
-    				  |WHILE (TOP > 3) {
+    				    |WHILE (TOP > 3) {
     			      |  REPLACE (TOP - 1)
-                      |}""".stripMargin, state)
-    //assertEquals(3, state.top)
+                |}""".stripMargin, controller)
+    assertEquals(ResultOrAbend(3), controller.top)
   }
 
   def testGridXY() {
-    val state = State(2, 3, 0)
-    evaluate("""|PUSH X
-    				  |PUSH Y""".stripMargin, state)
-    //assertEquals(3, state.pop)
-    //assertEquals(2, state.pop)
+    val controller = new Controller(State(2, 3, 0))
+    evaluate("PUSH X PUSH Y", controller)
+    assertEquals(ResultOrAbend(3), controller.top)
+    evaluate("POP", controller)
+    assertEquals(ResultOrAbend(2), controller.top)
   }
 
   def testWhileGrid() {
@@ -243,18 +247,17 @@ class EvaluatorTest extends TestCase {
   }
 
   def testDeltaXY() {
-    val state = State(2, 3, 0)
-    evaluate("PUSH DX", state)
-    //assertEquals(0, state.top)
-    evaluate("PUSH DY", state)
-    //assertEquals(-1, state.top)
+    val controller = new Controller(new State(2, 3, 0))
+    evaluate("PUSH DX", controller)
+    assertEquals(ResultOrAbend(0), controller.top)
+    evaluate("PUSH DY", controller)
+    assertEquals(ResultOrAbend(-1), controller.top)
     evaluate("""|
     			      |RIGHT
-    			      |PUSH DX""".stripMargin, state)
-    //assertEquals(1, state.top)
-    evaluate("PUSH DY", state)
-    //assertEquals(0, state.top)
-
+    			      |PUSH DX""".stripMargin, controller)
+    assertEquals(ResultOrAbend(1), controller.top)
+    evaluate("PUSH DY", controller)
+    assertEquals(ResultOrAbend(0), controller.top)
   }
 
   def testAbs() {
@@ -342,16 +345,14 @@ class EvaluatorTest extends TestCase {
     executeBooleanLogicTest("NOT((1 + 3) <> (0 - -4))", Not(NotEqual(Add(List(Constant(1), Constant(3))), Subtract(List(Constant(0), Constant(-4))))), true)
   }
 
-  def testPopOnEmptyStack() {
-    val state = new State(2, 2, 0)
-    assertEquals(EvaluationResult(None, Some(IllegalOperationOnEmptyStack)),
-          evaluate("POP", state))
-  }
-
-  def testTopOnEmptyStack() {
-    val state = new State(2, 2, 0)
-    assertEquals(EvaluationResult(None, Some(IllegalOperationOnEmptyStack)),
-          evaluate("PUSH TOP", state))
+  def testIllegalOperationOnEmptyStack() {
+    List("POP",
+         "PUSH TOP",
+         "REPLACE 2"
+      ).map { code:String =>
+     assertEquals(code, ResultOrAbend(None, Some(IllegalOperationOnEmptyStack)),
+          evaluate(code, new State(2, 2, 0)))
+    }
   }
 
   def testAdjacent() {
@@ -408,65 +409,58 @@ class EvaluatorTest extends TestCase {
 
       override def distanceY(entity: String, state: State) = if (entityMap.contains(entity)) {Some(entityMap(entity)._2 - state.gridY)} else {None}
     }
-    evaluate("PUSH DISTANCEX(ROCK)", new Controller(state, environment))
-    //assertEquals(3, state.top)
-    //assertEquals(false, state.stopped)
-    //assertEquals(None, state.abend)
-    evaluate("PUSH DISTANCEY(ROCK)", new Controller(state, environment))
-    //assertEquals(2, state.top)
-    //assertEquals(false, state.stopped)
-    //assertEquals(None, state.abend)
-    evaluate("PUSH DISTANCEX(FLAG)", new Controller(state, environment))
-    //assertEquals(-1, state.top)
-    //assertEquals(false, state.stopped)
-    //assertEquals(None, state.abend)
-    evaluate("PUSH DISTANCEY(FLAG)", new Controller(state, environment))
-    //assertEquals(-2, state.top)
-    //assertEquals(false, state.stopped)
-    //assertEquals(None, state.abend)
-    //assertEquals(EvaluationResult(None, Some(UnknownEntity("FOO"))), evaluator.evaluate("PUSH DISTANCEX(FOO)", state))
+    val controller = new Controller(state, environment)
+    evaluate("PUSH DISTANCEX(ROCK)", controller)
+    assertEquals(ResultOrAbend(3), controller.top)
+    evaluate("PUSH DISTANCEY(ROCK)", controller)
+    assertEquals(ResultOrAbend(2), controller.top)
+    evaluate("PUSH DISTANCEX(FLAG)", controller)
+    assertEquals(ResultOrAbend(-1), controller.top)
+    evaluate("PUSH DISTANCEY(FLAG)", controller)
+    assertEquals(ResultOrAbend(-2), controller.top)
+    assertEquals(ResultOrAbend(UnknownEntity("FOO")), evaluate("PUSH DISTANCEX(FOO)", controller))
   }
 
   def testDefCall {
     val state = State(2, 2, 0)
     val controller = new Controller(state)
-    assertEquals(EvaluationSuccessUnit, evaluate(
+    assertEquals(SuccessResultUnit, evaluate(
       """|DEF RIGHT_FORWARD { RIGHT FORWARD }
          |DEF LEFT_FORWARD { LEFT FORWARD }
      		 |DEF EMPTY { }
      		 |CALL RIGHT_FORWARD""".stripMargin, controller))
     assertEquals(State(3, 2, 1), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("CALL LEFT_FORWARD", controller))
+    assertEquals(SuccessResultUnit, evaluate("CALL LEFT_FORWARD", controller))
     assertEquals(State(3, 1, 0), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("CALL EMPTY", controller))
+    assertEquals(SuccessResultUnit, evaluate("CALL EMPTY", controller))
     assertEquals(State(3, 1, 0), state)
-    assertEquals(EvaluationResult(None, Some(UndefinedBlock("FOO"))), evaluate("CALL FOO", controller))
+    assertEquals(ResultOrAbend(None, Some(UndefinedBlock("FOO"))), evaluate("CALL FOO", controller))
     assertEquals(State(3, 1, 0), state)
   }
 
   def testDefCallWithParams {
     val state = State(2, 2, 0)
     val controller = new Controller(state)
-    assertEquals(EvaluationSuccessUnit, evaluate("""|DEF RIGHT_FORWARD { RIGHT FORWARD :1 }
+    assertEquals(SuccessResultUnit, evaluate("""|DEF RIGHT_FORWARD { RIGHT FORWARD :1 }
      					  |DEF LEFT_FORWARD { LEFT FORWARD :1 }
      						|DEF EMPTY { }
      						|DEF LEFT_LEFT_FORWARD { LEFT FORWARD :1 LEFT FORWARD :2 }
      						|CALL RIGHT_FORWARD(1)""".stripMargin, controller))
     assertEquals(State(3, 2, 1), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("CALL LEFT_FORWARD(2)", controller))
+    assertEquals(SuccessResultUnit, evaluate("CALL LEFT_FORWARD(2)", controller))
     assertEquals(State(3, 0, 0), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("CALL LEFT_FORWARD(3)", controller))
+    assertEquals(SuccessResultUnit, evaluate("CALL LEFT_FORWARD(3)", controller))
     assertEquals(State(0, 0, 3), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("CALL LEFT_LEFT_FORWARD(4, 5)", controller))
+    assertEquals(SuccessResultUnit, evaluate("CALL LEFT_LEFT_FORWARD(4, 5)", controller))
     assertEquals(State(5, 4, 1), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("CALL EMPTY", controller))
+    assertEquals(SuccessResultUnit, evaluate("CALL EMPTY", controller))
     assertEquals(State(5, 4, 1), state)
-    assertEquals(EvaluationResult(None, Some(UndefinedBlock("FOO"))), evaluate("CALL FOO", controller))
+    assertEquals(ResultOrAbend(None, Some(UndefinedBlock("FOO"))), evaluate("CALL FOO", controller))
     assertEquals(State(5, 4, 1), state)
   }
 
   def testUnboundParams {
-    assertEquals(EvaluationResult(None,Some(UnboundParameter(1))), evaluate("PUSH :1", State(2, 2, 0)))
+    assertEquals(ResultOrAbend(None,Some(UnboundParameter(1))), evaluate("PUSH :1", State(2, 2, 0)))
   }
 
   def testPrint() {
@@ -478,20 +472,15 @@ class EvaluatorTest extends TestCase {
     }
     evaluate("""PRINT "X = " + X + " Y = " + Y + " " + ((2+2) = 4) + " foo" """, controller)
     assertEquals("X = 2 Y = 3 true foo", controller.lastPrint)
-  }
+  }            
 
   def testStoreMem() {
-    val state = new State(2, 2, 0)
-    val controller = new Controller(state)
-    //, new Constraints(10, 10, 10)
-    assertEquals(EvaluationSuccessUnit, evaluate("""STORE (3,42) PUSH MEM(3)""", controller))
-    assertEquals(EvaluationResult(Some(42), None), controller.top)
+    val controller = new Controller(new State(2, 2, 0), DefaultEnvironment, new Constraints(10, 10, 10))
+    assertEquals(SuccessResultUnit, evaluate("""STORE (3,42) PUSH MEM(3)""", controller))
+    assertEquals(ResultOrAbend(42), controller.top)
     assertEquals(42, controller.memory(3))
-    assertEquals(EvaluationSuccessUnit, evaluate("""STORE (10,42)""", controller))
-    //assertEquals(Some(InvalidMEMAddress(10)), state.abend)
-    //state.reset()
-    assertEquals(EvaluationSuccessUnit, evaluate("""PUSH MEM(10)""", controller))
-    //assertEquals(Some(InvalidMEMAddress(10)), state.abend)
+    assertEquals(ResultOrAbend(InvalidMEMAddress(10)), evaluate("""STORE (10,42)""", controller))
+    assertEquals(ResultOrAbend(InvalidMEMAddress(11)), evaluate("""PUSH MEM(11)""", controller))
   }
 
   def testMaxStack() {
@@ -517,7 +506,7 @@ class EvaluatorTest extends TestCase {
     val state = new State(2, 2, 2)
     val environment = new Environment(10, 10, Set((2, 3)))
     val controller = new Controller(state, environment)
-    assertEquals(EvaluationSuccessUnit, evaluate("FORWARD", controller))
+    assertEquals(SuccessResultUnit, evaluate("FORWARD", controller))
     assertEquals(State(2,2,2), state)
   }
 
@@ -526,43 +515,65 @@ class EvaluatorTest extends TestCase {
     val environment = new Environment(3, 3, Set((1, 1)))
     val controller = new Controller(state, environment)
 
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(0,0,1), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(1,0,1), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(2,0,1), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(2,0,2), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(2,1,2), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(2,2,2), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(2,2,3), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(1,2,3), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(0,2,3), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(0,2,0), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(0,1,0), state)
     // Face obstructed square first
-    assertEquals(EvaluationSuccessUnit, evaluate("RIGHT IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("RIGHT IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
     assertEquals(State(0,1,2), state)
     // Test outside grid boundaries
-    assertEquals(EvaluationSuccessUnit, evaluate("IF (OBSTRUCTED(-1,0)) { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF (OBSTRUCTED(-1,0)) { RIGHT }", controller))
     assertEquals(State(0,1,3), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF (OBSTRUCTED(0,-1)) { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF (OBSTRUCTED(0,-1)) { RIGHT }", controller))
     assertEquals(State(0,1,0), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF (OBSTRUCTED(0,0)) { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF (OBSTRUCTED(0,0)) { RIGHT }", controller))
     assertEquals(State(0,1,0), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF (OBSTRUCTED(2,3)) { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF (OBSTRUCTED(2,3)) { RIGHT }", controller))
     assertEquals(State(0,1,1), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF (OBSTRUCTED(3,2)) { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF (OBSTRUCTED(3,2)) { RIGHT }", controller))
     assertEquals(State(0,1,2), state)
-    assertEquals(EvaluationSuccessUnit, evaluate("IF (OBSTRUCTED(2,2)) { RIGHT }", controller))
+    assertEquals(SuccessResultUnit, evaluate("IF (OBSTRUCTED(2,2)) { RIGHT }", controller))
     assertEquals(State(0,1,2), state)
   }
+
+  def testPostMoveForward() {
+    object Kablooey extends Abend("Kablooey")
+    
+    val state = new State(0, 0, 0)
+    val environment = new Environment(3, 3) {
+
+
+      override def postMoveForward(state:State):Option[Abend] = {
+
+        state match {
+          case State(1,1,_) => Some(Kablooey)
+          case _ => None
+        }
+      }
+    }
+    val controller = new Controller(state, environment)
+    assertEquals(SuccessResultUnit, evaluate("RIGHT FORWARD RIGHT", controller))
+    assertEquals(State(1,0,2), state)
+    assertEquals(ResultOrAbend[Unit](None, Some(Kablooey)), evaluate("FORWARD 2", controller))
+  }
+
 }

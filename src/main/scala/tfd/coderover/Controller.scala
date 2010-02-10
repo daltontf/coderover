@@ -2,14 +2,30 @@ package tfd.coderover
 
 import collection.mutable.Stack
 
-class Controller(val state:State, environment:Environment = DefaultEnvironment, constraints:Constraints = DefaultConstraints) {
+class Controller(var state:State, environment:Environment = DefaultEnvironment, constraints:Constraints = DefaultConstraints) {
   private[this] var callStackSize = 0
 
   private[coderover] val blockMap = new scala.collection.mutable.HashMap[String, List[Instruction]]()
 
   private[this] val stack = new Stack[Int]()
 
-  private[coderover] def moveForward() = state.moveForward()
+  private[coderover] def moveForward(distance:Int):ResultOrAbend[Unit] = {
+    var absDistance = Math.abs(distance)
+    var postForwardAbend:Option[Abend] = None
+    while (!stopped
+        && postForwardAbend.isEmpty
+        && absDistance > 0
+        && canMoveForward()) {
+          state.moveForward()
+          postForwardAbend = environment.postMoveForward(state)
+        	absDistance = absDistance - 1
+    }
+    if (postForwardAbend.isEmpty) {
+      SuccessResultUnit
+    } else {
+      new ResultOrAbend(postForwardAbend.get)
+    }
+  }
 
   private[coderover] def turnRight() = state.turnRight()
 
@@ -23,29 +39,30 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
 
   private[coderover] var stopped = false
 
-  private[coderover] def push(value:Int) =  {
+  private[coderover] def push(value:Int):ResultOrAbend[Unit] =  {
       stack.push(value)
       if (depth > constraints.maxStackSize) {
-        new EvaluationResult[Unit](StackOverflow)
+        new ResultOrAbend(StackOverflow)
       } else {
-        EvaluationSuccessUnit
+        SuccessResultUnit
     }
   }
 
-  private[coderover] def pop() =
+  private[coderover] def pop():ResultOrAbend[Unit] =
       if (!stack.isEmpty) {
 	  	  stack.pop()
-        EvaluationSuccessUnit
+        SuccessResultUnit
       } else {
-  		  new EvaluationResult[Unit](IllegalOperationOnEmptyStack)
+  		  new ResultOrAbend(IllegalOperationOnEmptyStack)
   		}
 
-  private[coderover] def top =
+  private[coderover] def top:ResultOrAbend[Int] =
       if (!stack.isEmpty) {
-	  	  new EvaluationResult[Int](stack.top)
+	  	  new ResultOrAbend(stack.top)
       } else {
-  		  new EvaluationResult[Int](IllegalOperationOnEmptyStack)
-  		}
+  		  new ResultOrAbend(IllegalOperationOnEmptyStack)
+      }
+
 
   private[coderover] def depth = stack.size
 
@@ -53,12 +70,12 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
     callStackSize = 0
   }
 
-  private[coderover] def incrementCallStack():EvaluationResult[Unit] = {
+  private[coderover] def incrementCallStack():ResultOrAbend[Unit] = {
     callStackSize = callStackSize + 1
     if (callStackSize > constraints.maxCallStackSize) {
-       new EvaluationResult[Unit](CallStackOverflow)
+       new ResultOrAbend[Unit](CallStackOverflow)
     } else {
-        EvaluationSuccessUnit
+        SuccessResultUnit
     }
   }
 
@@ -66,18 +83,18 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
     callStackSize = callStackSize - 1
   }
 
-  private[coderover] def mem(address:Int):EvaluationResult[Int] =
+  private[coderover] def mem(address:Int):ResultOrAbend[Int] =
      if (address > 0 && address < memory.size) {
-         new EvaluationResult(memory(address))
+         new ResultOrAbend(memory(address))
      } else {
-         new EvaluationResult(InvalidMEMAddress(address));
+         new ResultOrAbend(InvalidMEMAddress(address));
      }
 
-  private[coderover] def store(address:Int, value:Int):EvaluationResult[Unit] = {
+  private[coderover] def store(address:Int, value:Int):ResultOrAbend[Unit] = {
      if (address > 0 && address < memory.size) {
-          new EvaluationResult(memory(address) = value)
+          new ResultOrAbend(memory(address) = value)
      } else {
-          new EvaluationResult(InvalidMEMAddress(address));
+          new ResultOrAbend(InvalidMEMAddress(address));
      }
   }
 
@@ -97,7 +114,14 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
 
   private[coderover] def canMoveForward() = environment.canMoveForward(state)
 
-  private[coderover] def postMoveForward() = environment.postMoveForward(state)
+  private[coderover] def postMoveForward():ResultOrAbend[Unit] = {
+    val result = environment.postMoveForward(state)
+    if (result.isEmpty) {
+      SuccessResultUnit
+    } else {
+      new ResultOrAbend(result.get)
+    }
+  }
   
   private[coderover] def gridX = state.gridX
 

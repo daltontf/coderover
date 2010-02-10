@@ -14,7 +14,7 @@ class Environment(
       (nextX >= 0 && nextX < sizeX && nextY >=0 && nextY < sizeY && !obstructed.contains((nextX, nextY)))
     }
   
-  def postMoveForward(state:State) { }
+  def postMoveForward(state:State):Option[Abend] = None
   
   def paint(state:State) { }
   

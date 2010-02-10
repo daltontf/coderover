@@ -2,29 +2,16 @@ package tfd.coderover
 
 import collection.mutable.Stack
 
-case class EvaluationResult[A](val value:Option[A], val abend:Option[Abend]) {
-  def this(rawValue:A) = this(Some(rawValue), None)
-  def this(rawAbend:Abend) = this(None, Some(rawAbend))
 
-  def success = !value.isEmpty
-
-  def flatMap[B](f: A => EvaluationResult[B]): EvaluationResult[B] =
-    if (success) f(value.get) else this.asInstanceOf[EvaluationResult[B]]
-
-  def map[B](f: A => B): EvaluationResult[B] = 
-     if (success) new EvaluationResult(f(value.get)) else this.asInstanceOf[EvaluationResult[B]]
-}
-
-object EvaluationSuccessUnit extends EvaluationResult[Unit](Some(()), None)
 
 class Evaluator() {
   
-  final def evaluate(instructions:List[Instruction], controller:Controller):EvaluationResult[Unit] = {
+  final def evaluate(instructions:List[Instruction], controller:Controller):ResultOrAbend[Unit] = {
     controller.stopped = false
     evaluate(instructions, Array.empty[Int], controller)
   }  
 
-  private[this] final def evaluate(instructions:List[Instruction], args:Array[Int], controller:Controller):EvaluationResult[Unit] =
+  private[this] final def evaluate(instructions:List[Instruction], args:Array[Int], controller:Controller):ResultOrAbend[Unit] =
     if (instructions != Nil) {
       instructions.tail.foldLeft(evaluateInstruction(instructions.head, args, controller)) {
          (previousResult, instruction) =>
@@ -32,33 +19,33 @@ class Evaluator() {
               yield (yp)
       }
     } else {
-      EvaluationSuccessUnit
+      SuccessResultUnit
     }
 
   
-  private[this] final def processDistance(distance:Option[Int], entity:String):EvaluationResult[Int] =
+  private[this] final def processDistance(distance:Option[Int], entity:String):ResultOrAbend[Int] =
     if (distance == None) { 
-    	new EvaluationResult(UnknownEntity(entity))
+    	new ResultOrAbend(UnknownEntity(entity))
     } else {
-      new EvaluationResult(distance.get)
+      new ResultOrAbend(distance.get)
     }
 
-  private[this] def evaluateDivideByZero(expression:IntExpression, args:Array[Int], controller:Controller):EvaluationResult[Int] = {
+  private[this] def evaluateDivideByZero(expression:IntExpression, args:Array[Int], controller:Controller):ResultOrAbend[Int] = {
     val result = evaluateInt(expression, args, controller)
     if (!result.value.isEmpty && result.value.get == 0) {
-      new EvaluationResult(DivideByZero)
+      new ResultOrAbend(DivideByZero)
     } else {
       result
     }
   }
 
-  private[coderover] val add = { (x:EvaluationResult[Int], y:EvaluationResult[Int]) =>
+  private[coderover] val add = { (x:ResultOrAbend[Int], y:ResultOrAbend[Int]) =>
     for (xp <- x; yp <- x) yield (xp + yp)
   }
 
-  private[coderover] final def evaluateInt(expression:IntExpression, args:Array[Int], controller:Controller):EvaluationResult[Int] = {
+  private[coderover] final def evaluateInt(expression:IntExpression, args:Array[Int], controller:Controller):ResultOrAbend[Int] = {
     expression match {
-      case Constant(x)               => new EvaluationResult(x)
+      case Constant(x)               => new ResultOrAbend(x)
       case Add(expressionList) 	 	   => expressionList.tail.foldLeft(evaluateInt(expressionList.head, args, controller)) {
                                           (previousResult, intExpression) =>
                                             for (xp <- previousResult; yp <- evaluateInt(intExpression, args, controller))
@@ -85,11 +72,11 @@ class Evaluator() {
                                               yield (xp % yp)
                                         }
       case Top() 				             => controller.top
-      case GridX() 				           => new EvaluationResult(controller.gridX)
-      case GridY() 				           => new EvaluationResult(controller.gridY)
-      case DeltaX() 			           => new EvaluationResult(controller.deltaX)
-      case DeltaY() 			           => new EvaluationResult(controller.deltaY)
-      case Depth()				           => new EvaluationResult(controller.depth)
+      case GridX() 				           => new ResultOrAbend(controller.gridX)
+      case GridY() 				           => new ResultOrAbend(controller.gridY)
+      case DeltaX() 			           => new ResultOrAbend(controller.deltaX)
+      case DeltaY() 			           => new ResultOrAbend(controller.deltaY)
+      case Depth()				           => new ResultOrAbend(controller.depth)
       case Abs(expr) 			           => for (x <- evaluateInt(expr, args, controller)) yield (Math.abs(x))
       case Max(expr1, expr2) 	       => for (x <- evaluateInt(expr1, args, controller);
                                              y <- evaluateInt(expr2, args, controller)) yield (Math.max(x,y))
@@ -101,14 +88,14 @@ class Evaluator() {
       case Mem(address)              => for (x <- evaluateInt(address, args, controller);
                                              y <- controller.mem(x)) yield (y)
       case Param(position)           => if (position > 0 && position <= args.length) {
-                                          new EvaluationResult(args(position-1))
+                                          new ResultOrAbend(args(position-1))
                                         } else {
-                                          new EvaluationResult(UnboundParameter(position))
+                                          new ResultOrAbend(UnboundParameter(position))
                                         }
     }
   }
   
-   private[coderover] final def evaluateBoolean(booleanExpression:BooleanExpression, args:Array[Int], controller:Controller):EvaluationResult[Boolean] = {
+   private[coderover] final def evaluateBoolean(booleanExpression:BooleanExpression, args:Array[Int], controller:Controller):ResultOrAbend[Boolean] = {
 	  booleanExpression match {
         case Obstructed(xExpression, yExpression) => for (x <- evaluateInt(xExpression, args, controller);
                                                           y <- evaluateInt(yExpression, args, controller))
@@ -151,13 +138,13 @@ class Evaluator() {
         case NotEqual(left, right) 			          =>  for (x <- evaluateInt(left, args, controller);
                                                            y <- evaluateInt(right, args, controller))
                                                              yield (x != y)
-        case Adjacent(entity)				              =>  new EvaluationResult(controller.isAdjacent(entity))
+        case Adjacent(entity)				              =>  new ResultOrAbend(controller.isAdjacent(entity))
 	  }
   }
    
-  private[coderover] final def evaluateString(expression:Expression, args:Array[Int], controller:Controller):EvaluationResult[String] = {
+  private[coderover] final def evaluateString(expression:Expression, args:Array[Int], controller:Controller):ResultOrAbend[String] = {
 	   expression match {
-        case StringConstant(value)					      => new EvaluationResult(value)
+        case StringConstant(value)					      => new ResultOrAbend(value)
         case intExpression:IntExpression          => for (x <- evaluateInt(intExpression, args, controller))
                                                         yield(x.toString)
         case booleanExpression:BooleanExpression  => for (x <- evaluateBoolean(booleanExpression, args, controller))
@@ -168,56 +155,49 @@ class Evaluator() {
   private[coderover] final def isSuccessAndTrue(booleanExpression:BooleanExpression, args:Array[Int], controller:Controller)=
     evaluateBoolean(booleanExpression, args, controller).value == Some(true)
 
-  private[coderover] final def evaluateInstruction(instruction:Instruction, args:Array[Int], controller:Controller):EvaluationResult[Unit] = {
+  private[coderover] final def evaluateInstruction(instruction:Instruction, args:Array[Int], controller:Controller):ResultOrAbend[Unit] = {
       if (!controller.stopped) {
         instruction match {
             case Def(name, instructions) => {
                                                 controller.blockMap += name -> instructions
-                                                EvaluationSuccessUnit
+                                                SuccessResultUnit
                                             }
             case Call(name, callArgs)    => if (controller.blockMap.contains(name)) {
                                                 controller.incrementCallStack()
                                                 val evalArgs = callArgs.map{ evaluateInt(_, args, controller) }
                                                 val failedArgEval = evalArgs.find{ !_.success }
-                                                val result:EvaluationResult[Unit] = if (failedArgEval.isEmpty) {
+                                                val result:ResultOrAbend[Unit] = if (failedArgEval.isEmpty) {
                                                   evaluate(
                                                       controller.blockMap(name),
                                                       evalArgs.map {_.value.get }.toArray,
                                                       controller)
                                                 } else {
-                                                  new EvaluationResult(failedArgEval.get.abend.get)
+                                                  new ResultOrAbend(failedArgEval.get.abend.get)
                                                 }
                                                 controller.decrementCallStack()
                                                 result
             				                        } else {
-            					   	                    new EvaluationResult(UndefinedBlock(name))
+            					   	                    new ResultOrAbend(UndefinedBlock(name))
             				                        }
-        	  case Forward(expression)     => for (distance <- evaluateInt(expression, args, controller))
-                                              yield {
-        	                                      var absDistance = Math.abs(distance)
-                                                while (!controller.stopped && absDistance > 0 && controller.canMoveForward()) {
-        				                                  controller.moveForward()
-        				                                  controller.postMoveForward()
-        				                                  absDistance = absDistance - 1
-        		                                    }
-                                            }
+        	  case Forward(expression)     => for (distance <- evaluateInt(expression, args, controller);
+                                                 result <- controller.moveForward(distance)
+                                            ) yield (result)
         	  case TurnRight()             => {
                                               controller.turnRight()
-                                              EvaluationSuccessUnit
+                                              SuccessResultUnit
                                             }
         	  case TurnLeft()	             => {
                                               controller.turnLeft()
-                                              EvaluationSuccessUnit
+                                              SuccessResultUnit
                                             }
         	  case Push(expression)        => for (x <- evaluateInt(expression, args, controller);
-                                                 y <- controller.push(x))
-                                              yield (y)
-            case Pop() 			             => controller.pop()
-            case Replace(expression)     => for (x <- evaluateInt(expression, args, controller))
-            	                                yield {
-                                                controller.pop()
-            	                                  controller.push(x)
-                                              }
+                                                 result <- controller.push(x))
+                                              yield (result)
+            case Pop() 			             => controller.pop
+            case Replace(expression)     => for (x <- evaluateInt(expression, args, controller);
+            	                                   _ <- controller.pop();
+                                                 result <- controller.push(x))
+                                                       yield (result)
         	case If(booleanExpression, thenstatements, elsestatements) => 
         		for (x <- evaluateBoolean(booleanExpression, args, controller))
               yield {
@@ -228,7 +208,7 @@ class Evaluator() {
         		    }
               }
         	case While(booleanExpression, blockstatements) => {
-            var result:EvaluationResult[Unit] = EvaluationSuccessUnit
+            var result:ResultOrAbend[Unit] = SuccessResultUnit
         		while (isSuccessAndTrue(booleanExpression, args, controller) && (result.success)) {
             		result = evaluate(blockstatements, args, controller)
         		}
@@ -236,7 +216,7 @@ class Evaluator() {
           }
           case Paint() => {
               controller.paint()
-              EvaluationSuccessUnit
+              SuccessResultUnit
           }
           case Print(expressionList) => for (evaluationResult <- expressionList.tail.foldLeft(evaluateString(expressionList.head, args, controller)) {
                                                         (previousResult, stringExpression) =>
@@ -244,11 +224,12 @@ class Evaluator() {
                                                             yield (xp + yp)
                                            }) yield { controller.print(evaluationResult) }
           case Store(address, value) => for (x <- evaluateInt(address, args, controller);
-                                             y <- evaluateInt(value, args, controller))
-                                                yield {  controller.store(x, y)  }
+                                             y <- evaluateInt(value, args, controller);
+                                             result <- controller.store(x, y))
+                                        yield (result)
         }
       } else {
-          new EvaluationResult(None, None)
+          new ResultOrAbend(None, None)
       }
   }
 }
