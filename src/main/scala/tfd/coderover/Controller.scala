@@ -16,7 +16,7 @@ class Controller(var state:State, environment:Environment = DefaultEnvironment, 
         && postForwardAbend.isEmpty
         && absDistance > 0
         && canMoveForward()) {
-          state.moveForward()
+          executeMoveForward()
           postForwardAbend = environment.postMoveForward(state)
         	absDistance = absDistance - 1
     }
@@ -26,6 +26,8 @@ class Controller(var state:State, environment:Environment = DefaultEnvironment, 
       new ResultOrAbend(postForwardAbend.get)
     }
   }
+
+  protected def executeMoveForward() = state.moveForward()
 
   private[coderover] def turnRight() = state.turnRight()
 
