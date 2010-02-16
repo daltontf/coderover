@@ -144,7 +144,9 @@ class LanguageParser extends JavaTokenParsers {
     case defName~None => Call(defName, Nil) 
   }
 
-  lazy val callParams:Parser[List[IntExpression]] = "(" ~> repsep(intExpression, ",") <~ ")"
+  lazy val callParam:Parser[IntExpression] = mathematical | intExpression 
+
+  lazy val callParams:Parser[List[IntExpression]] = "(" ~> repsep(callParam, ",") <~ ")"
   
   lazy val instruction:Parser[Instruction] = command  | controlFlow
   

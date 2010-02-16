@@ -20,4 +20,10 @@ case class State(
   def deltaX = DIRECTIONS(directionIndex)._1
   
   def deltaY = DIRECTIONS(directionIndex)._2
+
+  def setEqual(other:State) {
+    gridX = other.gridX
+    gridY = other.gridY
+    directionIndex = other.directionIndex
+  }
 }

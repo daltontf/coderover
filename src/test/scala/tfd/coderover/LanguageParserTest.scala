@@ -270,10 +270,18 @@ class LanguageParserTest extends TestCase {
   }
 
   def testCall() {
-    assertEquals(List(Call("FUNC", Nil)), parse("CALL FUNC").get)
-    assertEquals(List(Call("FUNC", Nil)), parse("CALL FUNC()").get)
-    assertEquals(List(Call("FUNC", List(Constant(42)))), parse("CALL FUNC(42)").get)
+    List[(String, List[Instruction])](
+      "CALL FUNC" -> List(Call("FUNC", Nil)),
+      "CALL FUNC()" -> List(Call("FUNC", Nil)),
+      "CALL FUNC(42)" -> List(Call("FUNC", List(Constant(42))))
+    ).map {
+      case (code:String, ast:List[Instruction]) =>
+      assertEquals(ast, parse(code).get)                          
+    }
+    assertEquals(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), parse("CALL FUNC(42,TOP + 28)").get)
     assertEquals(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), parse("CALL FUNC(42,(TOP + 28))").get)
+    assertEquals(List(Call("FUNC", List(Constant(42), Negate(Add(List(Top(), Constant(28))))))), parse("CALL FUNC(42,-(TOP + 28))").get)
+    assertEquals(List(Call("FUNC", List(Constant(42), Add(List(Negate(Top()), Constant(28)))))), parse("CALL FUNC(42,-TOP + 28)").get)
   }
 
   def testPrint() {

@@ -2,7 +2,7 @@ package tfd.coderover
 
 import collection.mutable.Stack
 
-class Controller(var state:State, environment:Environment = DefaultEnvironment, constraints:Constraints = DefaultConstraints) {
+class Controller(val state:State, environment:Environment = DefaultEnvironment, constraints:Constraints = DefaultConstraints) {
   private[this] var callStackSize = 0
 
   private[coderover] val blockMap = new scala.collection.mutable.HashMap[String, List[Instruction]]()
