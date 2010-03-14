@@ -4,71 +4,67 @@ import junit.framework._
 import org.junit.Assert._
 
 class LanguageParserTest extends TestCase {
-  private[this] val languageParser = new LanguageParser()
-  import languageParser._
+  private[this] val languageParser = new LanguageParser();  import languageParser._
+
+  private def assertParsingWithParserProduces(parser:Parser[_])(expectedAst:Expression, code:String*) {
+    code.foreach{ x => assertEquals(expectedAst, parseAll(parser, x).get) }
+  }
+
+  private def assertProgramParsingProduces(expectedAst:List[Expression], code:String*) {
+    code.foreach{ x => assertEquals(expectedAst, parse(x).get) }
+  }
 
   def testEmptyProgram() {
-    assertEquals(List(), parse("").get)
-    assertEquals(List(), parse(" ").get)
-    assertEquals(List(), parse("\n").get)
+    assertProgramParsingProduces(List(), "", " ","\n", "\n \n")
   }
 
   def testIntExpression() {
-    List(
-      "1",
-      "(1)",
-      "((1))"
-    ).foreach {
-      code => assertEquals(Constant(1), parseAll(intExpression, code).get)                        
-    }
-    List(
-      "-1",
-      "(-1)",
-      "((-1))"
-    ).foreach {
-      code => assertEquals(Constant(-1), parseAll(intExpression, code).get)                        
-    }
-    assertEquals(Constant(-1), parseAll(intExpression, "-1").get)
-    assertEquals(Negate(Add(List(Constant(1), Constant(2)))), parseAll(intExpression, "-(1+2)").get)
+    val assertParsingIntExpression = assertParsingWithParserProduces(intExpression) _
+    assertParsingIntExpression(Constant(1), "1", "01", "(1)", "((1))", "(((01)))", "((0000001))")
+    assertParsingIntExpression(Constant(-1), "-1", "-01", "(-1)", "((-01))", "((-00001))")
+    assertParsingIntExpression(Negate(Add(List(Constant(1), Constant(2)))), "-(1+2)", "-(((1)+(2)))")
   }
 
   def testStringConstant() {
-    assertEquals(StringConstant("foo"), parseAll(stringConstant, "\"foo\"").get)
+    assertParsingWithParserProduces(stringConstant)(StringConstant("foo"), "\"foo\"")
   }
 
   def testMathematical() {
-    assertEquals(Add(List(Constant(1), Constant(-1))), parseAll(mathematical, "1 + -1").get)
-    assertEquals(Subtract(List(Constant(1), Constant(-1))), parseAll(mathematical, "1 - -1").get)
-    assertEquals(Subtract(List(Add(List(Constant(-1), Constant(2))), Constant(3))), parseAll(mathematical, "(-1 + 2) - 3").get)
-    assertEquals(Multiply(List(Constant(4), Constant(5))), parseAll(mathematical, "4 * 5").get)
-    assertEquals(Divide(List(Constant(10), Constant(3))), parseAll(mathematical, "10 / 3").get)
-    assertEquals(Modulus(List(Constant(10), Constant(3))), parseAll(mathematical, "10 % 3").get)
+    val assertParsingMathematical = assertParsingWithParserProduces(mathematical) _
+    assertParsingMathematical(Add(List(Constant(1), Constant(-1))), "1 + -1")
+    assertParsingMathematical(Subtract(List(Constant(1), Constant(-1))), "1 - -1")
+    assertParsingMathematical(Subtract(List(Add(List(Constant(-1), Constant(2))), Constant(3))), "(-1 + 2) - 3")
+    assertParsingMathematical(Multiply(List(Constant(4), Constant(5))), "4 * 5")
+    assertParsingMathematical(Divide(List(Constant(10), Constant(3))), "10 / 3")
+    assertParsingMathematical(Modulus(List(Constant(10), Constant(3))), "10 % 3")
   }
 
   def testComparison() {
-    assertEquals(Equal(Constant(1), Constant(2)), parseAll(comparison, "1 = 2").get)
-    assertEquals(LessThan(Constant(-1), Constant(1)), parseAll(comparison, "-1 < 1").get)
-    assertEquals(GreaterThan(Constant(3), Constant(-2)), parseAll(comparison, " 3  >  -2").get)
-    assertEquals(LessThanOrEqual(Constant(-1), Constant(1)), parseAll(comparison, "-1 <= 1").get)
-    assertEquals(GreaterThanOrEqual(Constant(3), Constant(-2)), parseAll(comparison, "3>=-2").get)
-    assertEquals(NotEqual(Constant(1), Constant(2)), parseAll(comparison, "1<>2").get)
+    val assertParsingComparison = assertParsingWithParserProduces(comparison) _
+    assertParsingComparison(Equal(Constant(1), Constant(2)), "1 = 2")
+    assertParsingComparison(LessThan(Constant(-1), Constant(1)), "-1 < 1")
+    assertParsingComparison(GreaterThan(Constant(3), Constant(-2)), " 3  >  -2")
+    assertParsingComparison(LessThanOrEqual(Constant(-1), Constant(1)), "-1 <= 1")
+    assertParsingComparison(GreaterThanOrEqual(Constant(3), Constant(-2)), "3>=-2")
+    assertParsingComparison(NotEqual(Constant(1), Constant(2)), "1<>2")
   }
 
   def testLogical() {
-    assertEquals(And(List(
+    val assertParsingLogical = assertParsingWithParserProduces(logical) _
+    assertParsingLogical(And(List(
       Equal(Constant(2), Constant(2)),
-      NotEqual(Constant(4), Constant(-3)))), parseAll(logical, "(2 = 2) AND (4 <> -3)").get)
-    assertEquals(Or(List(
+      NotEqual(Constant(4), Constant(-3)))), "(2 = 2) AND (4 <> -3)")
+    assertParsingLogical(Or(List(
       Equal(Constant(2), Constant(3)),
-      NotEqual(Constant(4), Constant(-3)))), parseAll(logical, "(2 = 3) OR (4 <> -3)").get)
-    assertEquals(And(List(
+      NotEqual(Constant(4), Constant(-3)))), "(2 = 3) OR (4 <> -3)")
+    assertParsingLogical(And(List(
       Equal(Constant(2), Constant(2)),
       NotEqual(Constant(4), Constant(-3)),
-      LessThan(Constant(4), Constant(3)))), parseAll(logical, "(2 = 2) AND (4 <> -3) AND (4 < 3)").get)
-    assertEquals(Or(List(
+      LessThan(Constant(4), Constant(3)))), "(2 = 2) AND (4 <> -3) AND (4 < 3)")
+    assertParsingLogical(Or(List(
       Equal(Constant(2), Constant(2)),
       NotEqual(Constant(4), Constant(-3)),
-      LessThan(Constant(4), Constant(3)))), parseAll(logical, "(2 = 2) OR (4 <> -3) OR (4 < 3)").get)
+      LessThan(Constant(4), Constant(3)))), "(2 = 2) OR (4 <> -3) OR (4 < 3)")
   }
 
   def testSingleForward() {
@@ -288,7 +284,7 @@ class LanguageParserTest extends TestCase {
       "CALL FUNC()" -> List(Call("FUNC", Nil)),
       "CALL FUNC(42)" -> List(Call("FUNC", List(Constant(42))))
     ).map {
-      case (code:String, ast:List[Instruction]) =>
+       case (code:String, ast:List[Instruction]) =>
       assertEquals(ast, parse(code).get)                          
     }
     assertEquals(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), parse("CALL FUNC(42,TOP + 28)").get)
