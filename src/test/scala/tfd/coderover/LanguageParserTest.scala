@@ -67,9 +67,11 @@ class LanguageParserTest extends TestCase {
       LessThan(Constant(4), Constant(3)))), "(2 = 2) OR (4 <> -3) OR (4 < 3)")
   }
 
-  def testSingleForward() {
+  def testForward() {
     assertProgramParsingProduces(List(Forward(Constant(1))), "FORWARD")
-    assertProgramParsingProduces(List(Forward(Constant(2))), "FORWARD 2")
+    assertProgramParsingProduces(List(Forward(Constant(2))), "FORWARD 2", "FORWARD(2)", "FORWARD (2)", "FORWARD((2))")
+    assertProgramParsingProduces(List(Forward(Negate(Constant(2)))), "FORWARD(-(2))")
+    assertProgramParsingProduces(List(Forward(Top())), "FORWARD TOP", "FORWARD(TOP)")
   }
 
   def testRightLeft() {
@@ -168,10 +170,19 @@ class LanguageParserTest extends TestCase {
     assertProgramParsingProduces(List(While(Equal(Constant(1), Constant(2)), List())),
       """|
          |WHILE (1 = 2) {
-         |}""".stripMargin)
-    assertProgramParsingProduces(List(While(Equal(Constant(1), Constant(2)), List())), 
+         |}""".stripMargin,
       """|
          |WHILE ((1 = 2)) {
+         |}""".stripMargin)
+    assertProgramParsingProduces(List(While(Not(Equal(Constant(1), Constant(2))), List())), 
+      """|
+         |WHILE NOT(1 = 2) {
+         |}""".stripMargin,
+      """|
+         |WHILE (NOT(1 = 2)) {
+         |}""".stripMargin, 
+      """|
+         |WHILE NOT(1 = 2) {
          |}""".stripMargin)
   }
 
@@ -205,14 +216,14 @@ class LanguageParserTest extends TestCase {
   def testGridX() {
     assertProgramParsingProduces(List(While(LessThan(GridX(), Constant(5)), List(Forward(Constant(1))))),
       """|WHILE (X < 5) {
-         | FORWARD 1
+         | FORWARD
 		     |}""".stripMargin)
   }
 
   def testGridY() {
     assertProgramParsingProduces(List(While(GreaterThanOrEqual(GridY(), Constant(1)), List(Forward(Constant(1))))),
       """|WHILE (Y >= 1) {
-         | FORWARD 1
+         | FORWARD
 		     |}""".stripMargin)
   }
 
@@ -278,14 +289,8 @@ class LanguageParserTest extends TestCase {
   }
 
   def testCall() {
-    List[(String, List[Instruction])](
-      "CALL FUNC" -> List(Call("FUNC", Nil)),
-      "CALL FUNC()" -> List(Call("FUNC", Nil)),
-      "CALL FUNC(42)" -> List(Call("FUNC", List(Constant(42))))
-    ).map {
-       case (code:String, ast:List[Instruction]) =>
-      assertProgramParsingProduces(ast, code)                          
-    }
+    assertProgramParsingProduces(List(Call("FUNC", Nil)), "CALL FUNC", "CALL FUNC()")
+    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42)))), "CALL FUNC(42)")
     assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), "CALL FUNC(42,TOP + 28)")
     assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), "CALL FUNC(42,(TOP + 28))")
     assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Negate(Add(List(Top(), Constant(28))))))), "CALL FUNC(42,-(TOP + 28))")
@@ -297,11 +302,11 @@ class LanguageParserTest extends TestCase {
   }
 
   def testStore() {
-    assertProgramParsingProduces(List(Store(Constant(1), GridX())), """STORE (1, X)""")
+    assertProgramParsingProduces(List(Store(Constant(1), GridX())), "STORE (1, X)", "STORE((1),(X))")
   }
 
   def testMem() {
-    assertProgramParsingProduces(List(Push(Mem(Constant(1)))), """PUSH MEM(1)""")
+    assertProgramParsingProduces(List(Push(Mem(Constant(1)))), "PUSH(MEM(1))", "PUSH((MEM((1))))")
   }
 
   def testComments() {
@@ -329,6 +334,6 @@ class LanguageParserTest extends TestCase {
   }
 
   def testParameters() {
-    assertProgramParsingProduces(List(Forward(Param(1))), """FORWARD :1""")
+    assertProgramParsingProduces(List(Forward(Param(1))), "FORWARD(:1)", "FORWARD :1")
   }
 }

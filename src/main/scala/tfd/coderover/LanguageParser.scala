@@ -117,7 +117,7 @@ class LanguageParser extends JavaTokenParsers {
   
   lazy val paint:Parser[Paint] = "PAINT" ^^ { _ => Paint() }
   
-  lazy val replace:Parser[Replace] = "REPLACE"~>intExpression ^^ { x:IntExpression => Replace(x) }
+  lazy val replace:Parser[Replace] = "REPLACE"~>parenIntExpression ^^ { x:IntExpression => Replace(x) }
 
   lazy val store:Parser[Store] = "STORE" ~ "(" ~> intExpression ~ "," ~ intExpression <~ ")" ^^ {
     case address~_~value => Store(address, value)

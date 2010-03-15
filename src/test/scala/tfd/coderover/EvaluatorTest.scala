@@ -172,7 +172,7 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(2, 1, 0), state)
     evaluate("RIGHT", state)
     assertEquals(State(2, 1, 1), state)
-    evaluate("FORWARD 2", state)
+    evaluate("FORWARD (2)", state)
     assertEquals(State(4, 1, 1), state)
     evaluate("FORWARD (1+1)", state)
     assertEquals(State(6, 1, 1), state)
@@ -289,19 +289,19 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(2, 0, 0), state)
     evaluate("FORWARD", state)
     assertEquals(State(2, 0, 0), state)
-    evaluate("LEFT FORWARD 2", state)
+    evaluate("LEFT FORWARD (2)", state)
     assertEquals(State(0, 0, 3), state)
-    evaluate("FORWARD 2", state)
+    evaluate("FORWARD ( 2 )", state)
     assertEquals(State(0, 0, 3), state)
-    evaluate("LEFT FORWARD 9", state)
+    evaluate("LEFT FORWARD(9)", state)
     assertEquals(State(0, 9, 2), state)
     evaluate("FORWARD", state)
     assertEquals(State(0, 9, 2), state)
-    evaluate("LEFT FORWARD 9", state)
+    evaluate("LEFT FORWARD(9)", state)
     assertEquals(State(9, 9, 1), state)
     evaluate("FORWARD", state)
     assertEquals(State(9, 9, 1), state)
-    evaluate("LEFT FORWARD 99", state)
+    evaluate("LEFT FORWARD(99)", state)
     assertEquals(State(9, 0, 0), state)
   }
 
@@ -441,10 +441,10 @@ class EvaluatorTest extends TestCase {
   def testDefCallWithParams {
     val state = State(2, 2, 0)
     val controller = new Controller(state)
-    assertEquals(SuccessResultUnit, evaluate("""|DEF RIGHT_FORWARD { RIGHT FORWARD :1 }
-     					  |DEF LEFT_FORWARD { LEFT FORWARD :1 }
+    assertEquals(SuccessResultUnit, evaluate("""|DEF RIGHT_FORWARD { RIGHT FORWARD (:1) }
+     					  |DEF LEFT_FORWARD { LEFT FORWARD (:1) }
      						|DEF EMPTY { }
-     						|DEF LEFT_LEFT_FORWARD { LEFT FORWARD :1 LEFT FORWARD :2 }
+     						|DEF LEFT_LEFT_FORWARD { LEFT FORWARD(:1) LEFT FORWARD(:2) }
      						|CALL RIGHT_FORWARD(1)""".stripMargin, controller))
     assertEquals(State(3, 2, 1), state)
     assertEquals(SuccessResultUnit, evaluate("CALL LEFT_FORWARD(2)", controller))
@@ -573,7 +573,7 @@ class EvaluatorTest extends TestCase {
     val controller = new Controller(state, environment)
     assertEquals(SuccessResultUnit, evaluate("RIGHT FORWARD RIGHT", controller))
     assertEquals(State(1,0,2), state)
-    assertEquals(ResultOrAbend[Unit](None, Some(Kablooey)), evaluate("FORWARD 2", controller))
+    assertEquals(ResultOrAbend[Unit](None, Some(Kablooey)), evaluate("FORWARD(2)", controller))
   }
 
 }
