@@ -2,17 +2,16 @@ package tfd.coderover
 
 class Environment(
         val sizeX:Int,
-        val sizeY:Int,
-        val obstructed:Set[(Int,Int)]          
+        val sizeY:Int
   ) {
-
-  def this(sizeX:Int, sizeY:Int) = this(sizeX, sizeY, Set.empty[(Int,Int)])
 
   def canMoveForward(state:State) = {
       val nextX = state.gridX + state.deltaX
       val nextY = state.gridY + state.deltaY
-      (nextX >= 0 && nextX < sizeX && nextY >=0 && nextY < sizeY && !obstructed.contains((nextX, nextY)))
+      (nextX >= 0 && nextX < sizeX && nextY >=0 && nextY < sizeY && !isObstructed(nextX, nextY))
     }
+
+  def isObstructed(x:Int, y:Int) = false
   
   def postMoveForward(state:State):Option[Abend] = None
   

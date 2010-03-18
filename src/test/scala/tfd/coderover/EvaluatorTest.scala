@@ -504,7 +504,9 @@ class EvaluatorTest extends TestCase {
 
   def testObstructions() {
     val state = new State(2, 2, 2)
-    val environment = new Environment(10, 10, Set((2, 3)))
+    val environment = new Environment(10, 10) {
+      override def isObstructed(x: Int, y: Int) = (x,y) == (2,3)
+    }
     val controller = new Controller(state, environment)
     assertEquals(SuccessResultUnit, evaluate("FORWARD", controller))
     assertEquals(State(2,2,2), state)
@@ -512,7 +514,9 @@ class EvaluatorTest extends TestCase {
 
   def testObstructed() {
     val state = new State(0, 0, 0)
-    val environment = new Environment(3, 3, Set((1, 1)))
+    val environment = new Environment(3, 3) {
+      override def isObstructed(x: Int, y: Int) = (x,y) == (1,1)
+    }
     val controller = new Controller(state, environment)
 
     assertEquals(SuccessResultUnit, evaluate("IF NOT(OBSTRUCTED(X+DX,Y+DY)) { FORWARD } ELSE { RIGHT }", controller))
