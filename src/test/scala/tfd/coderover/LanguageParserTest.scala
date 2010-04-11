@@ -358,7 +358,7 @@ class LanguageParserTest extends TestCase {
   }
 
   def testEvalParameters() {
-    assertProgramParsingProduces(List(Forward(EvalParam(1))), "FORWARD(:1)")
+    assertProgramParsingProduces(List(Forward(EvalParam(1))), "FORWARD($1)")
   }
 
   def testFunc() {

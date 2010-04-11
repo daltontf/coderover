@@ -441,10 +441,10 @@ class EvaluatorTest extends TestCase {
   def testProcCallWithParams {
     val state = State(2, 2, 0)
     val controller = new Controller(state)
-    assertEquals(SuccessResultUnit, evaluate("""|PROC RFORWARD { RIGHT FORWARD (:1) }
-     					  |PROC LFORWARD { LEFT FORWARD (:1) }
+    assertEquals(SuccessResultUnit, evaluate("""|PROC RFORWARD { RIGHT FORWARD ($1) }
+     					  |PROC LFORWARD { LEFT FORWARD ($1) }
      						|PROC EMPTY { }
-     						|PROC LLFORWARD { LEFT FORWARD(:1) LEFT FORWARD(:2) }
+     						|PROC LLFORWARD { LEFT FORWARD($1) LEFT FORWARD($2) }
      						|RFORWARD(1)""".stripMargin, controller))
     assertEquals(State(3, 2, 1), state)
     assertEquals(SuccessResultUnit, evaluate("LFORWARD(2)", controller))
@@ -470,7 +470,7 @@ class EvaluatorTest extends TestCase {
   }
 
   def testUnboundParams {
-    assertEquals(ResultOrAbend(None,Some(UnboundParameter(1))), evaluate("PUSH :1", State(2, 2, 0)))
+    assertEquals(ResultOrAbend(None,Some(UnboundParameter(1))), evaluate("PUSH($1)", State(2, 2, 0)))
   }
 
   def testPrint() {
@@ -598,4 +598,15 @@ class EvaluatorTest extends TestCase {
     assertEquals(ResultOrAbend(2), controller.top)  
   }
 
+  def testRecursiveFunc() {
+    val controller = new Controller(new State(2, 3, 0)) {
+      var lastPrint: String = null
+
+      override def print(value: String) {lastPrint = value}
+    }
+    evaluate("""
+      |FUNC FACTORIAL ( ($1 = 1) ? 1 : $1 * FACTORIAL($1 - 1))
+      |PRINT "FACTORIAL(6) = " + FACTORIAL(6)""".stripMargin, controller)
+    assertEquals("FACTORIAL(6) = 720", controller.lastPrint)
+  }
 }

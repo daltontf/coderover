@@ -60,7 +60,7 @@ class LanguageParser extends JavaTokenParsers {
     case "DISTANCEY"~_~parm => DistanceY(parm)
   }
 
-  lazy val evalParam:Parser[EvalParam] = """:\d+""".r ^^ { x => EvalParam(x.substring(1).toInt) }
+  lazy val evalParam:Parser[EvalParam] = """\$\d+""".r ^^ { x => EvalParam(x.substring(1).toInt) }
 
   lazy val arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED"|"OBSTRUCTED") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
     case "PAINTED"~_~x~_~y => Painted(x, y)
@@ -116,7 +116,7 @@ class LanguageParser extends JavaTokenParsers {
    	case None => Forward(Constant(1))
  	}
 
-  lazy val push:Parser[Push] = "PUSH"~> intExpression ^^ { x:IntExpression => Push(x)}
+  lazy val push:Parser[Push] = "PUSH"~> expressionParameter ^^ { x:IntExpression => Push(x)}
   
   lazy val pop:Parser[Pop] = "POP" ^^ { _ => Pop() }
   
@@ -126,9 +126,9 @@ class LanguageParser extends JavaTokenParsers {
   
   lazy val paint:Parser[Paint] = "PAINT" ^^ { _ => Paint() }
   
-  lazy val replace:Parser[Replace] = "REPLACE"~>intExpression ^^ { x:IntExpression => Replace(x) }
+  lazy val replace:Parser[Replace] = "REPLACE"~>expressionParameter ^^ { x:IntExpression => Replace(x) }
 
-  lazy val store:Parser[Store] = "STORE" ~ "(" ~> intExpression ~ "," ~ intExpression <~ ")" ^^ {
+  lazy val store:Parser[Store] = "STORE" ~ "(" ~> expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
     case address~_~value => Store(address, value)
   }
   
