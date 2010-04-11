@@ -425,38 +425,48 @@ class EvaluatorTest extends TestCase {
     val state = State(2, 2, 0)
     val controller = new Controller(state)
     assertEquals(SuccessResultUnit, evaluate(
-      """|DEF RIGHT_FORWARD { RIGHT FORWARD }
-         |DEF LEFT_FORWARD { LEFT FORWARD }
-     		 |DEF EMPTY { }
-     		 |CALL RIGHT_FORWARD""".stripMargin, controller))
+      """|PROC RIGHTFORWARD { RIGHT FORWARD }
+         |PROC LEFTFORWARD { LEFT FORWARD }
+     		 |PROC EMPTY { }
+     		 |RIGHTFORWARD""".stripMargin, controller))
     assertEquals(State(3, 2, 1), state)
-    assertEquals(SuccessResultUnit, evaluate("CALL LEFT_FORWARD", controller))
+    assertEquals(SuccessResultUnit, evaluate("LEFTFORWARD", controller))
     assertEquals(State(3, 1, 0), state)
-    assertEquals(SuccessResultUnit, evaluate("CALL EMPTY", controller))
+    assertEquals(SuccessResultUnit, evaluate("EMPTY", controller))
     assertEquals(State(3, 1, 0), state)
-    assertEquals(ResultOrAbend(None, Some(UndefinedBlock("FOO"))), evaluate("CALL FOO", controller))
+    assertEquals(ResultOrAbend(None, Some(UndefinedBlock("FOO"))), evaluate("FOO", controller))
     assertEquals(State(3, 1, 0), state)
   }
 
-  def testDefCallWithParams {
+  def testProcCallWithParams {
     val state = State(2, 2, 0)
     val controller = new Controller(state)
-    assertEquals(SuccessResultUnit, evaluate("""|DEF RIGHT_FORWARD { RIGHT FORWARD (:1) }
-     					  |DEF LEFT_FORWARD { LEFT FORWARD (:1) }
-     						|DEF EMPTY { }
-     						|DEF LEFT_LEFT_FORWARD { LEFT FORWARD(:1) LEFT FORWARD(:2) }
-     						|CALL RIGHT_FORWARD(1)""".stripMargin, controller))
+    assertEquals(SuccessResultUnit, evaluate("""|PROC RFORWARD { RIGHT FORWARD (:1) }
+     					  |PROC LFORWARD { LEFT FORWARD (:1) }
+     						|PROC EMPTY { }
+     						|PROC LLFORWARD { LEFT FORWARD(:1) LEFT FORWARD(:2) }
+     						|RFORWARD(1)""".stripMargin, controller))
     assertEquals(State(3, 2, 1), state)
-    assertEquals(SuccessResultUnit, evaluate("CALL LEFT_FORWARD(2)", controller))
+    assertEquals(SuccessResultUnit, evaluate("LFORWARD(2)", controller))
     assertEquals(State(3, 0, 0), state)
-    assertEquals(SuccessResultUnit, evaluate("CALL LEFT_FORWARD(3)", controller))
+    assertEquals(SuccessResultUnit, evaluate("LFORWARD(3)", controller))
     assertEquals(State(0, 0, 3), state)
-    assertEquals(SuccessResultUnit, evaluate("CALL LEFT_LEFT_FORWARD(4, 5)", controller))
+    assertEquals(SuccessResultUnit, evaluate("LLFORWARD(4, 5)", controller))
     assertEquals(State(5, 4, 1), state)
-    assertEquals(SuccessResultUnit, evaluate("CALL EMPTY", controller))
+    assertEquals(SuccessResultUnit, evaluate("EMPTY", controller))
     assertEquals(State(5, 4, 1), state)
-    assertEquals(ResultOrAbend(None, Some(UndefinedBlock("FOO"))), evaluate("CALL FOO", controller))
+    assertEquals(ResultOrAbend(None, Some(UndefinedBlock("FOO"))), evaluate("FOO", controller))
     assertEquals(State(5, 4, 1), state)
+  }
+
+  def testFuncInvoke {
+      val state = State(2, 2, 0)
+      val controller = new Controller(state)
+      assertEquals(SuccessResultUnit, evaluate("""
+        |FUNC PLUSXY ( X + Y )
+        |RIGHT
+        |FORWARD(PLUSXY)""".stripMargin, controller))
+      assertEquals(State(6, 2, 1), state)    
   }
 
   def testUnboundParams {
@@ -496,9 +506,9 @@ class EvaluatorTest extends TestCase {
     val state = new State(2, 2, 0)
     val controller = new Controller(state) // new Constraints(10, 10, 1))
     evaluate("""
-    |DEF FOO { PUSH 2 POP }
-    |DEF BAR { PUSH 1 CALL FOO POP }
-    |CALL BAR""".stripMargin, controller)
+    |PROC FOO { PUSH 2 POP }
+    |PROC BAR { PUSH 1 FOO POP }
+    |BAR""".stripMargin, controller)
     //assertEquals(Some(CallStackOverflow), state.abend)
   }
 

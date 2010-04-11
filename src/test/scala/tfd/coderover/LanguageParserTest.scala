@@ -1,17 +1,40 @@
 package tfd.coderover
 
-import junit.framework._
-import org.junit.Assert._
+import junit.framework.Assert._
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matcher
+
+import junit.framework.TestCase
+
+object HamcrestAdapter {
+  import org.hamcrest.Matchers
+
+  def is[T](value:T):Matcher[Any] = Matchers.is(value.asInstanceOf[Any])
+}
+
+import HamcrestAdapter._
 
 class LanguageParserTest extends TestCase {
   private[this] val languageParser = new LanguageParser();  import languageParser._
 
   private def assertParsingWithParserProduces(parser:Parser[_])(expectedAst:Expression, code:String*) {
-    code.foreach{ x => assertEquals(expectedAst, parseAll(parser, x).get) }
+    code.foreach{ x =>
+      val parseResult = parseAll(parser, x)
+      if (!parseResult.successful) {
+        fail("Parsing failed:\n" + parseResult.asInstanceOf[NoSuccess].msg)
+      }
+      assertThat(parseResult.get, is(expectedAst))
+    }
   }
 
   private def assertProgramParsingProduces(expectedAst:List[Any], code:String*) {
-    code.foreach{ x => assertEquals(expectedAst, parse(x).get) }
+    code.foreach{ x =>
+      val parseResult = parse(x)
+      if (!parseResult.successful) {
+        fail("Parsing failed:\n" + parseResult.asInstanceOf[NoSuccess].msg)
+      }
+      assertThat(parseResult.get, is(expectedAst))
+    }
   }
 
   def testEmptyProgram() {
@@ -69,9 +92,9 @@ class LanguageParserTest extends TestCase {
 
   def testForward() {
     assertProgramParsingProduces(List(Forward(Constant(1))), "FORWARD")
-    assertProgramParsingProduces(List(Forward(Constant(2))), "FORWARD 2", "FORWARD(2)", "FORWARD (2)", "FORWARD((2))")
+    assertProgramParsingProduces(List(Forward(Constant(2))), "FORWARD(2)", "FORWARD (2)", "FORWARD((2))")
     assertProgramParsingProduces(List(Forward(Negate(Constant(2)))), "FORWARD(-(2))")
-    assertProgramParsingProduces(List(Forward(Top())), "FORWARD TOP", "FORWARD(TOP)")
+    assertProgramParsingProduces(List(Forward(Top())), "FORWARD(TOP)")
   }
 
   def testRightLeft() {
@@ -284,17 +307,18 @@ class LanguageParserTest extends TestCase {
     assertProgramParsingProduces(List(Push(Min(DistanceX("FLAG"), DistanceY("FLAG")))), "PUSH MIN(DISTANCEX(FLAG), DISTANCEY(FLAG))")
   }
 
-  def testDef() {
-    assertProgramParsingProduces(List(Def("FUNC", List(TurnLeft(), TurnLeft()))), "DEF FUNC { LEFT LEFT }")
+  def testProc() {
+    assertProgramParsingProduces(List(Proc("FUNC", List(TurnLeft(), TurnLeft()))), "PROC FUNC { LEFT LEFT }")
+    assertProgramParsingProduces(List(Proc("FUNC_underscore", List(TurnLeft(), TurnLeft()))), "PROC FUNC_underscore { LEFT LEFT }")
   }
 
   def testCall() {
-    assertProgramParsingProduces(List(Call("FUNC", Nil)), "CALL FUNC", "CALL FUNC()")
-    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42)))), "CALL FUNC(42)")
-    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), "CALL FUNC(42,TOP + 28)")
-    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), "CALL FUNC(42,(TOP + 28))")
-    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Negate(Add(List(Top(), Constant(28))))))), "CALL FUNC(42,-(TOP + 28))")
-    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Negate(Top()), Constant(28)))))), "CALL FUNC(42,-TOP + 28)")
+    assertProgramParsingProduces(List(Call("FUNC", Nil)), "FUNC", "FUNC()")
+    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42)))), "FUNC(42)")
+    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), "FUNC(42,TOP + 28)")
+    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), "FUNC(42,(TOP + 28))")
+    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Negate(Add(List(Top(), Constant(28))))))), "FUNC(42,-(TOP + 28))")
+    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Negate(Top()), Constant(28)))))), "FUNC(42,-TOP + 28)")
   }
 
   def testPrint() {
@@ -334,6 +358,14 @@ class LanguageParserTest extends TestCase {
   }
 
   def testParameters() {
-    assertProgramParsingProduces(List(Forward(Param(1))), "FORWARD(:1)", "FORWARD :1")
+    assertProgramParsingProduces(List(Forward(Param(1))), "FORWARD(:1)")
+  }
+
+  def testFunc() {
+    assertProgramParsingProduces(List(Func("TEST", Add(List(DeltaX(), GridX())))), "FUNC TEST ( DX + X )")
+  }
+
+  def testInvoke() {
+    assertProgramParsingProduces(List(Push(Invoke("TEST", List(Constant(42))))), "PUSH TEST(42)")
   }
 }

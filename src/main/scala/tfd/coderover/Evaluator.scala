@@ -92,6 +92,23 @@ class Evaluator() {
                                         } else {
                                           new ResultOrAbend(UnboundParameter(position))
                                         }
+      case Invoke(name, invArgs)    => if (controller.funcMap.contains(name)) {
+                                        controller.incrementCallStack()
+                                        val evalArgs = invArgs.map{ evaluateInt(_, args, controller) }
+                                        val failedArgEval = evalArgs.find{ !_.success }
+                                        val result:ResultOrAbend[Int] = if (failedArgEval.isEmpty) {
+                                          evaluateInt(
+                                            controller.funcMap(name),
+                                            evalArgs.map {_.value.get }.toArray,
+                                            controller)
+                                          } else {
+                                            new ResultOrAbend(failedArgEval.get.abend.get)
+                                          }
+                                        controller.decrementCallStack()
+                                        result
+                                        } else {
+                                          new ResultOrAbend(UndefinedBlock(name))
+                                        }
     }
   }
   
@@ -158,17 +175,17 @@ class Evaluator() {
   private[coderover] final def evaluateInstruction(instruction:Instruction, args:Array[Int], controller:Controller):ResultOrAbend[Unit] = {
       if (!controller.stopped) {
         instruction match {
-            case Def(name, instructions) => {
-                                                controller.blockMap += name -> instructions
+            case Proc(name, instructions) => {
+                                                controller.procMap += name -> instructions
                                                 SuccessResultUnit
                                             }
-            case Call(name, callArgs)    => if (controller.blockMap.contains(name)) {
+            case Call(name, callArgs)    => if (controller.procMap.contains(name)) {
                                                 controller.incrementCallStack()
                                                 val evalArgs = callArgs.map{ evaluateInt(_, args, controller) }
                                                 val failedArgEval = evalArgs.find{ !_.success }
                                                 val result:ResultOrAbend[Unit] = if (failedArgEval.isEmpty) {
                                                   evaluate(
-                                                      controller.blockMap(name),
+                                                      controller.procMap(name),
                                                       evalArgs.map {_.value.get }.toArray,
                                                       controller)
                                                 } else {
@@ -227,6 +244,10 @@ class Evaluator() {
                                              y <- evaluateInt(value, args, controller);
                                              result <- controller.store(x, y))
                                         yield (result)
+          case Func(name, expression) => {
+                                                controller.funcMap += name -> expression
+                                                SuccessResultUnit
+                                            }
         }
       } else {
           new ResultOrAbend(None, None)

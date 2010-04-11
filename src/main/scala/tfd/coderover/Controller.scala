@@ -5,7 +5,9 @@ import collection.mutable.Stack
 class Controller(val state:State, environment:Environment = DefaultEnvironment, constraints:Constraints = DefaultConstraints) {
   private[this] var callStackSize = 0
 
-  private[coderover] val blockMap = new scala.collection.mutable.HashMap[String, List[Instruction]]()
+  private[coderover] val procMap = new scala.collection.mutable.HashMap[String, List[Instruction]]()
+
+  private[coderover] val funcMap = new scala.collection.mutable.HashMap[String, IntExpression]()
 
   private[this] val stack = new Stack[Int]()
 
