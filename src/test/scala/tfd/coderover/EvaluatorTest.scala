@@ -590,4 +590,12 @@ class EvaluatorTest extends TestCase {
     assertEquals(ResultOrAbend[Unit](None, Some(Kablooey)), evaluate("FORWARD(2)", controller))
   }
 
+  def testTernary() {
+    val controller = new Controller(State(2, 2, 0))
+    evaluate("PUSH ((1 < 2) ? 1 : 2)", controller)
+    assertEquals(ResultOrAbend(1), controller.top)
+    evaluate("PUSH ((1 > 2) ? 1 : 2)", controller)
+    assertEquals(ResultOrAbend(2), controller.top)  
+  }
+
 }

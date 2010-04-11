@@ -169,7 +169,7 @@ class LanguageParserTest extends TestCase {
            |IF (1 <> 2) {
            | LEFT
            | FORWARD
-           |} ELSE IF (2 = 3 ) {
+           |} ELSE IF (2 = 3) {
            | RIGHT
            |}""".stripMargin)
   }
@@ -313,12 +313,12 @@ class LanguageParserTest extends TestCase {
   }
 
   def testCall() {
-    assertProgramParsingProduces(List(Call("FUNC", Nil)), "FUNC", "FUNC()")
-    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42)))), "FUNC(42)")
-    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), "FUNC(42,TOP + 28)")
-    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Top(), Constant(28)))))), "FUNC(42,(TOP + 28))")
-    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Negate(Add(List(Top(), Constant(28))))))), "FUNC(42,-(TOP + 28))")
-    assertProgramParsingProduces(List(Call("FUNC", List(Constant(42), Add(List(Negate(Top()), Constant(28)))))), "FUNC(42,-TOP + 28)")
+    assertProgramParsingProduces(List(InvokeProc("PRC", Nil)), "PRC", "PRC()")
+    assertProgramParsingProduces(List(InvokeProc("PRC", List(Constant(42)))), "PRC(42)")
+    assertProgramParsingProduces(List(InvokeProc("PRC", List(Constant(42), Add(List(Top(), Constant(28)))))), "PRC(42,TOP + 28)")
+    assertProgramParsingProduces(List(InvokeProc("PRC", List(Constant(42), Add(List(Top(), Constant(28)))))), "PRC(42,(TOP + 28))")
+    assertProgramParsingProduces(List(InvokeProc("PRC", List(Constant(42), Negate(Add(List(Top(), Constant(28))))))), "PRC(42,-(TOP + 28))")
+    assertProgramParsingProduces(List(InvokeProc("PRC", List(Constant(42), Add(List(Negate(Top()), Constant(28)))))), "PRC(42,-TOP + 28)")
   }
 
   def testPrint() {
@@ -357,8 +357,8 @@ class LanguageParserTest extends TestCase {
     assertProgramParsingProduces(List(Print(List(StringConstant("-DX = "), Negate(DeltaX())))), """PRINT "-DX = " + -DX""")
   }
 
-  def testParameters() {
-    assertProgramParsingProduces(List(Forward(Param(1))), "FORWARD(:1)")
+  def testEvalParameters() {
+    assertProgramParsingProduces(List(Forward(EvalParam(1))), "FORWARD(:1)")
   }
 
   def testFunc() {
@@ -366,6 +366,10 @@ class LanguageParserTest extends TestCase {
   }
 
   def testInvoke() {
-    assertProgramParsingProduces(List(Push(Invoke("TEST", List(Constant(42))))), "PUSH TEST(42)")
+    assertProgramParsingProduces(List(Push(InvokeFunc("TEST", List(Constant(42))))), "PUSH TEST(42)")
+  }
+
+  def testTernary() {
+    assertProgramParsingProduces(List(Push(Ternary(Equal(DeltaY(), Constant(0)), DeltaX(), Constant(-1)))), "PUSH ((DY = 0) ? DX : -1)")
   }
 }

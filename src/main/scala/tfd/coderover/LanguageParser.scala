@@ -8,15 +8,15 @@ class LanguageParser extends JavaTokenParsers {
 
   lazy val constant:Parser[Constant] = wholeNumber ^^ { x => Constant(x.toInt) }
 
-  lazy val intExpression:Parser[IntExpression] = parenIntExpression | param | constant | arityNoneIntFunction | arityOneIntFunction | arityTwoIntFunction | arityOneIdentFunction | negatedIntExpression | invoke
+  lazy val intExpression:Parser[IntExpression] = parenIntExpression | evalParam | constant | ternaryExpression | arityNoneIntFunction | arityOneIntFunction | arityTwoIntFunction | arityOneIdentFunction | negatedIntExpression | invokeFunc
 
   lazy val parenIntExpression:Parser[IntExpression] = "(" ~> ( mathematical | intExpression) <~ ")"
 
   lazy val negatedIntExpression:Parser[IntExpression] = "-"~>(intExpression) ^^ { expression => Negate(expression) }
 
-  lazy val invoke:Parser[Invoke] = ident ~ opt(callParams)  ^^ {
-    case defName~Some(params) => Invoke(defName, params)
-    case defName~None => Invoke(defName, Nil)
+  lazy val invokeFunc:Parser[InvokeFunc] = ident ~ opt(params)  ^^ {
+    case defName~Some(x) => InvokeFunc(defName, x)
+    case defName~None => InvokeFunc(defName, Nil)
   }
 
   lazy val mathematical:Parser[Mathematical] = mathematical("+", (head:IntExpression, tail:List[IntExpression]) => Add(head :: tail)) |
@@ -31,6 +31,10 @@ class LanguageParser extends JavaTokenParsers {
     }
 
   lazy val expressionParameter:Parser[IntExpression] = mathematical | intExpression
+
+  lazy val ternaryExpression:Parser[Ternary] =  booleanExpression ~ "?" ~ expressionParameter ~ ":" ~ expressionParameter ^^ {
+    case exp~_~thenEx~_~elseEx => Ternary(exp, thenEx, elseEx)
+  }
 
   lazy val arityNoneIntFunction:Parser[IntExpression] = ("TOP"|"X"|"Y"|"DX"|"DY"|"DEPTH") ^^ {
     case "TOP" => Top()
@@ -56,7 +60,7 @@ class LanguageParser extends JavaTokenParsers {
     case "DISTANCEY"~_~parm => DistanceY(parm)
   }
 
-  lazy val param:Parser[Param] = """:\d+""".r ^^ { x => Param(x.substring(1).toInt) }
+  lazy val evalParam:Parser[EvalParam] = """:\d+""".r ^^ { x => EvalParam(x.substring(1).toInt) }
 
   lazy val arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED"|"OBSTRUCTED") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
     case "PAINTED"~_~x~_~y => Painted(x, y)
@@ -128,7 +132,7 @@ class LanguageParser extends JavaTokenParsers {
     case address~_~value => Store(address, value)
   }
   
-  lazy val command:Parser[Instruction] = forward | right | left | paint | push | pop | replace | store | printString | call
+  lazy val command:Parser[Instruction] = forward | right | left | paint | push | pop | replace | store | printString | invokeProc
   
   lazy val controlFlow:Parser[Instruction] = ifStatement | whileStatement
   
@@ -142,14 +146,14 @@ class LanguageParser extends JavaTokenParsers {
 
   lazy val adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ { x => Adjacent(x) }
   
-  lazy val call:Parser[Call] = ident ~ opt(callParams)  ^^ {
-    case defName~Some(params) => Call(defName, params)
-    case defName~None => Call(defName, Nil) 
+  lazy val invokeProc:Parser[InvokeProc] = ident ~ opt(params)  ^^ {
+    case defName~Some(x) => InvokeProc(defName, x)
+    case defName~None => InvokeProc(defName, Nil)
   }
 
-  lazy val callParam:Parser[IntExpression] = mathematical | intExpression 
+  lazy val param:Parser[IntExpression] = mathematical | intExpression
 
-  lazy val callParams:Parser[List[IntExpression]] = "(" ~> repsep(callParam, ",") <~ ")"
+  lazy val params:Parser[List[IntExpression]] = "(" ~> repsep(param, ",") <~ ")"
   
   lazy val instruction:Parser[Instruction] = controlFlow | command 
   

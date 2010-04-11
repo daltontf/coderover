@@ -87,12 +87,12 @@ class Evaluator() {
       case DistanceY(entity)  	     => processDistance(controller.distanceY(entity), entity)
       case Mem(address)              => for (x <- evaluateInt(address, args, controller);
                                              y <- controller.mem(x)) yield (y)
-      case Param(position)           => if (position > 0 && position <= args.length) {
+      case EvalParam(position)           => if (position > 0 && position <= args.length) {
                                           new ResultOrAbend(args(position-1))
                                         } else {
                                           new ResultOrAbend(UnboundParameter(position))
                                         }
-      case Invoke(name, invArgs)    => if (controller.funcMap.contains(name)) {
+      case InvokeFunc(name, invArgs)    => if (controller.funcMap.contains(name)) {
                                         controller.incrementCallStack()
                                         val evalArgs = invArgs.map{ evaluateInt(_, args, controller) }
                                         val failedArgEval = evalArgs.find{ !_.success }
@@ -109,6 +109,10 @@ class Evaluator() {
                                         } else {
                                           new ResultOrAbend(UndefinedBlock(name))
                                         }
+      case Ternary(booleanExpression, thenExpression, elseExpression) =>
+            for (x <- evaluateBoolean(booleanExpression, args, controller);
+                 res <-evaluateInt(if (x) thenExpression else elseExpression, args, controller))
+              yield { res }
     }
   }
   
@@ -179,7 +183,7 @@ class Evaluator() {
                                                 controller.procMap += name -> instructions
                                                 SuccessResultUnit
                                             }
-            case Call(name, callArgs)    => if (controller.procMap.contains(name)) {
+            case InvokeProc(name, callArgs)    => if (controller.procMap.contains(name)) {
                                                 controller.incrementCallStack()
                                                 val evalArgs = callArgs.map{ evaluateInt(_, args, controller) }
                                                 val failedArgEval = evalArgs.find{ !_.success }
