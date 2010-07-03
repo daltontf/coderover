@@ -172,10 +172,6 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(2, 1, 0), state)
     evaluate("RIGHT", state)
     assertEquals(State(2, 1, 1), state)
-    evaluate("FORWARD (2)", state)
-    assertEquals(State(4, 1, 1), state)
-    evaluate("FORWARD (1+1)", state)
-    assertEquals(State(6, 1, 1), state)
   }
 
   def testIfThenElse() {
@@ -289,19 +285,19 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(2, 0, 0), state)
     evaluate("FORWARD", state)
     assertEquals(State(2, 0, 0), state)
-    evaluate("LEFT FORWARD (2)", state)
+    evaluate("LEFT REPEAT 2 { FORWARD }", state)
     assertEquals(State(0, 0, 3), state)
-    evaluate("FORWARD ( 2 )", state)
+    evaluate("REPEAT 2 { FORWARD }", state)
     assertEquals(State(0, 0, 3), state)
-    evaluate("LEFT FORWARD(9)", state)
+    evaluate("LEFT REPEAT 9 { FORWARD }", state)
     assertEquals(State(0, 9, 2), state)
     evaluate("FORWARD", state)
     assertEquals(State(0, 9, 2), state)
-    evaluate("LEFT FORWARD(9)", state)
+    evaluate("LEFT REPEAT 9 { FORWARD }", state)
     assertEquals(State(9, 9, 1), state)
     evaluate("FORWARD", state)
     assertEquals(State(9, 9, 1), state)
-    evaluate("LEFT FORWARD(99)", state)
+    evaluate("LEFT REPEAT 99 { FORWARD }", state)
     assertEquals(State(9, 0, 0), state)
   }
 
@@ -441,10 +437,10 @@ class EvaluatorTest extends TestCase {
   def testProcCallWithParams {
     val state = State(2, 2, 0)
     val controller = new Controller(state)
-    assertEquals(SuccessResultUnit, evaluate("""|PROC RFORWARD { RIGHT FORWARD ($1) }
-     					  |PROC LFORWARD { LEFT FORWARD ($1) }
+    assertEquals(SuccessResultUnit, evaluate("""|PROC RFORWARD { RIGHT REPEAT $1 { FORWARD } }
+     					  |PROC LFORWARD { LEFT REPEAT $1 { FORWARD } }
      						|PROC EMPTY { }
-     						|PROC LLFORWARD { LEFT FORWARD($1) LEFT FORWARD($2) }
+     						|PROC LLFORWARD { LEFT REPEAT $1 {FORWARD} LEFT REPEAT $2 {FORWARD} }
      						|RFORWARD(1)""".stripMargin, controller))
     assertEquals(State(3, 2, 1), state)
     assertEquals(SuccessResultUnit, evaluate("LFORWARD(2)", controller))
@@ -465,7 +461,7 @@ class EvaluatorTest extends TestCase {
       assertEquals(SuccessResultUnit, evaluate("""
         |FUNC PLUSXY ( X + Y )
         |RIGHT
-        |FORWARD(PLUSXY)""".stripMargin, controller))
+        |REPEAT PLUSXY {FORWARD}""".stripMargin, controller))
       assertEquals(State(6, 2, 1), state)    
   }
 
@@ -587,7 +583,7 @@ class EvaluatorTest extends TestCase {
     val controller = new Controller(state, environment)
     assertEquals(SuccessResultUnit, evaluate("RIGHT FORWARD RIGHT", controller))
     assertEquals(State(1,0,2), state)
-    assertEquals(ResultOrAbend[Unit](None, Some(Kablooey)), evaluate("FORWARD(2)", controller))
+    assertEquals(ResultOrAbend[Unit](None, Some(Kablooey)), evaluate("FORWARD", controller))
   }
 
   def testTernary() {
@@ -608,5 +604,18 @@ class EvaluatorTest extends TestCase {
       |FUNC FACTORIAL ( ($1 = 1) ? 1 : $1 * FACTORIAL($1 - 1))
       |PRINT "FACTORIAL(6) = " + FACTORIAL(6)""".stripMargin, controller)
     assertEquals("FACTORIAL(6) = 720", controller.lastPrint)
+  }
+
+  def testPred() {
+    val state = new State(2, 2, 0)
+    val controller = new Controller(state)
+    evaluate("""
+      |PRED Y_EQUALS (Y = $1)
+      |IF Y_EQUALS(2) { FORWARD }""".stripMargin, controller)
+    assertEquals(State(2,1,0), state)
+    evaluate("""IF Y_EQUALS(2) { FORWARD }""".stripMargin, controller)
+    assertEquals(State(2,1,0), state)
+    evaluate("""IF Y_EQUALS(1) { FORWARD RIGHT }""".stripMargin, controller)
+    assertEquals(State(2,0,1), state)
   }
 }

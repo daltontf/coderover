@@ -2,8 +2,6 @@ package tfd.coderover
 
 import collection.mutable.Stack
 
-
-
 class Evaluator() {
   
   final def evaluate(instructions:List[Instruction], controller:Controller):ResultOrAbend[Unit] = {
@@ -160,6 +158,24 @@ class Evaluator() {
                                                            y <- evaluateInt(right, args, controller))
                                                              yield (x != y)
         case Adjacent(entity)				              =>  new ResultOrAbend(controller.isAdjacent(entity))
+
+        case InvokePred(name, invArgs)    => if (controller.predMap.contains(name)) {
+                                        controller.incrementCallStack()
+                                        val evalArgs = invArgs.map{ evaluateInt(_, args, controller) }
+                                        val failedArgEval = evalArgs.find{ !_.success }
+                                        val result:ResultOrAbend[Boolean] = if (failedArgEval.isEmpty) {
+                                          evaluateBoolean(
+                                            controller.predMap(name),
+                                            evalArgs.map {_.value.get }.toArray,
+                                            controller)
+                                          } else {
+                                            new ResultOrAbend(failedArgEval.get.abend.get)
+                                          }
+                                        controller.decrementCallStack()
+                                        result
+                                        } else {
+                                          new ResultOrAbend(UndefinedBlock(name))
+                                        }
 	  }
   }
    
@@ -200,9 +216,7 @@ class Evaluator() {
             				                        } else {
             					   	                    new ResultOrAbend(UndefinedBlock(name))
             				                        }
-        	  case Forward(expression)     => for (distance <- evaluateInt(expression, args, controller);
-                                                 result <- controller.moveForward(distance)
-                                            ) yield (result)
+        	  case Forward()               => controller.moveForward()
         	  case TurnRight()             => {
                                               controller.turnRight()
                                               SuccessResultUnit
@@ -251,7 +265,15 @@ class Evaluator() {
           case Func(name, expression) => {
                                                 controller.funcMap += name -> expression
                                                 SuccessResultUnit
-                                            }
+                                         }
+          case Pred(name, expression) => {
+                                                controller.predMap += name -> expression
+                                                SuccessResultUnit
+                                         }
+          case Repeat(timesExpression, instructions) => {
+                for (times <- evaluateInt(timesExpression, args, controller) )
+                     yield (for (x <- 1 to Math.abs(times)) yield (evaluate(instructions, args, controller)))
+            } 
         }
       } else {
           new ResultOrAbend(None, None)

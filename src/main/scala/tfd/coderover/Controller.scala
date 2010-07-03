@@ -9,18 +9,15 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
 
   private[coderover] val funcMap = new scala.collection.mutable.HashMap[String, IntExpression]()
 
+  private[coderover] val predMap = new scala.collection.mutable.HashMap[String, BooleanExpression]()
+
   private[this] val stack = new Stack[Int]()
 
-  private[coderover] def moveForward(distance:Int):ResultOrAbend[Unit] = {
-    var absDistance = Math.abs(distance)
+  private[coderover] def moveForward():ResultOrAbend[Unit] = {
     var postForwardAbend:Option[Abend] = None
-    while (!stopped
-        && postForwardAbend.isEmpty
-        && absDistance > 0
-        && canMoveForward()) {
+    if (!stopped && canMoveForward()) {
           executeMoveForward()
           postForwardAbend = environment.postMoveForward(state)
-        	absDistance = absDistance - 1
     }
     if (postForwardAbend.isEmpty) {
       SuccessResultUnit

@@ -1,7 +1,7 @@
 package tfd.coderover
 
 sealed abstract class Instruction 
-case class Forward(expression:IntExpression) extends Instruction
+case class Forward() extends Instruction
 case class TurnRight() extends Instruction
 case class TurnLeft() extends Instruction
 case class If(booleanExpression:BooleanExpression, thenStatements:List[Instruction], elseStatements:List[Instruction]) extends Instruction
@@ -12,9 +12,11 @@ case class Pop() extends Instruction
 case class Replace(expression:IntExpression) extends Instruction
 case class Proc(name:String, statements:List[Instruction]) extends Instruction
 case class Func(name:String, expression:IntExpression) extends Instruction
+case class Pred(name:String, expression:BooleanExpression) extends Instruction
 case class InvokeProc(name:String, callArgs:List[IntExpression]) extends Instruction
 case class Print(expression:List[Expression]) extends Instruction
 case class Store(address:IntExpression, value:IntExpression) extends Instruction
+case class Repeat(times:IntExpression, instructions:List[Instruction]) extends Instruction
 
 sealed abstract class Expression()
   case class StringConstant(value:String) extends Expression
@@ -51,6 +53,7 @@ sealed abstract class BooleanExpression() extends Expression
  case class Adjacent(entity:String) extends BooleanExpression
  case class Not(booleanExpression:BooleanExpression) extends BooleanExpression
  case class Obstructed(x:IntExpression, y:IntExpression) extends BooleanExpression
+ case class InvokePred(name:String, args:List[IntExpression]) extends BooleanExpression
  sealed abstract class Logical() extends BooleanExpression
   case class Or(val expressions:List[BooleanExpression])extends Logical
   case class And(val expressions:List[BooleanExpression]) extends Logical

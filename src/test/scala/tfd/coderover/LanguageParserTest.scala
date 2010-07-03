@@ -91,10 +91,7 @@ class LanguageParserTest extends TestCase {
   }
 
   def testForward() {
-    assertProgramParsingProduces(List(Forward(Constant(1))), "FORWARD")
-    assertProgramParsingProduces(List(Forward(Constant(2))), "FORWARD(2)", "FORWARD (2)", "FORWARD((2))")
-    assertProgramParsingProduces(List(Forward(Negate(Constant(2)))), "FORWARD(-(2))")
-    assertProgramParsingProduces(List(Forward(Top())), "FORWARD(TOP)")
+    assertProgramParsingProduces(List(Forward()), "FORWARD")
   }
 
   def testRightLeft() {
@@ -104,37 +101,37 @@ class LanguageParserTest extends TestCase {
   }
 
   def testSimpleIfComparisons() {
-    assertProgramParsingProduces(List(If(Equal(Constant(1), Constant(2)), List(TurnLeft(), Forward(Constant(1))), Nil)),
+    assertProgramParsingProduces(List(If(Equal(Constant(1), Constant(2)), List(TurnLeft(), Forward()), Nil)),
       """|
          |IF (1 = 2) {
          | LEFT
          | FORWARD
          | }""".stripMargin)
-    assertProgramParsingProduces(List(If(LessThan(Constant(1), Constant(2)), List(TurnLeft(), Forward(Constant(1))), Nil)), 
+    assertProgramParsingProduces(List(If(LessThan(Constant(1), Constant(2)), List(TurnLeft(), Forward()), Nil)), 
       """|
          |IF (1 < 2) {
          | LEFT
          | FORWARD
          | }""".stripMargin)
-    assertProgramParsingProduces(List(If(GreaterThan(Constant(1), Constant(2)), List(TurnLeft(), Forward(Constant(1))), Nil)),
+    assertProgramParsingProduces(List(If(GreaterThan(Constant(1), Constant(2)), List(TurnLeft(), Forward()), Nil)),
       """|
          |IF (1 > 2) {
          | LEFT
          | FORWARD
          | }""".stripMargin)
-    assertProgramParsingProduces(List(If(GreaterThanOrEqual(Constant(1), Constant(2)), List(TurnLeft(), Forward(Constant(1))), Nil)),
+    assertProgramParsingProduces(List(If(GreaterThanOrEqual(Constant(1), Constant(2)), List(TurnLeft(), Forward()), Nil)),
       """|
          |IF (1 >= 2) {
          | LEFT
          | FORWARD
          | }""".stripMargin)
-    assertProgramParsingProduces(List(If(LessThanOrEqual(Constant(1), Constant(2)), List(TurnLeft(), Forward(Constant(1))), Nil)),
+    assertProgramParsingProduces(List(If(LessThanOrEqual(Constant(1), Constant(2)), List(TurnLeft(), Forward()), Nil)),
       """|
          |IF (1 <= 2) {                                                                                                               
          | LEFT
          | FORWARD
          | }""".stripMargin)
-    assertProgramParsingProduces(List(If(NotEqual(Constant(1), Constant(2)), List(TurnLeft(), Forward(Constant(1))), Nil)),
+    assertProgramParsingProduces(List(If(NotEqual(Constant(1), Constant(2)), List(TurnLeft(), Forward()), Nil)),
       """|
          |IF (1 <> 2) {
          | LEFT
@@ -149,7 +146,7 @@ class LanguageParserTest extends TestCase {
   }
 
   def testIfElse() {
-    assertProgramParsingProduces(List(If(NotEqual(Constant(1), Constant(2)), List(TurnLeft(), Forward(Constant(1))), List(TurnRight()))), 
+    assertProgramParsingProduces(List(If(NotEqual(Constant(1), Constant(2)), List(TurnLeft(), Forward()), List(TurnRight()))), 
       """|
          |IF (1 <> 2) {
          | LEFT
@@ -162,7 +159,7 @@ class LanguageParserTest extends TestCase {
   def testIfElseIf() {
     assertProgramParsingProduces(List(
       If(NotEqual(Constant(1), Constant(2)),
-        List(TurnLeft(), Forward(Constant(1))),
+        List(TurnLeft(), Forward()),
         List(If(Equal(Constant(2), Constant(3)), List(TurnRight()), Nil))
         )),
         """|
@@ -180,11 +177,11 @@ class LanguageParserTest extends TestCase {
         And(List(
           GreaterThan(Constant(1), Constant(-1)),
           NotEqual(Constant(-3), Add(List(Constant(2), Constant(-2)))))),
-        List(TurnLeft(), Forward(Add(List(Constant(1), Constant(2)))), TurnRight()), Nil)), 
+        List(TurnLeft(), Forward(), TurnRight()), Nil)),
       """|
          |IF ((1 > -1) AND (-3 <> (2 + -2))) {
          | LEFT
-         | FORWARD (1 + 2)
+         | FORWARD
          | RIGHT
          | }""".stripMargin)
   }
@@ -214,6 +211,7 @@ class LanguageParserTest extends TestCase {
     assertProgramParsingProduces(List(Push(Add(List(Constant(1), Constant(2))))), "PUSH (1+2)")
     assertProgramParsingProduces(List(Push(Subtract(List(Constant(8), GridX())))), "PUSH (8 - X)")
     assertProgramParsingProduces(List(Push(Negate(Add(List(Constant(1), Constant(2)))))), "PUSH -(1+2)")
+    assertProgramParsingProduces(List(Push(Abs(Constant(-1)))), "PUSH ABS(-1)")
   }
 
   def testPop() {
@@ -237,14 +235,14 @@ class LanguageParserTest extends TestCase {
   }
 
   def testGridX() {
-    assertProgramParsingProduces(List(While(LessThan(GridX(), Constant(5)), List(Forward(Constant(1))))),
+    assertProgramParsingProduces(List(While(LessThan(GridX(), Constant(5)), List(Forward()))),
       """|WHILE (X < 5) {
          | FORWARD
 		     |}""".stripMargin)
   }
 
   def testGridY() {
-    assertProgramParsingProduces(List(While(GreaterThanOrEqual(GridY(), Constant(1)), List(Forward(Constant(1))))),
+    assertProgramParsingProduces(List(While(GreaterThanOrEqual(GridY(), Constant(1)), List(Forward()))),
       """|WHILE (Y >= 1) {
          | FORWARD
 		     |}""".stripMargin)
@@ -283,17 +281,17 @@ class LanguageParserTest extends TestCase {
   }
 
   def testPainted() {
-    assertProgramParsingProduces(List((While(Painted(Constant(1), Constant(2)), List(Forward(Constant(1)))))),
+    assertProgramParsingProduces(List((While(Painted(Constant(1), Constant(2)), List(Forward())))),
       "WHILE (PAINTED(1,2)) { FORWARD }")
-    assertProgramParsingProduces(List((While(Painted(Constant(1), Constant(2)), List(Forward(Constant(1)))))),
+    assertProgramParsingProduces(List((While(Painted(Constant(1), Constant(2)), List(Forward())))),
       "WHILE PAINTED(1,2) { FORWARD }")
-    assertProgramParsingProduces(List((While(Painted(Constant(1), Constant(2)), List(Forward(Constant(1)))))),
+    assertProgramParsingProduces(List((While(Painted(Constant(1), Constant(2)), List(Forward())))),
       "WHILE ((PAINTED(1,2))) { FORWARD }")
 
   }
 
   def testNot() {
-    assertProgramParsingProduces(List((While(Not(Painted(Constant(1), Constant(2))), List(Forward(Constant(1)))))),
+    assertProgramParsingProduces(List((While(Not(Painted(Constant(1), Constant(2))), List(Forward())))),
       "WHILE (NOT(PAINTED(1,2))) { FORWARD }")
   }
 
@@ -358,18 +356,30 @@ class LanguageParserTest extends TestCase {
   }
 
   def testEvalParameters() {
-    assertProgramParsingProduces(List(Forward(EvalParam(1))), "FORWARD($1)")
+    assertProgramParsingProduces(List(Push(EvalParam(1))), "PUSH $1")
   }
 
   def testFunc() {
     assertProgramParsingProduces(List(Func("TEST", Add(List(DeltaX(), GridX())))), "FUNC TEST ( DX + X )")
   }
 
-  def testInvoke() {
+  def testPred() {
+    assertProgramParsingProduces(List(Pred("DY_EQUALS", Equal(DeltaY(), EvalParam(1)))), "PRED DY_EQUALS ( DY = $1 )")
+  }
+
+  def testInvokeFunc() {
     assertProgramParsingProduces(List(Push(InvokeFunc("TEST", List(Constant(42))))), "PUSH TEST(42)")
+  }
+
+  def testInvokePred() {
+    assertProgramParsingProduces(List(If(InvokePred("DY_EQUALS", List(Constant(2))), Nil, Nil)), "IF DY_EQUALS(2) { }")
   }
 
   def testTernary() {
     assertProgramParsingProduces(List(Push(Ternary(Equal(DeltaY(), Constant(0)), DeltaX(), Constant(-1)))), "PUSH ((DY = 0) ? DX : -1)")
+  }
+
+  def testRepeat() {
+    assertProgramParsingProduces(List(Repeat(Constant(5), List(Forward(), TurnRight()))), "REPEAT 5 { FORWARD RIGHT }")
   }
 }

@@ -80,7 +80,7 @@ class LanguageParser extends JavaTokenParsers {
 
   lazy val nestedBoolean:Parser[BooleanExpression] = comparison | logical 
 
-  lazy val booleanExpression:Parser[BooleanExpression] =  parenBoolean | not | adjacent | arityTwoBoolean 
+  lazy val booleanExpression:Parser[BooleanExpression] =  parenBoolean | not | adjacent | arityTwoBoolean | invokePred
 
   lazy val not:Parser[BooleanExpression] = "NOT" ~> parenBoolean ^^ { expression => Not(expression) }
   
@@ -111,10 +111,7 @@ class LanguageParser extends JavaTokenParsers {
    	case whileExpression~_~blockInstructions => While(whileExpression, blockInstructions)
  	}
   
-  lazy val forward:Parser[Forward] = "FORWARD"~> opt(parenIntExpression) ^^ {
-   	case Some(expression)=> Forward(expression)
-   	case None => Forward(Constant(1))
- 	}
+  lazy val forward:Parser[Forward] = "FORWARD" ^^ { _  => Forward() }
 
   lazy val push:Parser[Push] = "PUSH"~> expressionParameter ^^ { x:IntExpression => Push(x)}
   
@@ -132,7 +129,7 @@ class LanguageParser extends JavaTokenParsers {
     case address~_~value => Store(address, value)
   }
   
-  lazy val command:Parser[Instruction] = forward | right | left | paint | push | pop | replace | store | printString | invokeProc
+  lazy val command:Parser[Instruction] = forward | right | left | paint | push | pop | replace | store | printString | repeat | invokeProc
   
   lazy val controlFlow:Parser[Instruction] = ifStatement | whileStatement
   
@@ -144,11 +141,24 @@ class LanguageParser extends JavaTokenParsers {
     case name~_~expression => Func(name, expression)
   }
 
+  lazy val pred:Parser[Pred] = "PRED" ~> ident ~ booleanExpression ^^ {
+    case name~expression => Pred(name, expression)
+  }
+
+  lazy val invokePred:Parser[InvokePred] = ident ~ opt(params)  ^^ {
+    case defName~Some(x) => InvokePred(defName, x)
+    case defName~None => InvokePred(defName, Nil)
+  }
+
   lazy val adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ { x => Adjacent(x) }
   
   lazy val invokeProc:Parser[InvokeProc] = ident ~ opt(params)  ^^ {
     case defName~Some(x) => InvokeProc(defName, x)
     case defName~None => InvokeProc(defName, Nil)
+  }
+
+  lazy val repeat:Parser[Repeat] = "REPEAT" ~> expressionParameter ~ "{" ~ rep(instruction) <~ "}" ^^ {
+    case timesExpression~_~instructions => Repeat(timesExpression, instructions)
   }
 
   lazy val param:Parser[IntExpression] = mathematical | intExpression
@@ -157,7 +167,7 @@ class LanguageParser extends JavaTokenParsers {
   
   lazy val instruction:Parser[Instruction] = controlFlow | command 
   
-  lazy val topLevelInstruction:Parser[Instruction] = proc | func | instruction 
+  lazy val topLevelInstruction:Parser[Instruction] = proc | func | pred |instruction 
   
   lazy val program = rep(topLevelInstruction)
   
