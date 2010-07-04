@@ -16,7 +16,11 @@ case class InvalidMEMAddress(val value:Int) extends Abend("Invalid MEM address :
 
 case class UnknownEntity(val entity:String) extends Abend("Unknown entity :" + entity)
 
-case class UndefinedBlock(val name:String) extends Abend("Undefined block :" + name)
+case class UndefinedProcedure(val name:String) extends Abend("Undefined PROCEDURE :" + name)
+
+case class UndefinedFunction(val name:String) extends Abend("Undefined FUNCTION :" + name)
+
+case class UndefinedPredicate(val name:String) extends Abend("Undefined PREDICATE :" + name)
 
 case class UnboundParameter(val position:Int) extends Abend("Unbound parameter :" + position)
 

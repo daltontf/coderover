@@ -306,8 +306,9 @@ class LanguageParserTest extends TestCase {
   }
 
   def testProc() {
-    assertProgramParsingProduces(List(Proc("FUNC", List(TurnLeft(), TurnLeft()))), "PROC FUNC { LEFT LEFT }")
-    assertProgramParsingProduces(List(Proc("FUNC_underscore", List(TurnLeft(), TurnLeft()))), "PROC FUNC_underscore { LEFT LEFT }")
+    assertProgramParsingProduces(List(Proc("TWO_LEFTS", List(TurnLeft(), TurnLeft()))), "PROC TWO_LEFTS { LEFT LEFT }")
+    assertProgramParsingProduces(List(Proc("TWO_LEFTS", List(TurnLeft(), TurnLeft()))), "PROCEDURE TWO_LEFTS { LEFT LEFT }")
+    assertProgramParsingProduces(List(Proc("TWO_LEFTS_underscore", List(TurnLeft(), TurnLeft()))), "PROC TWO_LEFTS_underscore { LEFT LEFT }")
   }
 
   def testCall() {
@@ -361,10 +362,12 @@ class LanguageParserTest extends TestCase {
 
   def testFunc() {
     assertProgramParsingProduces(List(Func("TEST", Add(List(DeltaX(), GridX())))), "FUNC TEST ( DX + X )")
+    assertProgramParsingProduces(List(Func("TEST", Add(List(DeltaX(), GridX())))), "FUNCTION TEST ( DX + X )")
   }
 
   def testPred() {
     assertProgramParsingProduces(List(Pred("DY_EQUALS", Equal(DeltaY(), EvalParam(1)))), "PRED DY_EQUALS ( DY = $1 )")
+    assertProgramParsingProduces(List(Pred("DY_EQUALS", Equal(DeltaY(), EvalParam(1)))), "PREDICATE DY_EQUALS ( DY = $1 )")
   }
 
   def testInvokeFunc() {

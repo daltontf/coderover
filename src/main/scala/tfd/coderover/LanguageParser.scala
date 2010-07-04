@@ -133,15 +133,15 @@ class LanguageParser extends JavaTokenParsers {
   
   lazy val controlFlow:Parser[Instruction] = ifStatement | whileStatement
   
-  lazy val proc:Parser[Proc] = "PROC" ~> ident ~ "{" ~ rep(instruction) <~ "}" ^^ {
+  lazy val proc:Parser[Proc] = ("PROCEDURE" | "PROC") ~> ident ~ "{" ~ rep(instruction) <~ "}" ^^ {
     case name~_~instructions => Proc(name, instructions)
   }
 
-  lazy val func:Parser[Func] = "FUNC" ~> ident ~ "(" ~ expressionParameter <~ ")" ^^ {
+  lazy val func:Parser[Func] = ("FUNCTION" | "FUNC") ~> ident ~ "(" ~ expressionParameter <~ ")" ^^ {
     case name~_~expression => Func(name, expression)
   }
 
-  lazy val pred:Parser[Pred] = "PRED" ~> ident ~ booleanExpression ^^ {
+  lazy val pred:Parser[Pred] = ("PREDICATE" | "PRED") ~> ident ~ booleanExpression ^^ {
     case name~expression => Pred(name, expression)
   }
 

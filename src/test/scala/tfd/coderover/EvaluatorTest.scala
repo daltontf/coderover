@@ -430,7 +430,7 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(3, 1, 0), state)
     assertEquals(SuccessResultUnit, evaluate("EMPTY", controller))
     assertEquals(State(3, 1, 0), state)
-    assertEquals(ResultOrAbend(None, Some(UndefinedBlock("FOO"))), evaluate("FOO", controller))
+    assertEquals(ResultOrAbend(None, Some(UndefinedProcedure("FOO"))), evaluate("FOO", controller))
     assertEquals(State(3, 1, 0), state)
   }
 
@@ -451,7 +451,7 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(5, 4, 1), state)
     assertEquals(SuccessResultUnit, evaluate("EMPTY", controller))
     assertEquals(State(5, 4, 1), state)
-    assertEquals(ResultOrAbend(None, Some(UndefinedBlock("FOO"))), evaluate("FOO", controller))
+    assertEquals(ResultOrAbend(None, Some(UndefinedProcedure("FOO"))), evaluate("FOO", controller))
     assertEquals(State(5, 4, 1), state)
   }
 
@@ -617,5 +617,22 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(2,1,0), state)
     evaluate("""IF Y_EQUALS(1) { FORWARD RIGHT }""".stripMargin, controller)
     assertEquals(State(2,0,1), state)
+  }
+
+  def testUnboundInProc() {
+    assertEquals(ResultOrAbend(UndefinedProcedure("BAR")),
+      evaluate("""
+        |PROC FOO { BAR(1) }
+        |FOO""".stripMargin, new Controller(new State(0,0,0)))        
+    )
+  }
+
+  def testUnboundPred() {
+    val state = new State(2, 2, 0)
+    val controller = new Controller(state)
+    assertEquals(ResultOrAbend(UndefinedPredicate("Y_EQUAL")), evaluate(""" 
+      |PRED Y_EQUALS (Y = $1)
+      |IF Y_EQUAL(2) { FORWARD }""".stripMargin, controller))
+
   }
 }

@@ -105,7 +105,7 @@ class Evaluator() {
                                         controller.decrementCallStack()
                                         result
                                         } else {
-                                          new ResultOrAbend(UndefinedBlock(name))
+                                          new ResultOrAbend(UndefinedFunction(name))
                                         }
       case Ternary(booleanExpression, thenExpression, elseExpression) =>
             for (x <- evaluateBoolean(booleanExpression, args, controller);
@@ -174,7 +174,7 @@ class Evaluator() {
                                         controller.decrementCallStack()
                                         result
                                         } else {
-                                          new ResultOrAbend(UndefinedBlock(name))
+                                          new ResultOrAbend(UndefinedPredicate(name))
                                         }
 	  }
   }
@@ -214,7 +214,7 @@ class Evaluator() {
                                                 controller.decrementCallStack()
                                                 result
             				                        } else {
-            					   	                    new ResultOrAbend(UndefinedBlock(name))
+            					   	                    new ResultOrAbend(UndefinedProcedure(name))
             				                        }
         	  case Forward()               => controller.moveForward()
         	  case TurnRight()             => {
