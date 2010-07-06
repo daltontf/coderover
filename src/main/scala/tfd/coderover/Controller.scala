@@ -3,19 +3,15 @@ package tfd.coderover
 import collection.mutable.Stack
 
 class Controller(val state:State, environment:Environment = DefaultEnvironment, constraints:Constraints = DefaultConstraints) {
-  private[this] var callStackSize = 0
+  var executionState:ExecutionState = _
 
-  private[coderover] val procMap = new scala.collection.mutable.HashMap[String, List[Instruction]]()
-
-  private[coderover] val funcMap = new scala.collection.mutable.HashMap[String, IntExpression]()
-
-  private[coderover] val predMap = new scala.collection.mutable.HashMap[String, BooleanExpression]()
-
-  private[this] val stack = new Stack[Int]()
+  private[coderover] def resetState() {
+    executionState = new ExecutionState(constraints)
+  }
 
   private[coderover] def moveForward():ResultOrAbend[Unit] = {
     var postForwardAbend:Option[Abend] = None
-    if (!stopped && canMoveForward()) {
+    if (!executionState.stopped && canMoveForward()) {
           executeMoveForward()
           postForwardAbend = environment.postMoveForward(state)
     }
@@ -36,13 +32,9 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
 
   private[coderover] def print(value:String) = println(value)  
 
-  private[coderover] val memory = new Array[Int](constraints.memorySize)
-
-  private[coderover] var stopped = false
-
   private[coderover] def push(value:Int):ResultOrAbend[Unit] =  {
-      stack.push(value)
-      if (depth > constraints.maxStackSize) {
+      executionState.stack.push(value)
+      if (executionState.stack.size > constraints.maxStackSize) {
         new ResultOrAbend(StackOverflow)
       } else {
         SuccessResultUnit
@@ -50,50 +42,42 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
   }
 
   private[coderover] def pop():ResultOrAbend[Unit] =
-      if (!stack.isEmpty) {
-	  	  stack.pop()
+      if (!executionState.stack.isEmpty) {
+	  	  executionState.stack.pop()
         SuccessResultUnit
       } else {
   		  new ResultOrAbend(IllegalOperationOnEmptyStack)
   		}
 
   private[coderover] def top:ResultOrAbend[Int] =
-      if (!stack.isEmpty) {
-	  	  new ResultOrAbend(stack.top)
+      if (!executionState.stack.isEmpty) {
+	  	  new ResultOrAbend(executionState.stack.top)
       } else {
   		  new ResultOrAbend(IllegalOperationOnEmptyStack)
       }
 
 
-  private[coderover] def depth = stack.size
-
-  private[coderover] def resetCallStack() {
-    callStackSize = 0
-  }
+  private[coderover] def depth = executionState.stack.size
 
   private[coderover] def incrementCallStack():ResultOrAbend[Unit] = {
-    callStackSize = callStackSize + 1
-    if (callStackSize > constraints.maxCallStackSize) {
+    executionState.incrementCallStack()
+    if (executionState.callStackSize > constraints.maxCallStackSize) {
        new ResultOrAbend[Unit](CallStackOverflow)
     } else {
         SuccessResultUnit
     }
   }
-
-  private[coderover] def decrementCallStack() {
-    callStackSize = callStackSize - 1
-  }
-
+  
   private[coderover] def mem(address:Int):ResultOrAbend[Int] =
-     if (address > 0 && address < memory.size) {
-         new ResultOrAbend(memory(address))
+     if (address >= 0 && address < executionState.memory.size) {
+         new ResultOrAbend(executionState.memory(address))
      } else {
          new ResultOrAbend(InvalidMEMAddress(address));
      }
 
   private[coderover] def store(address:Int, value:Int):ResultOrAbend[Unit] = {
-     if (address > 0 && address < memory.size) {
-          new ResultOrAbend(memory(address) = value)
+     if (address >= 0 && address < executionState.memory.size) {
+          new ResultOrAbend(executionState.memory(address) = value)
      } else {
           new ResultOrAbend(InvalidMEMAddress(address));
      }
@@ -123,7 +107,7 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
       new ResultOrAbend(result.get)
     }
   }
-  
+
   private[coderover] def gridX = state.gridX
 
   private[coderover] def gridY = state.gridY
@@ -132,4 +116,7 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
 
   private[coderover] def deltaY = state.deltaY
 
+  private[coderover] def stop = if (executionState != null) executionState.stopped = true
+
+  private[coderover] def stopped = executionState != null && executionState.stopped
 }

@@ -204,11 +204,11 @@ class EvaluatorTest extends TestCase {
     val controller = new Controller(State(2, 2, 0))
     evaluate("PUSH (1+2)", controller)
     assertEquals(ResultOrAbend(3), controller.top)
-    evaluate("PUSH (TOP + 1)", controller)
+    evaluate("PUSH (1+2) PUSH (TOP + 1)", controller)
     assertEquals(ResultOrAbend(4), controller.top)
-    evaluate("POP", controller)
+    evaluate("PUSH (1+2) PUSH (TOP + 1) POP", controller)
     assertEquals(ResultOrAbend(3), controller.top)
-    evaluate("REPLACE (TOP * 2)", controller)
+    evaluate("PUSH (1+2) PUSH (TOP + 1) POP REPLACE (TOP * 2)", controller)
     assertEquals(ResultOrAbend(6), controller.top)
   }
 
@@ -225,7 +225,7 @@ class EvaluatorTest extends TestCase {
     val controller = new Controller(State(2, 3, 0))
     evaluate("PUSH X PUSH Y", controller)
     assertEquals(ResultOrAbend(3), controller.top)
-    evaluate("POP", controller)
+    evaluate("PUSH X PUSH Y POP", controller)
     assertEquals(ResultOrAbend(2), controller.top)
   }
 
@@ -422,13 +422,15 @@ class EvaluatorTest extends TestCase {
     val controller = new Controller(state)
     assertEquals(SuccessResultUnit, evaluate(
       """|PROC RIGHTFORWARD { RIGHT FORWARD }
-         |PROC LEFTFORWARD { LEFT FORWARD }
-     		 |PROC EMPTY { }
-     		 |RIGHTFORWARD""".stripMargin, controller))
+         |RIGHTFORWARD""".stripMargin, controller))
     assertEquals(State(3, 2, 1), state)
-    assertEquals(SuccessResultUnit, evaluate("LEFTFORWARD", controller))
+    assertEquals(SuccessResultUnit, evaluate("""
+         |PROC LEFTFORWARD { LEFT FORWARD }
+         |LEFTFORWARD""".stripMargin, controller))
     assertEquals(State(3, 1, 0), state)
-    assertEquals(SuccessResultUnit, evaluate("EMPTY", controller))
+    assertEquals(SuccessResultUnit, evaluate("""
+         |PROC EMPTY { }
+         |EMPTY""".stripMargin, controller))
     assertEquals(State(3, 1, 0), state)
     assertEquals(ResultOrAbend(None, Some(UndefinedProcedure("FOO"))), evaluate("FOO", controller))
     assertEquals(State(3, 1, 0), state)
@@ -437,19 +439,25 @@ class EvaluatorTest extends TestCase {
   def testProcCallWithParams {
     val state = State(2, 2, 0)
     val controller = new Controller(state)
-    assertEquals(SuccessResultUnit, evaluate("""|PROC RFORWARD { RIGHT REPEAT $1 { FORWARD } }
-     					  |PROC LFORWARD { LEFT REPEAT $1 { FORWARD } }
-     						|PROC EMPTY { }
-     						|PROC LLFORWARD { LEFT REPEAT $1 {FORWARD} LEFT REPEAT $2 {FORWARD} }
-     						|RFORWARD(1)""".stripMargin, controller))
+    assertEquals(SuccessResultUnit, evaluate("""
+                |PROC RFORWARD { RIGHT REPEAT $1 { FORWARD } }
+     					 	|RFORWARD(1)""".stripMargin, controller))
     assertEquals(State(3, 2, 1), state)
-    assertEquals(SuccessResultUnit, evaluate("LFORWARD(2)", controller))
+    assertEquals(SuccessResultUnit, evaluate("""
+                |PROC LFORWARD { LEFT REPEAT $1 { FORWARD } }
+                |LFORWARD(2)""".stripMargin, controller))
     assertEquals(State(3, 0, 0), state)
-    assertEquals(SuccessResultUnit, evaluate("LFORWARD(3)", controller))
+    assertEquals(SuccessResultUnit, evaluate("""
+                |PROC LFORWARD { LEFT REPEAT $1 { FORWARD } }
+                |LFORWARD(3)""".stripMargin, controller))
     assertEquals(State(0, 0, 3), state)
-    assertEquals(SuccessResultUnit, evaluate("LLFORWARD(4, 5)", controller))
+    assertEquals(SuccessResultUnit, evaluate("""
+                |PROC LLFORWARD { LEFT REPEAT $1 {FORWARD} LEFT REPEAT $2 {FORWARD} }
+                |LLFORWARD(4, 5)""".stripMargin, controller))
     assertEquals(State(5, 4, 1), state)
-    assertEquals(SuccessResultUnit, evaluate("EMPTY", controller))
+    assertEquals(SuccessResultUnit, evaluate("""
+                 |PROC EMPTY { }
+                 |EMPTY""".stripMargin, controller))
     assertEquals(State(5, 4, 1), state)
     assertEquals(ResultOrAbend(None, Some(UndefinedProcedure("FOO"))), evaluate("FOO", controller))
     assertEquals(State(5, 4, 1), state)
@@ -484,7 +492,7 @@ class EvaluatorTest extends TestCase {
     val controller = new Controller(new State(2, 2, 0), DefaultEnvironment, new Constraints(10, 10, 10))
     assertEquals(SuccessResultUnit, evaluate("""STORE (3,42) PUSH MEM(3)""", controller))
     assertEquals(ResultOrAbend(42), controller.top)
-    assertEquals(42, controller.memory(3))
+    assertEquals(42, controller.executionState.memory(3))
     assertEquals(ResultOrAbend(InvalidMEMAddress(10)), evaluate("""STORE (10,42)""", controller))
     assertEquals(ResultOrAbend(InvalidMEMAddress(11)), evaluate("""PUSH MEM(11)""", controller))
   }
@@ -613,9 +621,13 @@ class EvaluatorTest extends TestCase {
       |PRED Y_EQUALS (Y = $1)
       |IF Y_EQUALS(2) { FORWARD }""".stripMargin, controller)
     assertEquals(State(2,1,0), state)
-    evaluate("""IF Y_EQUALS(2) { FORWARD }""".stripMargin, controller)
+    evaluate("""
+       |PRED Y_EQUALS (Y = $1)
+       |IF Y_EQUALS(2) { FORWARD }""".stripMargin, controller)
     assertEquals(State(2,1,0), state)
-    evaluate("""IF Y_EQUALS(1) { FORWARD RIGHT }""".stripMargin, controller)
+    evaluate("""
+       |PRED Y_EQUALS (Y = $1)
+       |IF Y_EQUALS(1) { FORWARD RIGHT }""".stripMargin, controller)
     assertEquals(State(2,0,1), state)
   }
 

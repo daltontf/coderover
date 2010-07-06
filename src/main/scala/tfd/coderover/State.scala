@@ -1,11 +1,12 @@
 package tfd.coderover
 
+import collection.mutable.Stack
+
 case class State(
   var gridX:Int,
   var gridY:Int,
   var directionIndex:Int
-) {  
-
+) {
   import Constants._
 
   def moveForward() = {
@@ -25,5 +26,5 @@ case class State(
     gridX = other.gridX
     gridY = other.gridY
     directionIndex = other.directionIndex
-  }
+  }   
 }

@@ -5,7 +5,7 @@ import collection.mutable.Stack
 class Evaluator() {
   
   final def evaluate(instructions:List[Instruction], controller:Controller):ResultOrAbend[Unit] = {
-    controller.stopped = false
+    controller.resetState
     evaluate(instructions, Array.empty[Int], controller)
   }  
 
@@ -90,19 +90,19 @@ class Evaluator() {
                                         } else {
                                           new ResultOrAbend(UnboundParameter(position))
                                         }
-      case InvokeFunc(name, invArgs)    => if (controller.funcMap.contains(name)) {
+      case InvokeFunc(name, invArgs)    => if (controller.executionState.funcMap.contains(name)) {
                                         controller.incrementCallStack()
                                         val evalArgs = invArgs.map{ evaluateInt(_, args, controller) }
                                         val failedArgEval = evalArgs.find{ !_.success }
                                         val result:ResultOrAbend[Int] = if (failedArgEval.isEmpty) {
                                           evaluateInt(
-                                            controller.funcMap(name),
+                                            controller.executionState.funcMap(name),
                                             evalArgs.map {_.value.get }.toArray,
                                             controller)
                                           } else {
                                             new ResultOrAbend(failedArgEval.get.abend.get)
                                           }
-                                        controller.decrementCallStack()
+                                        controller.executionState.decrementCallStack()
                                         result
                                         } else {
                                           new ResultOrAbend(UndefinedFunction(name))
@@ -159,19 +159,19 @@ class Evaluator() {
                                                              yield (x != y)
         case Adjacent(entity)				              =>  new ResultOrAbend(controller.isAdjacent(entity))
 
-        case InvokePred(name, invArgs)    => if (controller.predMap.contains(name)) {
+        case InvokePred(name, invArgs)    => if (controller.executionState.predMap.contains(name)) {
                                         controller.incrementCallStack()
                                         val evalArgs = invArgs.map{ evaluateInt(_, args, controller) }
                                         val failedArgEval = evalArgs.find{ !_.success }
                                         val result:ResultOrAbend[Boolean] = if (failedArgEval.isEmpty) {
                                           evaluateBoolean(
-                                            controller.predMap(name),
+                                            controller.executionState.predMap(name),
                                             evalArgs.map {_.value.get }.toArray,
                                             controller)
                                           } else {
                                             new ResultOrAbend(failedArgEval.get.abend.get)
                                           }
-                                        controller.decrementCallStack()
+                                        controller.executionState.decrementCallStack()
                                         result
                                         } else {
                                           new ResultOrAbend(UndefinedPredicate(name))
@@ -193,25 +193,25 @@ class Evaluator() {
     evaluateBoolean(booleanExpression, args, controller).value == Some(true)
 
   private[coderover] final def evaluateInstruction(instruction:Instruction, args:Array[Int], controller:Controller):ResultOrAbend[Unit] = {
-      if (!controller.stopped) {
+      if (!controller.executionState.stopped) {
         instruction match {
             case Proc(name, instructions) => {
-                                                controller.procMap += name -> instructions
+                                                controller.executionState.procMap += name -> instructions
                                                 SuccessResultUnit
                                             }
-            case InvokeProc(name, callArgs)    => if (controller.procMap.contains(name)) {
+            case InvokeProc(name, callArgs)    => if (controller.executionState.procMap.contains(name)) {
                                                 controller.incrementCallStack()
                                                 val evalArgs = callArgs.map{ evaluateInt(_, args, controller) }
                                                 val failedArgEval = evalArgs.find{ !_.success }
                                                 val result:ResultOrAbend[Unit] = if (failedArgEval.isEmpty) {
                                                   evaluate(
-                                                      controller.procMap(name),
+                                                      controller.executionState.procMap(name),
                                                       evalArgs.map {_.value.get }.toArray,
                                                       controller)
                                                 } else {
                                                   new ResultOrAbend(failedArgEval.get.abend.get)
                                                 }
-                                                controller.decrementCallStack()
+                                                controller.executionState.decrementCallStack()
                                                 result
             				                        } else {
             					   	                    new ResultOrAbend(UndefinedProcedure(name))
@@ -263,11 +263,11 @@ class Evaluator() {
                                              result <- controller.store(x, y))
                                         yield (result)
           case Func(name, expression) => {
-                                                controller.funcMap += name -> expression
+                                                controller.executionState.funcMap += name -> expression
                                                 SuccessResultUnit
                                          }
           case Pred(name, expression) => {
-                                                controller.predMap += name -> expression
+                                                controller.executionState.predMap += name -> expression
                                                 SuccessResultUnit
                                          }
           case Repeat(timesExpression, instructions) => {
