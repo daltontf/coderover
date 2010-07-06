@@ -302,7 +302,6 @@ class EvaluatorTest extends TestCase {
   }
 
   def testPaint() {
-
     val environment = new Environment(10,10) {
       import scala.collection.mutable.ListBuffer
 
@@ -645,6 +644,19 @@ class EvaluatorTest extends TestCase {
     assertEquals(ResultOrAbend(UndefinedPredicate("Y_EQUAL")), evaluate(""" 
       |PRED Y_EQUALS (Y = $1)
       |IF Y_EQUAL(2) { FORWARD }""".stripMargin, controller))
+  }
 
+  def testShortCircuitAnd() {
+    assertEquals(
+      ResultOrAbend(false),
+      evaluateBoolean(And(List(Equal(Constant(1), Constant(2)), Equal(Constant(1), Mem(Constant(-1))))), Array.empty[Int], (State(2,2,0)))
+    )
+  }
+
+  def testShortCircuitOr() {
+    assertEquals(
+      ResultOrAbend(true),
+      evaluateBoolean(Or(List(Equal(Constant(1), Constant(1)), Equal(Constant(1), Mem(Constant(-1))))), Array.empty[Int], (State(2,2,0)))
+    )
   }
 }

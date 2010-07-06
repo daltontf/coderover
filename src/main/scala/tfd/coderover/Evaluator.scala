@@ -131,12 +131,16 @@ class Evaluator() {
                                                           yield ( !x )
 	      case And(booleanExpressionList)		        => booleanExpressionList.tail.foldLeft(evaluateBoolean(booleanExpressionList.head, args, controller)) {
                                                         (previousResult, booleanExpression) =>
-                                                          for (xp <- previousResult; yp <- evaluateBoolean(booleanExpression, args, controller))
+                                                          for (
+                                                            xp <- previousResult;
+                                                            yp <- if (xp) evaluateBoolean(booleanExpression, args, controller) else ResultOrAbend(false))
                                                             yield (xp && yp)
                                                      }
         case Or(booleanExpressionList) 		        => booleanExpressionList.tail.foldLeft(evaluateBoolean(booleanExpressionList.head, args, controller)) {
                                                         (previousResult, booleanExpression) =>
-                                                          for (xp <- previousResult; yp <- evaluateBoolean(booleanExpression, args, controller))
+                                                          for (
+                                                            xp <- previousResult;
+                                                            yp <- if (!xp) evaluateBoolean(booleanExpression, args, controller) else ResultOrAbend(true))
                                                             yield (xp || yp)
                                                      }
         case Equal(left, right) 			            => for (x <- evaluateInt(left, args, controller);
