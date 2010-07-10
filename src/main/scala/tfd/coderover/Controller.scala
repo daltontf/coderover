@@ -13,7 +13,7 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
     var postForwardAbend:Option[Abend] = None
     if (!executionState.stopped && canMoveForward()) {
           executeMoveForward()
-          postForwardAbend = environment.postMoveForward(state)
+          postForwardAbend = postMoveForward()
     }
     if (postForwardAbend.isEmpty) {
       SuccessResultUnit
@@ -22,13 +22,19 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
     }
   }
 
+  def canMoveForward(state:State) = {
+      val nextX = state.gridX + state.deltaX
+      val nextY = state.gridY + state.deltaY
+      (nextX >= 0 && nextX < sizeX && nextY >=0 && nextY < sizeY && !isObstructed(nextX, nextY))
+  }
+
   protected def executeMoveForward() = state.moveForward()
 
   private[coderover] def turnRight() = state.turnRight()
 
   private[coderover] def turnLeft() = state.turnLeft()
 
-  private[coderover] def paint() = environment.paint(state)
+  private[coderover] def paint() = environment.paint(gridX, gridY)
 
   private[coderover] def print(value:String) = println(value)  
 
@@ -87,25 +93,20 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
 
   private[coderover] val sizeY = environment.sizeY
 
-  private[coderover] def distanceX(entity:String):Option[Int] = environment.distanceX(entity, state)
+  private[coderover] def distanceX(entity:String):Option[Int] = environment.distanceX(entity, gridX, gridY)
 
-  private[coderover] def distanceY(entity:String):Option[Int] = environment.distanceY(entity, state)
+  private[coderover] def distanceY(entity:String):Option[Int] = environment.distanceY(entity, gridX, gridY)
 
   private[coderover] def isObstructed(x:Int, y:Int) = environment.isObstructed(x,y)
 
-  private[coderover] def isPainted(x:Int, y:Int) = environment.isPainted(x, y, state)
+  private[coderover] def isPainted(x:Int, y:Int) = environment.isPainted(x, y)
 
-  private[coderover] def isAdjacent(entity:String) = environment.adjacent(entity, state)
+  private[coderover] def isAdjacent(entity:String) = environment.adjacent(entity, gridX, gridY)
 
-  private[coderover] def canMoveForward() = environment.canMoveForward(state)
+  private[coderover] def canMoveForward():Boolean = canMoveForward(state)
 
-  private[coderover] def postMoveForward():ResultOrAbend[Unit] = {
-    val result = environment.postMoveForward(state)
-    if (result.isEmpty) {
-      SuccessResultUnit
-    } else {
-      new ResultOrAbend(result.get)
-    }
+  private[coderover] def postMoveForward():Option[Abend] = {
+    None
   }
 
   private[coderover] def gridX = state.gridX

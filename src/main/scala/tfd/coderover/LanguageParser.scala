@@ -167,9 +167,9 @@ class LanguageParser extends JavaTokenParsers {
   
   lazy val instruction:Parser[Instruction] = controlFlow | command 
   
-  lazy val topLevelInstruction:Parser[Instruction] = proc | func | pred |instruction 
+  def topLevelInstruction:Parser[Instruction] = proc | func | pred |instruction
   
-  lazy val program = rep(topLevelInstruction)
+  def program = rep(topLevelInstruction)
   
   def parse(text:String) = parseAll(program, text)
 

@@ -277,7 +277,7 @@ class Evaluator() {
           case Repeat(timesExpression, instructions) => {
                 for (times <- evaluateInt(timesExpression, args, controller) )
                      yield (for (x <- 1 to Math.abs(times)) yield (evaluate(instructions, args, controller)))
-            } 
+            }
         }
       } else {
           new ResultOrAbend(None, None)

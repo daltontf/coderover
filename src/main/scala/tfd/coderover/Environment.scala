@@ -4,26 +4,20 @@ class Environment(
         val sizeX:Int,
         val sizeY:Int
   ) {
-
-  def canMoveForward(state:State) = {
-      val nextX = state.gridX + state.deltaX
-      val nextY = state.gridY + state.deltaY
-      (nextX >= 0 && nextX < sizeX && nextY >=0 && nextY < sizeY && !isObstructed(nextX, nextY))
-    }
-
+  
   def isObstructed(x:Int, y:Int) = false
   
-  def postMoveForward(state:State):Option[Abend] = None
-  
-  def paint(state:State) { }
-  
-  def distanceX(entity:String, state:State):Option[Int] = None
-  
-  def distanceY(entity:String, state:State):Option[Int] = None
-  
-  def adjacent(entity:String, state:State) = false
+  def paint(x:Int, y:Int) { }
 
-  def isPainted(x:Int, y:Int, state:State) = false
+  def obstruct(x:Int, y:Int) { }
+  
+  def distanceX(entity:String, x:Int, y:Int):Option[Int] = None
+  
+  def distanceY(entity:String, x:Int, y:Int):Option[Int] = None
+  
+  def adjacent(entity:String, x:Int, y:Int) = false
+
+  def isPainted(x:Int, y:Int) = false
 } 
 
 object DefaultEnvironment extends Environment(10,10) 

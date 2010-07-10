@@ -307,8 +307,8 @@ class EvaluatorTest extends TestCase {
 
       val paintedTuples = new ListBuffer[(Int, Int)]
 
-      override def paint(state:State) {
-        paintedTuples += ((state.gridX, state.gridY))
+      override def paint(x:Int, y:Int) {
+        paintedTuples += ((x, y))
       }
     }
     val state = new State(2,2,0)
@@ -326,7 +326,7 @@ class EvaluatorTest extends TestCase {
     val environment = new Environment(10,10) {
       private val painted = (3, 4)
 
-      override def isPainted(x: Int, y: Int, state:State) = (x, y) == painted
+      override def isPainted(x: Int, y: Int) = (x, y) == painted
     }
     val state = new State(2, 2, 0)
     evaluate("""IF (PAINTED(1,2)) { FORWARD }""", new Controller(state, environment))
@@ -353,8 +353,8 @@ class EvaluatorTest extends TestCase {
   def testAdjacent() {
     val state = new State(2, 2, 1)
     val environment = new Environment(10,10) {
-      override def adjacent(entity: String, state: State) =
-        "ROCK" == entity && ((Math.abs(3 - state.gridX) + Math.abs(3 - state.gridY)) == 1)
+      override def adjacent(entity: String, x:Int, y:Int) =
+        "ROCK" == entity && ((Math.abs(3 - x) + Math.abs(3 - y)) == 1)
     }
     evaluate("""IF (ADJACENT(ROCK)) { FORWARD }""", new Controller(state, environment))
     assertEquals(State(2, 2, 1), state)
@@ -400,9 +400,9 @@ class EvaluatorTest extends TestCase {
       private val entityMap = Map("ROCK" -> (5, 5),
         "FLAG" -> (1, 1))
 
-      override def distanceX(entity: String, state: State) = if (entityMap.contains(entity)) {Some(entityMap(entity)._1 - state.gridX)} else {None}
+      override def distanceX(entity: String, x:Int, y:Int) = if (entityMap.contains(entity)) {Some(entityMap(entity)._1 - x)} else {None}
 
-      override def distanceY(entity: String, state: State) = if (entityMap.contains(entity)) {Some(entityMap(entity)._2 - state.gridY)} else {None}
+      override def distanceY(entity: String, x:Int, y:Int) = if (entityMap.contains(entity)) {Some(entityMap(entity)._2 - y)} else {None}
     }
     val controller = new Controller(state, environment)
     evaluate("PUSH DISTANCEX(ROCK)", controller)
@@ -576,10 +576,9 @@ class EvaluatorTest extends TestCase {
     object Kablooey extends Abend("Kablooey")
     
     val state = new State(0, 0, 0)
-    val environment = new Environment(3, 3) {
-
-
-      override def postMoveForward(state:State):Option[Abend] = {
+    val environment = new Environment(3, 3);
+    val controller = new Controller(state, environment) {
+      override def postMoveForward():Option[Abend] = {
 
         state match {
           case State(1,1,_) => Some(Kablooey)
@@ -587,7 +586,6 @@ class EvaluatorTest extends TestCase {
         }
       }
     }
-    val controller = new Controller(state, environment)
     assertEquals(SuccessResultUnit, evaluate("RIGHT FORWARD RIGHT", controller))
     assertEquals(State(1,0,2), state)
     assertEquals(ResultOrAbend[Unit](None, Some(Kablooey)), evaluate("FORWARD", controller))

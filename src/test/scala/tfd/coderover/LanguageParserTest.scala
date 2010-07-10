@@ -6,11 +6,7 @@ import org.hamcrest.Matcher
 
 import junit.framework.TestCase
 
-object HamcrestAdapter {
-  import org.hamcrest.Matchers
 
-  def is[T](value:T):Matcher[Any] = Matchers.is(value.asInstanceOf[Any])
-}
 
 import HamcrestAdapter._
 
