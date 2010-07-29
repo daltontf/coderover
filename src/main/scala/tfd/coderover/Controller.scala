@@ -2,7 +2,7 @@ package tfd.coderover
 
 import collection.mutable.Stack
 
-class Controller(val state:State, environment:Environment = DefaultEnvironment, constraints:Constraints = DefaultConstraints) {
+class Controller(var state:State, environment:Environment = DefaultEnvironment, constraints:Constraints = DefaultConstraints) {
   var executionState:ExecutionState = _
 
   private[coderover] def resetState() {
@@ -28,11 +28,11 @@ class Controller(val state:State, environment:Environment = DefaultEnvironment, 
       (nextX >= 0 && nextX < sizeX && nextY >=0 && nextY < sizeY && !isObstructed(nextX, nextY))
   }
 
-  protected def executeMoveForward() = state.moveForward()
+  protected def executeMoveForward() = state = state.moveForward()
 
-  private[coderover] def turnRight() = state.turnRight()
+  private[coderover] def turnRight() = state = state.turnRight()
 
-  private[coderover] def turnLeft() = state.turnLeft()
+  private[coderover] def turnLeft() = state = state.turnLeft()
 
   private[coderover] def paint() = environment.paint(gridX, gridY)
 

@@ -9,22 +9,13 @@ case class State(
 ) {
   import Constants._
 
-  def moveForward() = {
-    gridX = gridX + deltaX
-    gridY = gridY + deltaY
-  }
+  def moveForward() = State(gridX + deltaX, gridY + deltaY, directionIndex)
+    
+  def turnRight() = State(gridX, gridY,(directionIndex + DIRECTIONS.length + 1) % DIRECTIONS.length)
   
-  def turnRight() = directionIndex = (directionIndex + DIRECTIONS.length + 1) % DIRECTIONS.length
-  
-  def turnLeft() = directionIndex = (directionIndex + DIRECTIONS.length - 1) % DIRECTIONS.length
+  def turnLeft() = State(gridX, gridY,(directionIndex + DIRECTIONS.length - 1) % DIRECTIONS.length)
       
   def deltaX = DIRECTIONS(directionIndex)._1
   
   def deltaY = DIRECTIONS(directionIndex)._2
-
-  def setEqual(other:State) {
-    gridX = other.gridX
-    gridY = other.gridY
-    directionIndex = other.directionIndex
-  }   
 }
