@@ -14,6 +14,8 @@ object GridLocationOutOfBounds extends Abend("Grid location out of bounds")
 
 case class InvalidMEMAddress(val value:Int) extends Abend("Invalid MEM address :" + value)
 
+case class InvalidRepeat(wrappedMessage:String) extends Abend("Invalid Repeat :" + wrappedMessage)
+
 case class UnknownEntity(val entity:String) extends Abend("Unknown entity :" + entity)
 
 case class UndefinedProcedure(val name:String) extends Abend("Undefined PROCEDURE :" + name)

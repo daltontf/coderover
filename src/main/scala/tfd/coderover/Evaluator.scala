@@ -9,6 +9,7 @@ class Evaluator() {
     evaluate(instructions, Array.empty[Int], controller)
   }  
 
+  // This should be tail-recursive
   private[this] final def evaluate(instructions:List[Instruction], args:Array[Int], controller:Controller):ResultOrAbend[Unit] =
     if (instructions != Nil) {
       instructions.tail.foldLeft(evaluateInstruction(instructions.head, args, controller)) {
@@ -275,9 +276,19 @@ class Evaluator() {
                                                 SuccessResultUnit
                                          }
           case Repeat(timesExpression, instructions) => {
-                for (times <- evaluateInt(timesExpression, args, controller) )
-                     yield (for (x <- 1 to Math.abs(times)) yield (evaluate(instructions, args, controller)))
-            }
+                val timesResult = evaluateInt(timesExpression, args, controller)
+                if (timesResult.success) {
+                  var times = timesResult.value.get
+                  var repeatResult:ResultOrAbend[Unit] = SuccessResultUnit
+                  while (times > 0 && repeatResult.success) {
+                    repeatResult = evaluate(instructions, args, controller)
+                    times -= 1
+                  }
+                  repeatResult
+                } else {
+                  new ResultOrAbend(InvalidRepeat(timesResult.abend.get.message))
+                }
+              }
         }
       } else {
           new ResultOrAbend(None, None)

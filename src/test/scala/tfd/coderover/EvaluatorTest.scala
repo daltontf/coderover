@@ -625,13 +625,24 @@ class EvaluatorTest extends TestCase {
   }
 
   def testUnboundPred() {
-    val state = new State(2, 2, 0)
-    val controller = new Controller(state)
+    val controller = new Controller(new State(2, 2, 0))
     assertEquals(ResultOrAbend(UndefinedPredicate("Y_EQUAL")), evaluate(""" 
       |PRED Y_EQUALS (Y = $1)
       |IF Y_EQUAL(2) { FORWARD }""".stripMargin, controller))
   }
 
+  def testFailureInRepeat() {
+    val controller = new Controller(new State(2, 2, 0)) {
+      override def postMoveForward():Option[Abend] = state match {
+        case State(4,2,_) => Some(UnknownEntity("FOO"))
+        case _ => None
+      }
+    }
+    assertEquals(ResultOrAbend(UnknownEntity("FOO")), evaluate("""
+      |RIGHT REPEAT 5 { FORWARD }""".stripMargin, controller))
+    assertEquals(State(4,2,1), controller.state)
+  }
+    
   def testShortCircuitAnd() {
     assertEquals(
       ResultOrAbend(false),
