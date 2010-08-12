@@ -221,7 +221,14 @@ class Evaluator() {
             				                        } else {
             					   	                    new ResultOrAbend(UndefinedProcedure(name))
             				                        }
-        	  case Forward()               => controller.moveForward()
+        	  case Forward()               => {
+                                             val result = controller.moveForward()
+                                             if (result.isEmpty) {
+                                                SuccessResultUnit
+                                              } else {
+                                                new ResultOrAbend(result.get)
+                                              }
+                                            }
         	  case TurnRight()             => {
                                               controller.turnRight()
                                               SuccessResultUnit
