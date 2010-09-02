@@ -24,15 +24,15 @@ class Evaluator() {
   
   private[this] final def processDistance(distance:Option[Int], entity:String):ResultOrAbend[Int] =
     if (distance == None) { 
-    	new ResultOrAbend(UnknownEntity(entity))
+    	 AbendResult(UnknownEntity(entity))
     } else {
-      new ResultOrAbend(distance.get)
+       SuccessResult(distance.get)
     }
 
   private[this] def evaluateDivideByZero(expression:IntExpression, args:Array[Int], controller:Controller):ResultOrAbend[Int] = {
     val result = evaluateInt(expression, args, controller)
     if (!result.value.isEmpty && result.value.get == 0) {
-      new ResultOrAbend(DivideByZero)
+      AbendResult(DivideByZero)
     } else {
       result
     }
@@ -44,7 +44,7 @@ class Evaluator() {
 
   private[coderover] final def evaluateInt(expression:IntExpression, args:Array[Int], controller:Controller):ResultOrAbend[Int] = {
     expression match {
-      case Constant(x)               => new ResultOrAbend(x)
+      case Constant(x)               => SuccessResult(x)
       case Add(expressionList) 	 	   => expressionList.tail.foldLeft(evaluateInt(expressionList.head, args, controller)) {
                                           (previousResult, intExpression) =>
                                             for (xp <- previousResult; yp <- evaluateInt(intExpression, args, controller))
@@ -71,11 +71,11 @@ class Evaluator() {
                                               yield (xp % yp)
                                         }
       case Top() 				             => controller.top
-      case GridX() 				           => new ResultOrAbend(controller.gridX)
-      case GridY() 				           => new ResultOrAbend(controller.gridY)
-      case DeltaX() 			           => new ResultOrAbend(controller.deltaX)
-      case DeltaY() 			           => new ResultOrAbend(controller.deltaY)
-      case Depth()				           => new ResultOrAbend(controller.depth)
+      case GridX() 				           => SuccessResult(controller.gridX)
+      case GridY() 				           => SuccessResult(controller.gridY)
+      case DeltaX() 			           => SuccessResult(controller.deltaX)
+      case DeltaY() 			           => SuccessResult(controller.deltaY)
+      case Depth()				           => SuccessResult(controller.depth)
       case Abs(expr) 			           => for (x <- evaluateInt(expr, args, controller)) yield (Math.abs(x))
       case Max(expr1, expr2) 	       => for (x <- evaluateInt(expr1, args, controller);
                                              y <- evaluateInt(expr2, args, controller)) yield (Math.max(x,y))
@@ -86,12 +86,12 @@ class Evaluator() {
       case DistanceY(entity)  	     => processDistance(controller.distanceY(entity), entity)
       case Mem(address)              => for (x <- evaluateInt(address, args, controller);
                                              y <- controller.mem(x)) yield (y)
-      case EvalParam(position)           => if (position > 0 && position <= args.length) {
-                                          new ResultOrAbend(args(position-1))
+      case EvalParam(position)       => if (position > 0 && position <= args.length) {
+                                           SuccessResult(args(position-1))
                                         } else {
-                                          new ResultOrAbend(UnboundParameter(position))
+                                           AbendResult(UnboundParameter(position))
                                         }
-      case InvokeFunc(name, invArgs)    => if (controller.executionState.funcMap.contains(name)) {
+      case InvokeFunc(name, invArgs) => if (controller.executionState.funcMap.contains(name)) {
                                         controller.incrementCallStack()
                                         val evalArgs = invArgs.map{ evaluateInt(_, args, controller) }
                                         val failedArgEval = evalArgs.find{ !_.success }
@@ -101,12 +101,12 @@ class Evaluator() {
                                             evalArgs.map {_.value.get }.toArray,
                                             controller)
                                           } else {
-                                            new ResultOrAbend(failedArgEval.get.abend.get)
+                                            AbendResult(failedArgEval.get.abend.get)
                                           }
                                         controller.executionState.decrementCallStack()
                                         result
                                         } else {
-                                          new ResultOrAbend(UndefinedFunction(name))
+                                          AbendResult(UndefinedFunction(name))
                                         }
       case Ternary(booleanExpression, thenExpression, elseExpression) =>
             for (x <- evaluateBoolean(booleanExpression, args, controller);
@@ -134,14 +134,14 @@ class Evaluator() {
                                                         (previousResult, booleanExpression) =>
                                                           for (
                                                             xp <- previousResult;
-                                                            yp <- if (xp) evaluateBoolean(booleanExpression, args, controller) else ResultOrAbend(false))
+                                                            yp <- if (xp) evaluateBoolean(booleanExpression, args, controller) else SuccessResult(false))
                                                             yield (xp && yp)
                                                      }
         case Or(booleanExpressionList) 		        => booleanExpressionList.tail.foldLeft(evaluateBoolean(booleanExpressionList.head, args, controller)) {
                                                         (previousResult, booleanExpression) =>
                                                           for (
                                                             xp <- previousResult;
-                                                            yp <- if (!xp) evaluateBoolean(booleanExpression, args, controller) else ResultOrAbend(true))
+                                                            yp <- if (!xp) evaluateBoolean(booleanExpression, args, controller) else SuccessResult(true))
                                                             yield (xp || yp)
                                                      }
         case Equal(left, right) 			            => for (x <- evaluateInt(left, args, controller);
@@ -162,7 +162,7 @@ class Evaluator() {
         case NotEqual(left, right) 			          =>  for (x <- evaluateInt(left, args, controller);
                                                            y <- evaluateInt(right, args, controller))
                                                              yield (x != y)
-        case Adjacent(entity)				              =>  new ResultOrAbend(controller.isAdjacent(entity))
+        case Adjacent(entity)				              =>  SuccessResult(controller.isAdjacent(entity))
 
         case InvokePred(name, invArgs)    => if (controller.executionState.predMap.contains(name)) {
                                         controller.incrementCallStack()
@@ -174,19 +174,19 @@ class Evaluator() {
                                             evalArgs.map {_.value.get }.toArray,
                                             controller)
                                           } else {
-                                            new ResultOrAbend(failedArgEval.get.abend.get)
+                                            AbendResult(failedArgEval.get.abend.get)
                                           }
                                         controller.executionState.decrementCallStack()
                                         result
                                         } else {
-                                          new ResultOrAbend(UndefinedPredicate(name))
+                                          AbendResult(UndefinedPredicate(name))
                                         }
 	  }
   }
    
   private[coderover] final def evaluateString(expression:Expression, args:Array[Int], controller:Controller):ResultOrAbend[String] = {
 	   expression match {
-        case StringConstant(value)					      => new ResultOrAbend(value)
+        case StringConstant(value)					      => SuccessResult(value)
         case intExpression:IntExpression          => for (x <- evaluateInt(intExpression, args, controller))
                                                         yield(x.toString)
         case booleanExpression:BooleanExpression  => for (x <- evaluateBoolean(booleanExpression, args, controller))
@@ -214,19 +214,19 @@ class Evaluator() {
                                                       evalArgs.map {_.value.get }.toArray,
                                                       controller)
                                                 } else {
-                                                  new ResultOrAbend(failedArgEval.get.abend.get)
+                                                  AbendResult(failedArgEval.get.abend.get)
                                                 }
                                                 controller.executionState.decrementCallStack()
                                                 result
             				                        } else {
-            					   	                    new ResultOrAbend(UndefinedProcedure(name))
+            					   	                    AbendResult(UndefinedProcedure(name))
             				                        }
         	  case Forward()               => {
                                              val result = controller.moveForward()
                                              if (result.isEmpty) {
                                                 SuccessResultUnit
                                               } else {
-                                                new ResultOrAbend(result.get)
+                                                AbendResult(result.get)
                                               }
                                             }
         	  case TurnRight()             => {
@@ -293,12 +293,12 @@ class Evaluator() {
                   }
                   repeatResult
                 } else {
-                  new ResultOrAbend(InvalidRepeat(timesResult.abend.get.message))
+                  AbendResult(InvalidRepeat(timesResult.abend.get.message))
                 }
               }
         }
       } else {
-          new ResultOrAbend(None, None)
+          ResultOrAbend(None, None)
       }
   }
 }

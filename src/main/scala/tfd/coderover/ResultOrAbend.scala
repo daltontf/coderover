@@ -1,11 +1,14 @@
 package tfd.coderover
 
-object ResultOrAbend {
+object SuccessResult {
   def apply[A](rawValue:A) = new ResultOrAbend(rawValue)
-  def apply(rawAbend:Abend) = new ResultOrAbend[Nothing](rawAbend)
 }
 
-case class ResultOrAbend[A](val value:Option[A], val abend:Option[Abend]) {
+object AbendResult {
+  def apply[T](rawAbend:Abend) = new ResultOrAbend[T](rawAbend)
+}
+
+case class ResultOrAbend[A] protected (val value:Option[A], val abend:Option[Abend]) {
   def this(rawValue:A) = this(Some(rawValue), None)
   def this(rawAbend:Abend) = this(None, Some(rawAbend))
 

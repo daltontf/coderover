@@ -197,13 +197,13 @@ class EvaluatorTest extends TestCase {
   def testStack() {
     val controller = new Controller(State(2, 2, 0))
     evaluate("PUSH (1+2)", controller)
-    assertEquals(ResultOrAbend(3), controller.top)
+    assertEquals(SuccessResult(3), controller.top)
     evaluate("PUSH (1+2) PUSH (TOP + 1)", controller)
-    assertEquals(ResultOrAbend(4), controller.top)
+    assertEquals(SuccessResult(4), controller.top)
     evaluate("PUSH (1+2) PUSH (TOP + 1) POP", controller)
-    assertEquals(ResultOrAbend(3), controller.top)
+    assertEquals(SuccessResult(3), controller.top)
     evaluate("PUSH (1+2) PUSH (TOP + 1) POP REPLACE (TOP * 2)", controller)
-    assertEquals(ResultOrAbend(6), controller.top)
+    assertEquals(SuccessResult(6), controller.top)
   }
 
   def testWhileStack() {
@@ -212,15 +212,15 @@ class EvaluatorTest extends TestCase {
     				    |WHILE (TOP > 3) {
     			      |  REPLACE (TOP - 1)
                 |}""".stripMargin, controller)
-    assertEquals(ResultOrAbend(3), controller.top)
+    assertEquals(SuccessResult(3), controller.top)
   }
 
   def testGridXY() {
     val controller = new Controller(State(2, 3, 0))
     evaluate("PUSH X PUSH Y", controller)
-    assertEquals(ResultOrAbend(3), controller.top)
+    assertEquals(SuccessResult(3), controller.top)
     evaluate("PUSH X PUSH Y POP", controller)
-    assertEquals(ResultOrAbend(2), controller.top)
+    assertEquals(SuccessResult(2), controller.top)
   }
 
   def testWhileGrid() {
@@ -239,15 +239,15 @@ class EvaluatorTest extends TestCase {
   def testDeltaXY() {
     val controller = new Controller(new State(2, 3, 0))
     evaluate("PUSH DX", controller)
-    assertEquals(ResultOrAbend(0), controller.top)
+    assertEquals(SuccessResult(0), controller.top)
     evaluate("PUSH DY", controller)
-    assertEquals(ResultOrAbend(-1), controller.top)
+    assertEquals(SuccessResult(-1), controller.top)
     evaluate("""|
     			      |RIGHT
     			      |PUSH DX""".stripMargin, controller)
-    assertEquals(ResultOrAbend(1), controller.top)
+    assertEquals(SuccessResult(1), controller.top)
     evaluate("PUSH DY", controller)
-    assertEquals(ResultOrAbend(0), controller.top)
+    assertEquals(SuccessResult(0), controller.top)
   }
 
   def testAbs() {
@@ -400,14 +400,14 @@ class EvaluatorTest extends TestCase {
     }
     val controller = new Controller(state, environment)
     evaluate("PUSH DISTANCEX(ROCK)", controller)
-    assertEquals(ResultOrAbend(3), controller.top)
+    assertEquals(SuccessResult(3), controller.top)
     evaluate("PUSH DISTANCEY(ROCK)", controller)
-    assertEquals(ResultOrAbend(2), controller.top)
+    assertEquals(SuccessResult(2), controller.top)
     evaluate("PUSH DISTANCEX(FLAG)", controller)
-    assertEquals(ResultOrAbend(-1), controller.top)
+    assertEquals(SuccessResult(-1), controller.top)
     evaluate("PUSH DISTANCEY(FLAG)", controller)
-    assertEquals(ResultOrAbend(-2), controller.top)
-    assertEquals(ResultOrAbend(UnknownEntity("FOO")), evaluate("PUSH DISTANCEX(FOO)", controller))
+    assertEquals(SuccessResult(-2), controller.top)
+    assertEquals(AbendResult(UnknownEntity("FOO")), evaluate("PUSH DISTANCEX(FOO)", controller))
   }
 
   def testDefCall {
@@ -424,7 +424,7 @@ class EvaluatorTest extends TestCase {
          |PROC EMPTY { }
          |EMPTY""".stripMargin, controller))
     assertEquals(State(3, 1, 0),  controller.state)
-    assertEquals(ResultOrAbend(None, Some(UndefinedProcedure("FOO"))), evaluate("FOO", controller))
+    assertEquals(AbendResult(UndefinedProcedure("FOO")), evaluate("FOO", controller))
     assertEquals(State(3, 1, 0),  controller.state)
   }
 
@@ -450,7 +450,7 @@ class EvaluatorTest extends TestCase {
                  |PROC EMPTY { }
                  |EMPTY""".stripMargin, controller))
     assertEquals(State(5, 4, 1), controller.state)
-    assertEquals(ResultOrAbend(None, Some(UndefinedProcedure("FOO"))), evaluate("FOO", controller))
+    assertEquals(AbendResult(UndefinedProcedure("FOO")), evaluate("FOO", controller))
     assertEquals(State(5, 4, 1), controller.state)
   }
 
@@ -464,7 +464,7 @@ class EvaluatorTest extends TestCase {
   }
 
   def testUnboundParams {
-    assertEquals(ResultOrAbend(None,Some(UnboundParameter(1))), evaluate("PUSH($1)", new Controller(State(2, 2, 0))))
+    assertEquals(AbendResult(UnboundParameter(1)), evaluate("PUSH($1)", new Controller(State(2, 2, 0))))
   }
 
   def testPrint() {
@@ -481,10 +481,10 @@ class EvaluatorTest extends TestCase {
   def testStoreMem() {
     val controller = new Controller(new State(2, 2, 0), DefaultEnvironment, new Constraints(10, 10, 10))
     assertEquals(SuccessResultUnit, evaluate("""STORE (3,42) PUSH MEM(3)""", controller))
-    assertEquals(ResultOrAbend(42), controller.top)
+    assertEquals(SuccessResult(42), controller.top)
     assertEquals(42, controller.executionState.memory(3))
-    assertEquals(ResultOrAbend(InvalidMEMAddress(10)), evaluate("""STORE (10,42)""", controller))
-    assertEquals(ResultOrAbend(InvalidMEMAddress(11)), evaluate("""PUSH MEM(11)""", controller))
+    assertEquals(AbendResult(InvalidMEMAddress(10)), evaluate("""STORE (10,42)""", controller))
+    assertEquals(AbendResult(InvalidMEMAddress(11)), evaluate("""PUSH MEM(11)""", controller))
   }
 
   def testMaxStack() {
@@ -577,15 +577,15 @@ class EvaluatorTest extends TestCase {
     }
     assertEquals(SuccessResultUnit, evaluate("RIGHT FORWARD RIGHT", controller))
     assertEquals(State(1,0,2), controller.state)
-    assertEquals(ResultOrAbend[Unit](None, Some(Kablooey)), evaluate("FORWARD", controller))
+    assertEquals(AbendResult(Kablooey), evaluate("FORWARD", controller))
   }
 
   def testTernary() {
     val controller = new Controller(State(2, 2, 0))
     evaluate("PUSH ((1 < 2) ? 1 : 2)", controller)
-    assertEquals(ResultOrAbend(1), controller.top)
+    assertEquals(SuccessResult(1), controller.top)
     evaluate("PUSH ((1 > 2) ? 1 : 2)", controller)
-    assertEquals(ResultOrAbend(2), controller.top)  
+    assertEquals(SuccessResult(2), controller.top)
   }
 
   def testRecursiveFunc() {
@@ -617,7 +617,7 @@ class EvaluatorTest extends TestCase {
   }
 
   def testUnboundInProc() {
-    assertEquals(ResultOrAbend(UndefinedProcedure("BAR")),
+    assertEquals(AbendResult(UndefinedProcedure("BAR")),
       evaluate("""
         |PROC FOO { BAR(1) }
         |FOO""".stripMargin, new Controller(new State(0,0,0)))        
@@ -626,7 +626,7 @@ class EvaluatorTest extends TestCase {
 
   def testUnboundPred() {
     val controller = new Controller(new State(2, 2, 0))
-    assertEquals(ResultOrAbend(UndefinedPredicate("Y_EQUAL")), evaluate(""" 
+    assertEquals(AbendResult(UndefinedPredicate("Y_EQUAL")), evaluate("""
       |PRED Y_EQUALS (Y = $1)
       |IF Y_EQUAL(2) { FORWARD }""".stripMargin, controller))
   }
@@ -638,21 +638,21 @@ class EvaluatorTest extends TestCase {
         case _ => None
       }
     }
-    assertEquals(ResultOrAbend(UnknownEntity("FOO")), evaluate("""
+    assertEquals(AbendResult(UnknownEntity("FOO")), evaluate("""
       |RIGHT REPEAT 5 { FORWARD }""".stripMargin, controller))
     assertEquals(State(4,2,1), controller.state)
   }
     
   def testShortCircuitAnd() {
     assertEquals(
-      ResultOrAbend(false),
+      SuccessResult(false),
       evaluateBoolean(And(List(Equal(Constant(1), Constant(2)), Equal(Constant(1), Mem(Constant(-1))))), Array.empty[Int], (State(2,2,0)))
     )
   }
 
   def testShortCircuitOr() {
     assertEquals(
-      ResultOrAbend(true),
+      SuccessResult(true),
       evaluateBoolean(Or(List(Equal(Constant(1), Constant(1)), Equal(Constant(1), Mem(Constant(-1))))), Array.empty[Int], (State(2,2,0)))
     )
   }
