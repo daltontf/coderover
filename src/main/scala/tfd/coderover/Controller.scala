@@ -33,37 +33,37 @@ class Controller(var state:State, environment:Environment = DefaultEnvironment, 
 
   private[coderover] def print(value:String) = println(value)
 
-  private[coderover] def push(value:Int):ResultOrAbend[Unit] =  {
+  private[coderover] def push(value:Int):ResultOrAbend[Any] =  {
     executionState.stack.push(value)
     if (executionState.stack.size > constraints.maxStackSize) {
-      new ResultOrAbend(StackOverflow)
+      AbendResult(StackOverflow)
     } else {
       SuccessResultUnit
     }
   }
 
-  private[coderover] def pop():ResultOrAbend[Unit] =
+  private[coderover] def pop():ResultOrAbend[Any] =
     if (!executionState.stack.isEmpty) {
       executionState.stack.pop()
       SuccessResultUnit
     } else {
-      new ResultOrAbend(IllegalOperationOnEmptyStack)
+      AbendResult(IllegalOperationOnEmptyStack)
     }
 
   private[coderover] def top:ResultOrAbend[Int] =
     if (!executionState.stack.isEmpty) {
-      new ResultOrAbend(executionState.stack.top)
+      SuccessResult(executionState.stack.top)
     } else {
-      new ResultOrAbend(IllegalOperationOnEmptyStack)
+      AbendResult(IllegalOperationOnEmptyStack)
     }
 
 
   private[coderover] def depth = executionState.stack.size
 
-  private[coderover] def incrementCallStack():ResultOrAbend[Unit] = {
+  private[coderover] def incrementCallStack():ResultOrAbend[Any] = {
     executionState.incrementCallStack()
     if (executionState.callStackSize > constraints.maxCallStackSize) {
-      new ResultOrAbend[Unit](CallStackOverflow)
+      AbendResult(CallStackOverflow)
     } else {
       SuccessResultUnit
     }
@@ -71,16 +71,16 @@ class Controller(var state:State, environment:Environment = DefaultEnvironment, 
 
   private[coderover] def mem(address:Int):ResultOrAbend[Int] =
     if (address >= 0 && address < executionState.memory.size) {
-      new ResultOrAbend(executionState.memory(address))
+      SuccessResult(executionState.memory(address))
     } else {
-      new ResultOrAbend(InvalidMEMAddress(address));
+      AbendResult(InvalidMEMAddress(address));
     }
 
-  private[coderover] def store(address:Int, value:Int):ResultOrAbend[Unit] = {
+  private[coderover] def store(address:Int, value:Int):ResultOrAbend[Any] = {
     if (address >= 0 && address < executionState.memory.size) {
-      new ResultOrAbend(executionState.memory(address) = value)
+      SuccessResult(executionState.memory(address) = value)
     } else {
-      new ResultOrAbend(InvalidMEMAddress(address));
+      AbendResult(InvalidMEMAddress(address));
     }
   }
 

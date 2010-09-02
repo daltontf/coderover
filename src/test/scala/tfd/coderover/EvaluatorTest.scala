@@ -21,7 +21,7 @@ class EvaluatorTest extends TestCase {
   private def evaluateBoolean(booleanExpression:BooleanExpression, args:Array[Int], state:State):ResultOrAbend[Boolean] =
       evaluateBoolean(booleanExpression, args, new Controller(state, DefaultEnvironment))
 
-  private def evaluate(instructions:String, controller:Controller):ResultOrAbend[Unit] =
+  private def evaluate(instructions:String, controller:Controller):ResultOrAbend[Any] =
       evaluator.evaluate(parse(instructions).get, controller)
 
   private def executeConstantTest(stringInput: String, expectedConstant: Constant, expectedInt: Int) {
@@ -641,6 +641,31 @@ class EvaluatorTest extends TestCase {
     assertEquals(AbendResult(UnknownEntity("FOO")), evaluate("""
       |RIGHT REPEAT 5 { FORWARD }""".stripMargin, controller))
     assertEquals(State(4,2,1), controller.state)
+  }
+
+  def testFailureInIf() {
+    val controller = new Controller(new State(2, 2, 0)) {
+      override def postMoveForward():Option[Abend] = state match {
+        case State(x,_,_) if x > 2 => Some(UnknownEntity("FOO"))
+        case _ => None
+      }
+    }
+    assertEquals(AbendResult(DivideByZero), evaluate("""
+      |IF ((1 / 0) = 1) {
+      |}""".stripMargin, controller))
+    
+    assertEquals(AbendResult(UnknownEntity("FOO")), evaluate("""
+      |IF (1 = 1) {
+      |  RIGHT REPEAT 5 { FORWARD }
+      |}""".stripMargin, controller))
+    assertEquals(State(3,2,1), controller.state)
+  }
+
+  def testFailureInWhile() {
+    val controller = new Controller(new State(2, 2, 0))
+    assertEquals(AbendResult(DivideByZero), evaluate("""
+      |WHILE ((1 / 0) = 1) {
+      |}""".stripMargin, controller))
   }
     
   def testShortCircuitAnd() {

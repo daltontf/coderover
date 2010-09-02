@@ -4,13 +4,13 @@ import collection.mutable.Stack
 
 class Evaluator() {
   
-  final def evaluate(instructions:List[Instruction], controller:Controller):ResultOrAbend[Unit] = {
+  final def evaluate(instructions:List[Instruction], controller:Controller):ResultOrAbend[Any] = {
     controller.resetState
     evaluate(instructions, Array.empty[Int], controller)
   }  
 
   // This should be tail-recursive
-  private[this] final def evaluate(instructions:List[Instruction], args:Array[Int], controller:Controller):ResultOrAbend[Unit] =
+  private[this] final def evaluate(instructions:List[Instruction], args:Array[Int], controller:Controller):ResultOrAbend[Any] =
     if (instructions != Nil) {
       instructions.tail.foldLeft(evaluateInstruction(instructions.head, args, controller)) {
          (previousResult, instruction) =>
@@ -194,10 +194,7 @@ class Evaluator() {
 	   }  
   }
 
-  private[coderover] final def isSuccessAndTrue(booleanExpression:BooleanExpression, args:Array[Int], controller:Controller)=
-    evaluateBoolean(booleanExpression, args, controller).value == Some(true)
-
-  private[coderover] final def evaluateInstruction(instruction:Instruction, args:Array[Int], controller:Controller):ResultOrAbend[Unit] = {
+  private[coderover] final def evaluateInstruction(instruction:Instruction, args:Array[Int], controller:Controller):ResultOrAbend[Any] = {
       if (!controller.executionState.stopped) {
         instruction match {
             case Proc(name, instructions) => {
@@ -208,7 +205,7 @@ class Evaluator() {
                                                 controller.incrementCallStack()
                                                 val evalArgs = callArgs.map{ evaluateInt(_, args, controller) }
                                                 val failedArgEval = evalArgs.find{ !_.success }
-                                                val result:ResultOrAbend[Unit] = if (failedArgEval.isEmpty) {
+                                                val result:ResultOrAbend[Any] = if (failedArgEval.isEmpty) {
                                                   evaluate(
                                                       controller.executionState.procMap(name),
                                                       evalArgs.map {_.value.get }.toArray,
@@ -245,21 +242,30 @@ class Evaluator() {
             	                                   _ <- controller.pop();
                                                  result <- controller.push(x))
                                                        yield (result)
-        	case If(booleanExpression, thenstatements, elsestatements) => 
-        		for (x <- evaluateBoolean(booleanExpression, args, controller))
-              yield {
-                if (x) {
-                  evaluate(thenstatements, args, controller)
-        		    } else if (!elsestatements.isEmpty) {
-        			    evaluate(elsestatements, args, controller)
-        		    }
+        	case If(booleanExpression, thenstatements, elsestatements) => {
+            val booleanResult = evaluateBoolean(booleanExpression, args, controller)
+            if (booleanResult.success) {
+              if (booleanResult.value.get) {
+                evaluate(thenstatements, args, controller)
+              } else if (!elsestatements.isEmpty) {
+        			  evaluate(elsestatements, args, controller)
+              } else {
+                SuccessResultUnit
               }
+            } else {
+              booleanResult
+            }
+          }
         	case While(booleanExpression, blockstatements) => {
-            var result:ResultOrAbend[Unit] = SuccessResultUnit
-        		while (isSuccessAndTrue(booleanExpression, args, controller) && (result.success)) {
-            		result = evaluate(blockstatements, args, controller)
+            var result:ResultOrAbend[Any] = SuccessResultUnit
+            var booleanResult:ResultOrAbend[Boolean] = SuccessResult(true)
+        		while (result.success && booleanResult.success && booleanResult.value.get) {
+            	booleanResult = evaluateBoolean(booleanExpression, args, controller)
+              if (booleanResult.success && booleanResult.value.get) {
+                result = evaluate(blockstatements, args, controller)
+              }
         		}
-            result
+            if (booleanResult.success) result else booleanResult
           }
           case Paint() => {
               controller.paint()
@@ -286,7 +292,7 @@ class Evaluator() {
                 val timesResult = evaluateInt(timesExpression, args, controller)
                 if (timesResult.success) {
                   var times = timesResult.value.get
-                  var repeatResult:ResultOrAbend[Unit] = SuccessResultUnit
+                  var repeatResult:ResultOrAbend[Any] = SuccessResultUnit
                   while (times > 0 && repeatResult.success) {
                     repeatResult = evaluate(instructions, args, controller)
                     times -= 1
