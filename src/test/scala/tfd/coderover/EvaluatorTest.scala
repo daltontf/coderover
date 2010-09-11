@@ -410,7 +410,7 @@ class EvaluatorTest extends TestCase {
     assertEquals(AbendResult(UnknownEntity("FOO")), evaluate("PUSH DISTANCEX(FOO)", controller))
   }
 
-  def testDefCall {
+  def testProcCall {
     val controller = new Controller(State(2, 2, 0))
     assertEquals(SuccessResultUnit, evaluate(
       """|PROC RIGHTFORWARD { RIGHT FORWARD }
@@ -452,6 +452,10 @@ class EvaluatorTest extends TestCase {
     assertEquals(State(5, 4, 1), controller.state)
     assertEquals(AbendResult(UndefinedProcedure("FOO")), evaluate("FOO", controller))
     assertEquals(State(5, 4, 1), controller.state)
+
+    assertEquals(AbendResult(DivideByZero), evaluate("""
+        |PROC GO { REPEAT $1 { FORWARD } }
+        |GO(1/0)""".stripMargin, controller))
   }
 
   def testFuncInvoke {
@@ -460,7 +464,10 @@ class EvaluatorTest extends TestCase {
         |FUNC PLUSXY ( X + Y )
         |RIGHT
         |REPEAT PLUSXY {FORWARD}""".stripMargin, controller))
-      assertEquals(State(6, 2, 1), controller.state)    
+      assertEquals(State(6, 2, 1), controller.state)
+      assertEquals(AbendResult(DivideByZero), evaluate("""
+        |FUNC PLUS_1 ( $1 + 1 )
+        |PUSH(PLUS_1(1/0))""".stripMargin, controller))
   }
 
   def testUnboundParams {
@@ -614,6 +621,10 @@ class EvaluatorTest extends TestCase {
        |PRED Y_EQUALS (Y = $1)
        |IF Y_EQUALS(1) { FORWARD RIGHT }""".stripMargin, controller)
     assertEquals(State(2,0,1), controller.state)
+
+    assertEquals(AbendResult(DivideByZero), evaluate("""
+      |PRED Y_EQUALS (Y = $1)
+      |IF Y_EQUALS(1/0) { FORWARD RIGHT }""".stripMargin, controller))
   }
 
   def testUnboundInProc() {
@@ -662,10 +673,24 @@ class EvaluatorTest extends TestCase {
   }
 
   def testFailureInWhile() {
-    val controller = new Controller(new State(2, 2, 0))
+    val controller = new Controller(new State(2, 2, 0)) {
+      override def postMoveForward():Option[Abend] = state match {
+        case State(x,_,_) if x > 2 => Some(UnknownEntity("FOO"))
+        case _ => None
+      }
+    }
     assertEquals(AbendResult(DivideByZero), evaluate("""
       |WHILE ((1 / 0) = 1) {
       |}""".stripMargin, controller))
+    
+    assertEquals(AbendResult(UnknownEntity("FOO")), evaluate("""
+      |PUSH 2
+      |RIGHT
+      |WHILE (TOP > 0) {
+      |  REPLACE (TOP - 1)
+      |  FORWARD
+      |}""".stripMargin, controller))
+    assertEquals(State(3,2,1), controller.state)
   }
     
   def testShortCircuitAnd() {

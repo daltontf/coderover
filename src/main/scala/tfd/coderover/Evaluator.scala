@@ -38,38 +38,28 @@ class Evaluator() {
     }
   }
 
-  private[coderover] val add = { (x:ResultOrAbend[Int], y:ResultOrAbend[Int]) =>
-    for (xp <- x; yp <- x) yield (xp + yp)
-  }
+  private[coderover] def foldLeftInt(expressionList:List[IntExpression], args:Array[Int], controller:Controller, f:(Int, Int) => Int) =
+    expressionList.tail.foldLeft(evaluateInt(expressionList.head, args, controller)) {
+        (previousResult, intExpression) =>
+          for (xp <- previousResult; yp <- evaluateInt(intExpression, args, controller))
+            yield f(xp,yp)
+    }
+
+  private[coderover] def foldLeftIntDivide(expressionList:List[IntExpression], args:Array[Int], controller:Controller, f:(Int, Int) => Int) =
+    expressionList.tail.foldLeft(evaluateInt(expressionList.head, args, controller)) {
+        (previousResult, intExpression) =>
+          for (xp <- previousResult; yp <- evaluateDivideByZero(intExpression, args, controller))
+            yield f(xp,yp)
+    }
 
   private[coderover] final def evaluateInt(expression:IntExpression, args:Array[Int], controller:Controller):ResultOrAbend[Int] = {
     expression match {
       case Constant(x)               => SuccessResult(x)
-      case Add(expressionList) 	 	   => expressionList.tail.foldLeft(evaluateInt(expressionList.head, args, controller)) {
-                                          (previousResult, intExpression) =>
-                                            for (xp <- previousResult; yp <- evaluateInt(intExpression, args, controller))
-                                              yield (xp + yp)
-                                        }
-      case Subtract(expressionList)  => expressionList.tail.foldLeft(evaluateInt(expressionList.head, args, controller)) {
-                                          (previousResult, intExpression) =>
-                                            for (xp <- previousResult; yp <- evaluateInt(intExpression, args, controller))
-                                              yield (xp - yp) 
-                                        }
-      case Multiply(expressionList)  => expressionList.tail.foldLeft(evaluateInt(expressionList.head, args, controller)) {
-                                          (previousResult, intExpression) =>
-                                            for (xp <- previousResult; yp <- evaluateInt(intExpression, args, controller))
-                                              yield (xp * yp)
-                                        }
-      case Divide(expressionList)    => expressionList.tail.foldLeft(evaluateInt(expressionList.head, args, controller)) {
-                                          (previousResult, intExpression) =>
-                                            for (xp <- previousResult; yp <- evaluateDivideByZero(intExpression, args, controller))
-                                              yield (xp / yp)
-                                        }
-      case Modulus(expressionList)   => expressionList.tail.foldLeft(evaluateInt(expressionList.head, args, controller)) {
-                                          (previousResult, intExpression) =>
-                                            for (xp <- previousResult; yp <- evaluateDivideByZero(intExpression, args, controller))
-                                              yield (xp % yp)
-                                        }
+      case Add(expressionList) 	 	   => foldLeftInt(expressionList, args, controller, _ + _ )
+      case Subtract(expressionList)  => foldLeftInt(expressionList, args, controller, _ - _ )
+      case Multiply(expressionList)  => foldLeftInt(expressionList, args, controller, _ * _ )
+      case Divide(expressionList)    => foldLeftIntDivide(expressionList, args, controller, _ / _ )
+      case Modulus(expressionList)   => foldLeftIntDivide(expressionList, args, controller, _ % _ )
       case Top() 				             => controller.top
       case GridX() 				           => SuccessResult(controller.gridX)
       case GridY() 				           => SuccessResult(controller.gridY)
