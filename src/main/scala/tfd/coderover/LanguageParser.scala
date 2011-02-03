@@ -55,9 +55,10 @@ class LanguageParser extends JavaTokenParsers {
     case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
   }
 
-  lazy val arityOneIdentFunction:Parser[IntExpression] = ("DISTANCEX" | "DISTANCEY") ~ "(" ~ ident <~ ")" ^^ {
+  lazy val arityOneIdentFunction:Parser[IntExpression] = ("DISTANCEX" | "DISTANCEY" | "COUNT" ) ~ "(" ~ ident <~ ")" ^^ {
     case "DISTANCEX"~_~parm => DistanceX(parm)
     case "DISTANCEY"~_~parm => DistanceY(parm)
+    case "COUNT"~_~parm => Count(parm)
   }
 
   lazy val evalParam:Parser[EvalParam] = """\$\d+""".r ^^ { x => EvalParam(x.substring(1).toInt) }
@@ -165,9 +166,9 @@ class LanguageParser extends JavaTokenParsers {
 
   lazy val params:Parser[List[IntExpression]] = "(" ~> repsep(param, ",") <~ ")"
   
-  lazy val instruction:Parser[Instruction] = controlFlow | command 
+  lazy val instruction:Parser[Instruction] = positioned ( controlFlow | command ) 
   
-  def topLevelInstruction:Parser[Instruction] = proc | func | pred |instruction
+  def topLevelInstruction:Parser[Instruction] =  proc | func | pred |instruction 
   
   def program = rep(topLevelInstruction)
   

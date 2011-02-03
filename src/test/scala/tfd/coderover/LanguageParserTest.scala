@@ -258,6 +258,10 @@ class LanguageParserTest extends TestCase {
 		  	 |}""".stripMargin)
   }
 
+  def testCount() {
+    assertProgramParsingProduces(List(Push(Count("FOO"))), "PUSH COUNT(FOO)")
+  }
+
   def testAbs() {
     assertProgramParsingProduces(List(Push(Abs(Constant(-1)))), "PUSH ABS(-1)")
     assertProgramParsingProduces(List(Push(Negate(Abs(Constant(-1))))), "PUSH -ABS(-1)")

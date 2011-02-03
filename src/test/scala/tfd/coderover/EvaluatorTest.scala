@@ -595,6 +595,18 @@ class EvaluatorTest extends TestCase {
     assertEquals(SuccessResult(2), controller.top)
   }
 
+  def testCount() {
+    val controller = new Controller(
+      State(2, 2, 0),
+      new Environment(10,10) {
+        override def count(entity: String) = if (entity == "FOO") Some(42) else None
+      }
+    )
+    evaluate("PUSH COUNT(FOO)", controller)
+    assertEquals(SuccessResult(42), controller.top)
+    assertEquals(AbendResult(UnknownEntity("BAR")), evaluate("PUSH COUNT(BAR)", controller))
+  }
+
   def testRecursiveFunc() {
     val controller = new Controller(new State(2, 3, 0)) {
       var lastPrint: String = null

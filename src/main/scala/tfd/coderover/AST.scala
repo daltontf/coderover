@@ -1,6 +1,8 @@
 package tfd.coderover
 
-sealed abstract class Instruction 
+import util.parsing.input.Positional
+
+sealed abstract class Instruction extends Positional
 case class Forward() extends Instruction
 case class TurnRight() extends Instruction
 case class TurnLeft() extends Instruction
@@ -31,6 +33,7 @@ sealed abstract class Expression()
     case class Depth() extends IntExpression
     case class DistanceX(entity:String) extends IntExpression
     case class DistanceY(entity:String) extends IntExpression
+    case class Count(entity:String) extends IntExpression
     case class Abs(expression:IntExpression) extends IntExpression
     case class Max(expression1:IntExpression, expression2:IntExpression) extends IntExpression
     case class Min(expression1:IntExpression, expression2:IntExpression) extends IntExpression

@@ -14,7 +14,9 @@ class Environment(
   def distanceX(entity:String, x:Int, y:Int):Option[Int] = None
   
   def distanceY(entity:String, x:Int, y:Int):Option[Int] = None
-  
+
+  def count(entity:String):Option[Int] = None
+
   def adjacent(entity:String, x:Int, y:Int) = false
 
   def isPainted(x:Int, y:Int) = false

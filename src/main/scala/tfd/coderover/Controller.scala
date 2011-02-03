@@ -92,6 +92,8 @@ class Controller(var state:State, environment:Environment = DefaultEnvironment, 
 
   private[coderover] def distanceY(entity:String):Option[Int] = environment.distanceY(entity, gridX, gridY)
 
+  private[coderover] def count(entity:String):Option[Int] = environment.count(entity)
+
   private[coderover] def isObstructed(x:Int, y:Int) = environment.isObstructed(x,y)
 
   private[coderover] def isPainted(x:Int, y:Int) = environment.isPainted(x, y)

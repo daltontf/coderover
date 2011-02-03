@@ -39,5 +39,11 @@ class LanguageParserSpec extends Specification with DataTables {
         parseResult.get must == (List())
       }
     }
+
+    "parse COUNT function" in {
+      val parseResult = languageParser.parse("PUSH COUNT(FOO)")
+      parseResult.successful must == (true)
+      parseResult.get must == (List(Push(Count("FOO"))))
+    }
   }
 }

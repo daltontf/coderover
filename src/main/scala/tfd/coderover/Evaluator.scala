@@ -74,6 +74,14 @@ class Evaluator() {
       case Negate(expr)			         => for (x <- evaluateInt(expr, args, controller)) yield (-x)
       case DistanceX(entity)  	     => processDistance(controller.distanceX(entity), entity)
       case DistanceY(entity)  	     => processDistance(controller.distanceY(entity), entity)
+      case Count(entity)  	         => {
+                                          val count = controller.count(entity)
+                                          if (count != None) {
+                                            SuccessResult(count.get)
+                                          } else {
+                                            AbendResult(UnknownEntity(entity))
+                                          }
+                                        }
       case Mem(address)              => for (x <- evaluateInt(address, args, controller);
                                              y <- controller.mem(x)) yield (y)
       case EvalParam(position)       => if (position > 0 && position <= args.length) {
