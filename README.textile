@@ -1,0 +1,4 @@
+h1. Code Rover
+
+The purpose of Code Rover is to provide an environment where intermediate programming concepts can be learned.
+The primary audience are ages 10 and older. Please see the Wiki (http://github.com/daltontf/coderover/wiki) page for more information on the language.
