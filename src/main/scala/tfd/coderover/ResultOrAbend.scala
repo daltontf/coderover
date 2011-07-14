@@ -8,7 +8,7 @@ object AbendResult {
   def apply[T](rawAbend:Abend) = new ResultOrAbend[T](rawAbend)
 }
 
-case class ResultOrAbend[+A] protected (val value:Option[A], val abend:Option[Abend]) {
+case class ResultOrAbend[+A] private[coderover] (val value:Option[A], val abend:Option[Abend]) {
   def this(rawValue:A) = this(Some(rawValue), None)
   def this(rawAbend:Abend) = this(None, Some(rawAbend))
 

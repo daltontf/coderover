@@ -3,14 +3,6 @@ package tfd.coderover
 import org.specs.Specification
 import org.specs.util.DataTables
 
-/**
- * Created by IntelliJ IDEA.
- * User: daltontk
- * Date: Aug 23, 2010
- * Time: 9:46:22 PM
- * To change this template use File | Settings | File Templates.
- */
-
 class LanguageParserSpec extends Specification with DataTables {
   private[this] val languageParser = new LanguageParser();
 

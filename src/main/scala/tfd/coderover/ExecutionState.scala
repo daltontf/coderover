@@ -2,14 +2,6 @@ package tfd.coderover
 
 import collection.mutable.Stack
 
-/**
- * Created by IntelliJ IDEA.
- * User: daltontk
- * Date: Jul 5, 2010
- * Time: 7:14:44 PM
- * To change this template use File | Settings | File Templates.
- */
-
 class ExecutionState(constraints:Constraints = DefaultConstraints) {
   private[coderover] var callStackSize = 0
 
