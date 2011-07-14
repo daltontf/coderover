@@ -1,6 +1,7 @@
 package tfd.coderover
 
 import collection.mutable.Stack
+import annotation.tailrec
 
 class Evaluator() {
   
@@ -9,7 +10,6 @@ class Evaluator() {
     evaluate(instructions, Array.empty[Int], controller)
   }  
 
-  // This should be tail-recursive
   private[this] final def evaluate(instructions:List[Instruction], args:Array[Int], controller:Controller):ResultOrAbend[Any] =
     if (instructions != Nil) {
       instructions.tail.foldLeft(evaluateInstruction(instructions.head, args, controller)) {
@@ -74,13 +74,9 @@ class Evaluator() {
       case Negate(expr)			         => for (x <- evaluateInt(expr, args, controller)) yield (-x)
       case DistanceX(entity)  	     => processDistance(controller.distanceX(entity), entity)
       case DistanceY(entity)  	     => processDistance(controller.distanceY(entity), entity)
-      case Count(entity)  	         => {
-                                          val count = controller.count(entity)
-                                          if (count != None) {
-                                            SuccessResult(count.get)
-                                          } else {
-                                            AbendResult(UnknownEntity(entity))
-                                          }
+      case Count(entity)  	         => controller.count(entity) match {
+                                          case Some(x) => SuccessResult(x)
+                                          case None => AbendResult(UnknownEntity(entity))
                                         }
       case Mem(address)              => for (x <- evaluateInt(address, args, controller);
                                              y <- controller.mem(x)) yield (y)
