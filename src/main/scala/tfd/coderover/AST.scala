@@ -40,6 +40,7 @@ sealed abstract class Expression()
     case class Negate(expression:IntExpression) extends IntExpression
     case class Mem(expression:IntExpression) extends IntExpression
     case class EvalParam(position:Int) extends IntExpression
+    case class ParamCount() extends IntExpression
     case class InvokeFunc(name:String, args:List[IntExpression]) extends IntExpression
     case class Ternary(booleanExpression:BooleanExpression, thenExpression:IntExpression, elseExpression:IntExpression) extends IntExpression
 

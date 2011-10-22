@@ -85,6 +85,7 @@ class Evaluator() {
                                         } else {
                                            AbendResult(UnboundParameter(position))
                                         }
+      case ParamCount()              => SuccessResult(args.length)
       case InvokeFunc(name, invArgs) => if (controller.executionState.funcMap.contains(name)) {
                                         controller.incrementCallStack()
                                         val evalArgs = invArgs.map{ evaluateInt(_, args, controller) }

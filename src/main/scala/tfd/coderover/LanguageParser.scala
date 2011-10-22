@@ -36,13 +36,14 @@ class LanguageParser extends JavaTokenParsers {
     case exp~_~thenEx~_~elseEx => Ternary(exp, thenEx, elseEx)
   }
 
-  lazy val arityNoneIntFunction:Parser[IntExpression] = ("TOP"|"X"|"Y"|"DX"|"DY"|"DEPTH") ^^ {
+  lazy val arityNoneIntFunction:Parser[IntExpression] = ("TOP"|"X"|"Y"|"DX"|"DY"|"DEPTH"|"$COUNT") ^^ {
     case "TOP" => Top()
     case "X" => GridX()
     case "Y" => GridY()
     case "DX" => DeltaX()
     case "DY" => DeltaY()
     case "DEPTH" => Depth()
+    case "$COUNT" => ParamCount()
   }
 
   lazy val arityOneIntFunction:Parser[IntExpression] = ("ABS"|"MEM") ~ "(" ~ expressionParameter <~ ")" ^^ {

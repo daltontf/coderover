@@ -619,6 +619,16 @@ class EvaluatorTest extends TestCase {
     assertEquals("FACTORIAL(6) = 720", controller.lastPrint)
   }
 
+  def testParamCount() {
+    val controller = new Controller(new State(2, 3, 0))
+    evaluate("PUSH $COUNT", controller)
+    assertEquals(SuccessResult(0), controller.top)
+    evaluate("PROC FOO { PUSH $COUNT } FOO(1)", controller)
+    assertEquals(SuccessResult(1), controller.top)
+    evaluate("PROC FOO { PUSH $COUNT } FOO(1,2,3)", controller)
+    assertEquals(SuccessResult(3), controller.top)
+  }
+
   def testPred() {
     val controller = new Controller(new State(2, 2, 0))
     evaluate("""
