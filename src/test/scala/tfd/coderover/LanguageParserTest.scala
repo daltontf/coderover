@@ -357,7 +357,9 @@ class LanguageParserTest extends TestCase {
   }
 
   def testEvalParameters() {
-    assertProgramParsingProduces(List(Push(EvalParam(1))), "PUSH $1")
+    assertProgramParsingProduces(List(Push(EvalParam(Constant(1)))), "PUSH $1")
+    assertProgramParsingProduces(List(Push(EvalParam(Constant(1)))), "PUSH $(1)")
+    assertProgramParsingProduces(List(Push(EvalParam(Add(List(Constant(1), Constant(2), Constant(3)))))), "PUSH $(1 + 2 + 3)")
   }
 
   def testFunc() {
@@ -366,8 +368,8 @@ class LanguageParserTest extends TestCase {
   }
 
   def testPred() {
-    assertProgramParsingProduces(List(Pred("DY_EQUALS", Equal(DeltaY(), EvalParam(1)))), "PRED DY_EQUALS ( DY = $1 )")
-    assertProgramParsingProduces(List(Pred("DY_EQUALS", Equal(DeltaY(), EvalParam(1)))), "PREDICATE DY_EQUALS ( DY = $1 )")
+    assertProgramParsingProduces(List(Pred("DY_EQUALS", Equal(DeltaY(), EvalParam(Constant(1))))), "PRED DY_EQUALS ( DY = $1 )")
+    assertProgramParsingProduces(List(Pred("DY_EQUALS", Equal(DeltaY(), EvalParam(Constant(1))))), "PREDICATE DY_EQUALS ( DY = $1 )")
   }
 
   def testInvokeFunc() {

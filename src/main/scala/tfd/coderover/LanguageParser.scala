@@ -62,7 +62,7 @@ class LanguageParser extends JavaTokenParsers {
     case "COUNT"~_~parm => Count(parm)
   }
 
-  lazy val evalParam:Parser[EvalParam] = """\$\d+""".r ^^ { x => EvalParam(x.substring(1).toInt) }
+  lazy val evalParam:Parser[EvalParam] = """\$""".r ~> (constant | parenIntExpression) ^^ { x => EvalParam(x) }
 
   lazy val arityTwoBoolean:Parser[BooleanExpression] = ("PAINTED"|"OBSTRUCTED") ~ "(" ~ expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
     case "PAINTED"~_~x~_~y => Painted(x, y)

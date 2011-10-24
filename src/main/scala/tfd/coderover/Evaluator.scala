@@ -80,12 +80,13 @@ class Evaluator() {
                                         }
       case Mem(address)              => for (x <- evaluateInt(address, args, controller);
                                              y <- controller.mem(x)) yield (y)
-      case EvalParam(position)       => if (position > 0 && position <= args.length) {
-                                           SuccessResult(args(position-1))
-                                        } else {
-                                           AbendResult(UnboundParameter(position))
-                                        }
-      case ParamCount()              => SuccessResult(args.length)
+      case EvalParam(expr)           => for (position <- evaluateInt(expr, args, controller);
+                                             result <- if (position > 0 && position <= args.length) {
+                                                SuccessResult(args(position-1))
+                                              } else {
+                                                AbendResult(UnboundParameter(position))
+                                              }) yield(result)
+                                        case ParamCount()              => SuccessResult(args.length)
       case InvokeFunc(name, invArgs) => if (controller.executionState.funcMap.contains(name)) {
                                         controller.incrementCallStack()
                                         val evalArgs = invArgs.map{ evaluateInt(_, args, controller) }
