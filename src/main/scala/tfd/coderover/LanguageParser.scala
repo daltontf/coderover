@@ -8,7 +8,17 @@ class LanguageParser extends JavaTokenParsers {
 
   lazy val constant:Parser[Constant] = wholeNumber ^^ { x => Constant(x.toInt) }
 
-  lazy val intExpression:Parser[IntExpression] = parenIntExpression | evalParam | constant | ternaryExpression | arityNoneIntFunction | arityOneIntFunction | arityTwoIntFunction | arityOneIdentFunction | negatedIntExpression | invokeFunc
+  lazy val intExpression:Parser[IntExpression] = parenIntExpression |
+    evalParam |
+    constant |
+    ternaryExpression |
+    arityNoneIntFunction |
+    arityOneIntFunction |
+    arityTwoIntFunction |
+    entityIndexFunction |
+    countEntity |
+    negatedIntExpression |
+    invokeFunc
 
   lazy val parenIntExpression:Parser[IntExpression] = "(" ~> ( mathematical | intExpression) <~ ")"
 
@@ -56,11 +66,12 @@ class LanguageParser extends JavaTokenParsers {
     case "MIN"~_~parm1~_~parm2 => Min(parm1, parm2)
   }
 
-  lazy val arityOneIdentFunction:Parser[IntExpression] = ("DISTANCEX" | "DISTANCEY" | "COUNT" ) ~ "(" ~ ident <~ ")" ^^ {
-    case "DISTANCEX"~_~parm => DistanceX(parm)
-    case "DISTANCEY"~_~parm => DistanceY(parm)
-    case "COUNT"~_~parm => Count(parm)
+  lazy val entityIndexFunction:Parser[IntExpression] = ("DISTANCEX" | "DISTANCEY" ) ~ "(" ~ ident ~ opt(parenIntExpression) <~ ")" ^^ {
+    case "DISTANCEX"~_~parm~index => DistanceX(parm, index.getOrElse(Constant(1)))
+    case "DISTANCEY"~_~parm~index => DistanceY(parm, index.getOrElse(Constant(1)))
   }
+
+  lazy val countEntity  = "COUNT" ~ "(" ~> ident <~ ")" ^^ { Count(_) }
 
   lazy val evalParam:Parser[EvalParam] = """\$""".r ~> (constant | parenIntExpression) ^^ { x => EvalParam(x) }
 
@@ -152,8 +163,8 @@ class LanguageParser extends JavaTokenParsers {
     case defName~None => InvokePred(defName, Nil)
   }
 
-  lazy val adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ { x => Adjacent(x) }
-  
+  lazy val adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ { Adjacent(_) }
+
   lazy val invokeProc:Parser[InvokeProc] = ident ~ opt(params)  ^^ {
     case defName~Some(x) => InvokeProc(defName, x)
     case defName~None => InvokeProc(defName, Nil)

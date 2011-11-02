@@ -88,9 +88,9 @@ class Controller(var state:State, environment:Environment = DefaultEnvironment, 
 
   private[coderover] val sizeY = environment.sizeY
 
-  private[coderover] def distanceX(entity:String):Option[Int] = environment.distanceX(entity, gridX, gridY)
+  private[coderover] def distanceX(entity:String, index:Int):Option[Int] = environment.distanceX(entity, index, gridX, gridY)
 
-  private[coderover] def distanceY(entity:String):Option[Int] = environment.distanceY(entity, gridX, gridY)
+  private[coderover] def distanceY(entity:String, index:Int):Option[Int] = environment.distanceY(entity, index, gridX, gridY)
 
   private[coderover] def count(entity:String):Option[Int] = environment.count(entity)
 

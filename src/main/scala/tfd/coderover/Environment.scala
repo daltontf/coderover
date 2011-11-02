@@ -11,9 +11,9 @@ class Environment(
 
   def obstruct(x:Int, y:Int) { }
   
-  def distanceX(entity:String, x:Int, y:Int):Option[Int] = None
+  def distanceX(entity:String, index:Int, x:Int, y:Int):Option[Int] = None
   
-  def distanceY(entity:String, x:Int, y:Int):Option[Int] = None
+  def distanceY(entity:String, index:Int, x:Int, y:Int):Option[Int] = None
 
   def count(entity:String):Option[Int] = None
 

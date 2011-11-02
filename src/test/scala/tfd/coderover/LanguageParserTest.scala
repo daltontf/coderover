@@ -300,9 +300,10 @@ class LanguageParserTest extends TestCase {
   }
 
   def testDistances() {
-    assertProgramParsingProduces(List(Push(DistanceX("FLAG"))), "PUSH DISTANCEX(FLAG)")
-    assertProgramParsingProduces(List(Push(DistanceY("ROCK"))), "PUSH DISTANCEY(ROCK)")
-    assertProgramParsingProduces(List(Push(Min(DistanceX("FLAG"), DistanceY("FLAG")))), "PUSH MIN(DISTANCEX(FLAG), DISTANCEY(FLAG))")
+    assertProgramParsingProduces(List(Push(DistanceX("FLAG", Constant(1)))), "PUSH DISTANCEX(FLAG)")
+    assertProgramParsingProduces(List(Push(DistanceY("ROCK",  Constant(2)))), "PUSH DISTANCEY(ROCK(2))")
+    assertProgramParsingProduces(List(Push(Min(DistanceX("FLAG", Constant(3)), DistanceY("FLAG",  Constant(3))))),
+      "PUSH MIN(DISTANCEX(FLAG(3)), DISTANCEY(FLAG(3)))")
   }
 
   def testProc() {

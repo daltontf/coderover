@@ -31,8 +31,8 @@ sealed abstract class Expression()
     case class DeltaX() extends IntExpression
     case class DeltaY() extends IntExpression
     case class Depth() extends IntExpression
-    case class DistanceX(entity:String) extends IntExpression
-    case class DistanceY(entity:String) extends IntExpression
+    case class DistanceX(entity:String, indexExpression:IntExpression) extends IntExpression
+    case class DistanceY(entity:String, indexExpression:IntExpression) extends IntExpression
     case class Count(entity:String) extends IntExpression
     case class Abs(expression:IntExpression) extends IntExpression
     case class Max(expression1:IntExpression, expression2:IntExpression) extends IntExpression

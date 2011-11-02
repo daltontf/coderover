@@ -391,23 +391,45 @@ class EvaluatorTest extends TestCase {
   def testDistances() {
     val state = new State(2, 3, 1)
     val environment = new Environment(10,10) {
-      private val entityMap = Map("ROCK" -> (5, 5),
-        "FLAG" -> (1, 1))
+      private val entityMap = List(
+        "ROCK" -> (5, 5),
+        "ROCK" -> (2, 9),
+        "FLAG" -> (1, 1),
+        "FLAG" -> (8, 2),
+        "FLAG" -> (4, 0)
+      )
 
-      override def distanceX(entity: String, x:Int, y:Int) = if (entityMap.contains(entity)) {Some(entityMap(entity)._1 - x)} else {None}
+      private def findEntity(entity: String, index:Int) =
+        entityMap.filter(_._1 == entity).lift(index)
 
-      override def distanceY(entity: String, x:Int, y:Int) = if (entityMap.contains(entity)) {Some(entityMap(entity)._2 - y)} else {None}
+      override def distanceX(entity: String, index:Int, x:Int, y:Int) =
+        for (entity <- findEntity(entity, index)) yield (entity._2._1 - x)
+
+      override def distanceY(entity: String, index:Int, x:Int, y:Int) =
+        for (entity <- findEntity(entity, index)) yield (entity._2._2 - y)
     }
     val controller = new Controller(state, environment)
     evaluate("PUSH DISTANCEX(ROCK)", controller)
     assertEquals(SuccessResult(3), controller.top)
+    evaluate("PUSH DISTANCEX(ROCK(1))", controller)
+    assertEquals(SuccessResult(3), controller.top)
+    evaluate("PUSH DISTANCEX(ROCK(2))", controller)
+    assertEquals(SuccessResult(0), controller.top)
     evaluate("PUSH DISTANCEY(ROCK)", controller)
     assertEquals(SuccessResult(2), controller.top)
+    evaluate("PUSH DISTANCEY(ROCK(1))", controller)
+    assertEquals(SuccessResult(2), controller.top)
+    evaluate("PUSH DISTANCEY(ROCK(2))", controller)
+    assertEquals(SuccessResult(6), controller.top)
     evaluate("PUSH DISTANCEX(FLAG)", controller)
     assertEquals(SuccessResult(-1), controller.top)
     evaluate("PUSH DISTANCEY(FLAG)", controller)
     assertEquals(SuccessResult(-2), controller.top)
-    assertEquals(AbendResult(UnknownEntity("FOO")), evaluate("PUSH DISTANCEX(FOO)", controller))
+    assertEquals(AbendResult(InvalidEntity("FOO", 1)), evaluate("PUSH DISTANCEX(FOO)", controller))
+    assertEquals(AbendResult(InvalidEntity("FOO", 0)), evaluate("PUSH DISTANCEX(FOO(0))", controller))
+    assertEquals(AbendResult(InvalidEntity("ROCK",0)), evaluate("PUSH DISTANCEX(ROCK(0))", controller))
+    assertEquals(AbendResult(InvalidEntity("ROCK",3)), evaluate("PUSH DISTANCEX(ROCK(3))", controller))
+    assertEquals(AbendResult(InvalidEntity("FLAG",4)), evaluate("PUSH DISTANCEX(FLAG(4))", controller))
   }
 
   def testProcCall {

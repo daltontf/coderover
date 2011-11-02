@@ -22,9 +22,9 @@ class Evaluator() {
     }
 
   
-  private[this] final def processDistance(distance:Option[Int], entity:String):ResultOrAbend[Int] =
+  private[this] final def processDistance(distance:Option[Int], index:Int, entity:String):ResultOrAbend[Int] =
     if (distance == None) { 
-    	 AbendResult(UnknownEntity(entity))
+    	 AbendResult(InvalidEntity(entity, index))
     } else {
        SuccessResult(distance.get)
     }
@@ -72,8 +72,10 @@ class Evaluator() {
       case Min(expr1, expr2) 	       => for (x <- evaluateInt(expr1, args, controller);
                                              y <- evaluateInt(expr2, args, controller)) yield (Math.min(x,y))
       case Negate(expr)			         => for (x <- evaluateInt(expr, args, controller)) yield (-x)
-      case DistanceX(entity)  	     => processDistance(controller.distanceX(entity), entity)
-      case DistanceY(entity)  	     => processDistance(controller.distanceY(entity), entity)
+      case DistanceX(entity, expr)   => for (index <- evaluateInt(expr, args, controller);
+                                             distance <- processDistance(controller.distanceX(entity, index - 1), index, entity)) yield (distance)
+      case DistanceY(entity, expr)   => for (index <- evaluateInt(expr, args, controller);
+                                             distance <- processDistance(controller.distanceY(entity, index - 1), index, entity)) yield (distance)
       case Count(entity)  	         => controller.count(entity) match {
                                           case Some(x) => SuccessResult(x)
                                           case None => AbendResult(UnknownEntity(entity))
