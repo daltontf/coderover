@@ -8,6 +8,37 @@ class LanguageParser extends JavaTokenParsers {
 
   lazy val constant:Parser[Constant] = wholeNumber ^^ { x => Constant(x.toInt) }
 
+  override def skipWhitespace = true
+
+//  override protected def handleWhiteSpace(source: java.lang.CharSequence, offset: Int): Int =
+//	    if (skipWhitespace)
+//	      (whiteSpace findPrefixMatchOf (source.subSequence(offset, source.length))) match {
+//	        case Some(matched) => offset + matched.end - 1
+//	        case None => offset
+//	      }
+//	    else
+//	      offset
+
+  def onlyKeyword(s: String): Parser[String] = new Parser[String] {
+	    def apply(in: Input) = {
+	      val source = in.source
+	      val offset = in.offset
+	      val start = handleWhiteSpace(source, offset)
+	      var i = 0
+	      var j = start
+	      while (i < s.length && j < source.length && s.charAt(i) == source.charAt(j)) {
+	        i += 1
+	        j += 1
+	      }
+	      if (i == s.length && (j == source.length() || !(source.charAt(j).isLetterOrDigit || source.charAt(j) == '_')))
+	        Success(source.subSequence(start, j).toString, in.drop(j - offset))
+	      else  {
+	        val found = if (start == source.length()) "end of source" else "`"+source.charAt(start)+"'"
+	        Failure("`"+s+"' expected but "+found+" found", in.drop(start - offset))
+	      }
+	    }
+	  }
+
   lazy val intExpression:Parser[IntExpression] = parenIntExpression |
     evalParam |
     constant |
@@ -124,25 +155,30 @@ class LanguageParser extends JavaTokenParsers {
    	case whileExpression~_~blockInstructions => While(whileExpression, blockInstructions)
  	}
   
-  lazy val forward:Parser[Forward] = "FORWARD" ^^ { _  => Forward() }
+  lazy val forward:Parser[Forward] = onlyKeyword("FORWARD") ^^ { _  => Forward() }
 
-  lazy val push:Parser[Push] = "PUSH"~> expressionParameter ^^ { x:IntExpression => Push(x)}
+  lazy val pop:Parser[Pop] = onlyKeyword("POP") ^^ { _ => Pop() }
   
-  lazy val pop:Parser[Pop] = "POP" ^^ { _ => Pop() }
+  lazy val right:Parser[TurnRight] = onlyKeyword("RIGHT") ^^ { _ => TurnRight() }
   
-  lazy val right:Parser[TurnRight] = "RIGHT" ^^ { _ => TurnRight() }
+  lazy val left:Parser[TurnLeft] = onlyKeyword("LEFT") ^^ { _ => TurnLeft() }
   
-  lazy val left:Parser[TurnLeft] = "LEFT" ^^ { _ => TurnLeft() }
+  lazy val paint:Parser[Paint] = onlyKeyword("PAINT") ^^ { _ => Paint() }
   
-  lazy val paint:Parser[Paint] = "PAINT" ^^ { _ => Paint() }
-  
-  lazy val replace:Parser[Replace] = "REPLACE"~>expressionParameter ^^ { x:IntExpression => Replace(x) }
+  lazy val push:Parser[Push] = onlyKeyword("PUSH") ~> expressionParameter ^^ { x:IntExpression => Push(x)}
+
+  lazy val replace:Parser[Replace] = onlyKeyword("REPLACE")~>expressionParameter ^^ { x:IntExpression => Replace(x) }
 
   lazy val store:Parser[Store] = "STORE" ~ "(" ~> expressionParameter ~ "," ~ expressionParameter <~ ")" ^^ {
     case address~_~value => Store(address, value)
   }
-  
-  lazy val command:Parser[Instruction] = forward | right | left | paint | push | pop | replace | store | printString | repeat | invokeProc
+
+  lazy val invokeProc:Parser[InvokeProc] = ident ~ opt(params)  ^^ {
+    case defName~Some(x) => InvokeProc(defName, x)
+    case defName~None => InvokeProc(defName, Nil)
+  }
+
+  lazy val command:Parser[Instruction] = push | replace | store | printString | repeat | forward | right | left | paint | pop | invokeProc
   
   lazy val controlFlow:Parser[Instruction] = ifStatement | whileStatement
   
@@ -158,16 +194,11 @@ class LanguageParser extends JavaTokenParsers {
     case name~expression => Pred(name, expression)
   }
 
+  lazy val adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ { Adjacent(_) }
+
   lazy val invokePred:Parser[InvokePred] = ident ~ opt(params)  ^^ {
     case defName~Some(x) => InvokePred(defName, x)
     case defName~None => InvokePred(defName, Nil)
-  }
-
-  lazy val adjacent:Parser[BooleanExpression] = "ADJACENT" ~ "(" ~> ident <~ ")" ^^ { Adjacent(_) }
-
-  lazy val invokeProc:Parser[InvokeProc] = ident ~ opt(params)  ^^ {
-    case defName~Some(x) => InvokeProc(defName, x)
-    case defName~None => InvokeProc(defName, Nil)
   }
 
   lazy val repeat:Parser[Repeat] = "REPEAT" ~> expressionParameter ~ "{" ~ rep(instruction) <~ "}" ^^ {

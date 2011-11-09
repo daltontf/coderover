@@ -42,25 +42,69 @@ class LanguageParserSpec extends Specification with DataTables {
     }
   }
 
+  def parsingWholeProgramProducesExpression(code:String, expectedAst:List[Instruction]) {
+      val parseResult = languageParser.parse(code)
+      parseResult.successful must == (true)
+      parseResult.get mustEqual expectedAst
+  }
+
+
   "Parsing program" should {
     "parse empty file" in {
-      for (code <- List("", " ","\n", "\n \n")) {
-        val parseResult = languageParser.parse(code)
-        parseResult.successful mustEqual true
-        parseResult.get mustEqual List()
-      }
+      for (code <- List("", " ","\n", "\n \n")) parsingWholeProgramProducesExpression(code, List())
     }
 
     "parse COUNT function" in {
-      val parseResult = languageParser.parse("PUSH COUNT(FOO)")
-      parseResult.successful must == (true)
-      parseResult.get mustEqual List(Push(Count("FOO")))
+      parsingWholeProgramProducesExpression("PUSH COUNT(FOO)",  List(Push(Count("FOO"))))
     }
 
     "parse ParamCount" in {
-      val parseResult = languageParser.parse("PUSH $COUNT")
-      parseResult.successful must == (true)
-      parseResult.get mustEqual List(Push(ParamCount()))
+      parsingWholeProgramProducesExpression("PUSH $COUNT", List(Push(ParamCount())))
+    }
+
+    "should handle functions that begin with builtin name" in {
+      for (builtin <- List(
+        ("PAINT", Paint()),
+        ("FORWARD", Forward()),
+        ("RIGHT", TurnRight()),
+        ("LEFT", TurnLeft()),
+        ("POP", Pop())
+      )) {
+        parsingWholeProgramProducesExpression(("""
+        |PROC """ + builtin._1 + """IT { PRINT "FOO" }
+        |""" + builtin._1 + """IT
+        |""" + builtin._1)
+          .stripMargin, List(Proc(builtin._1 + "IT", List(Print(List(StringConstant("FOO"))))), InvokeProc(builtin._1 + "IT", List()), builtin._2)
+        )
+      }
+
+      parsingWholeProgramProducesExpression("""
+          |PROC PUSHIT  { PUSH($1) }
+          |PROC PUSHIT2 { PUSH($1) }
+          |PUSHIT(1)
+          |PUSHIT2(1)
+        """.stripMargin, List(
+              Proc("PUSHIT", List(Push(EvalParam(Constant(1))))),
+              Proc("PUSHIT2", List(Push(EvalParam(Constant(1))))),
+              InvokeProc("PUSHIT", List(Constant(1))),
+              InvokeProc("PUSHIT2", List(Constant(1))))
+      )
+
+      parsingWholeProgramProducesExpression("""
+          |PROC REPLACEIT  { REPLACE($1) }
+          |REPLACEIT(1)
+        """.stripMargin, List(
+              Proc("REPLACEIT", List(Replace(EvalParam(Constant(1))))),
+              InvokeProc("REPLACEIT", List(Constant(1))))
+      )
+
+      parsingWholeProgramProducesExpression("""
+          |PROC STOREIT  { STORE($1,$2) }
+          |STOREIT(1,2)
+        """.stripMargin, List(
+              Proc("STOREIT", List(Store(EvalParam(Constant(1)), EvalParam(Constant(2))))),
+              InvokeProc("STOREIT", List(Constant(1), Constant(2))))
+      )
     }
   }
 }
