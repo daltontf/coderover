@@ -10,15 +10,6 @@ class LanguageParser extends JavaTokenParsers {
 
   override def skipWhitespace = true
 
-//  override protected def handleWhiteSpace(source: java.lang.CharSequence, offset: Int): Int =
-//	    if (skipWhitespace)
-//	      (whiteSpace findPrefixMatchOf (source.subSequence(offset, source.length))) match {
-//	        case Some(matched) => offset + matched.end - 1
-//	        case None => offset
-//	      }
-//	    else
-//	      offset
-
   def onlyKeyword(s: String): Parser[String] = new Parser[String] {
 	    def apply(in: Input) = {
 	      val source = in.source
@@ -137,8 +128,22 @@ class LanguageParser extends JavaTokenParsers {
    lazy val logicalAnd = (booleanExpression ~ "AND" ~ rep1sep(booleanExpression, "AND")) ^^ {
     case head~"AND"~tail => And(head :: tail)
   }
+
+  lazy val printIntExpression:Parser[IntExpression] = parenIntExpression |
+    evalParam |
+    constant |
+    ternaryExpression |
+    arityNoneIntFunction |
+    arityOneIntFunction |
+    arityTwoIntFunction |
+    entityIndexFunction |
+    countEntity |
+    negatedIntExpression
+
+  lazy val printBooleanExpression:Parser[BooleanExpression] =  parenBoolean | not | adjacent | arityTwoBoolean
    
-  lazy val printString = "PRINT" ~> rep1sep((intExpression | booleanExpression | stringConstant), "+") ^^ { Print(_) }
+  lazy val printString = "PRINT" ~> rep1sep((printIntExpression | printBooleanExpression | stringConstant | invokeFunc | invokePred), ".") ^^ { Print(_) }
+
   
   lazy val stringConstant = stringLiteral ^^ { x=> StringConstant(x.substring(1, x.length-1)) }
   

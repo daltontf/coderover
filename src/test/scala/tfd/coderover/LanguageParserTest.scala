@@ -322,7 +322,9 @@ class LanguageParserTest extends TestCase {
   }
 
   def testPrint() {
-    assertProgramParsingProduces(List(Print(List(StringConstant("X = "), GridX()))), """PRINT "X = " + X""")
+    assertProgramParsingProduces(List(Print(List(StringConstant("X = "), GridX()))), """PRINT "X = " . X""")
+    assertProgramParsingProduces(List(Print(List(StringConstant("SUM = "), Add(List(Top(), Constant(28)))))), """PRINT "SUM = " . (TOP + 28)""")
+    assertProgramParsingProduces(List(Print(List(StringConstant("PAINTED = "), Painted(Constant(1), Constant(2))))), """PRINT "PAINTED = " . PAINTED(1,2)""")
   }
 
   def testStore() {
@@ -354,7 +356,7 @@ class LanguageParserTest extends TestCase {
   }
 
   def testNegativeExpression() {
-    assertProgramParsingProduces(List(Print(List(StringConstant("-DX = "), Negate(DeltaX())))), """PRINT "-DX = " + -DX""")
+    assertProgramParsingProduces(List(Print(List(StringConstant("-DX = "), Negate(DeltaX())))), """PRINT "-DX = " . -DX""")
   }
 
   def testEvalParameters() {

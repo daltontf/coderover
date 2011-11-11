@@ -503,7 +503,7 @@ class EvaluatorTest extends TestCase {
 
       override def print(value: String) {lastPrint = value}
     }
-    evaluate("""PRINT "X = " + X + " Y = " + Y + " " + ((2+2) = 4) + " foo" """, controller)
+    evaluate("""PRINT "X = " . X . " Y = " . Y . " " . ((2+2) = 4) . " foo" """, controller)
     assertEquals("X = 2 Y = 3 true foo", controller.lastPrint)
   }            
 
@@ -637,7 +637,7 @@ class EvaluatorTest extends TestCase {
     }
     evaluate("""
       |FUNC FACTORIAL ( ($1 = 1) ? 1 : $1 * FACTORIAL($1 - 1))
-      |PRINT "FACTORIAL(6) = " + FACTORIAL(6)""".stripMargin, controller)
+      |PRINT "FACTORIAL(6) = " . FACTORIAL(6)""".stripMargin, controller)
     assertEquals("FACTORIAL(6) = 720", controller.lastPrint)
   }
 
